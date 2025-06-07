@@ -1,6 +1,8 @@
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkFont
+import random
+import math
 
 class HackerTheme:
     """Dark hacker-inspired theme for a Tkinter application."""
@@ -11,8 +13,12 @@ class HackerTheme:
     LIGHTER_BLACK = "#1A1A1A"
     NEON_GREEN = "#00FF41"
     DARKER_GREEN = "#008F11"
+    ELECTRIC_BLUE = "#00BFFF"
+    CYBER_PURPLE = "#8A2BE2"
     DANGER_RED = "#FF0000"
     WARNING_YELLOW = "#FFFF00"
+    MATRIX_GREEN = "#00FF00"
+    NEON_CYAN = "#00FFFF"
     
     # Fonts
     FONT_FAMILY = "Courier"
@@ -129,3 +135,108 @@ class HackerTheme:
         
         # Start the glow effect
         update_glow()
+    
+    @classmethod
+    def create_matrix_rain_effect(cls, canvas, width, height):
+        """Create a Matrix-style digital rain effect."""
+        drops = []
+        characters = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz!@#$%^&*()[]{}|;:,.<>?"
+        
+        # Initialize rain drops
+        for i in range(20):
+            drops.append({
+                'x': random.randint(0, width),
+                'y': random.randint(-height, 0),
+                'speed': random.uniform(2, 8),
+                'char': random.choice(characters),
+                'opacity': random.uniform(0.3, 1.0)
+            })
+        
+        def animate_rain():
+            canvas.delete("rain")
+            
+            for drop in drops:
+                # Update position
+                drop['y'] += drop['speed']
+                
+                # Reset if off screen
+                if drop['y'] > height:
+                    drop['y'] = random.randint(-50, 0)
+                    drop['x'] = random.randint(0, width)
+                    drop['char'] = random.choice(characters)
+                    drop['opacity'] = random.uniform(0.3, 1.0)
+                
+                # Calculate color with opacity
+                green_intensity = int(255 * drop['opacity'])
+                color = f"#{0:02x}{green_intensity:02x}{0:02x}"
+                
+                # Draw character
+                canvas.create_text(
+                    drop['x'], drop['y'],
+                    text=drop['char'],
+                    fill=color,
+                    font=(cls.FONT_FAMILY, cls.FONT_SIZE_SMALL),
+                    tags="rain"
+                )
+            
+            # Schedule next frame
+            canvas.after(100, animate_rain)
+        
+        animate_rain()
+    
+    @classmethod
+    def create_typing_effect(cls, widget, text, delay=50):
+        """Create a typewriter effect for text."""
+        widget.config(text="")
+        
+        def type_char(index=0):
+            if index < len(text):
+                widget.config(text=text[:index+1])
+                widget.after(delay, lambda: type_char(index + 1))
+        
+        type_char()
+    
+    @classmethod
+    def create_pulse_effect(cls, widget):
+        """Create a pulsing border effect."""
+        original_relief = widget.cget('relief')
+        original_bd = widget.cget('borderwidth')
+        
+        def pulse():
+            # Alternate between raised and sunken
+            current_relief = widget.cget('relief')
+            if current_relief == 'raised':
+                widget.config(relief='sunken', borderwidth=3)
+            else:
+                widget.config(relief='raised', borderwidth=1)
+            
+            widget.after(800, pulse)
+        
+        pulse()
+    
+    @classmethod
+    def create_scanning_line(cls, widget):
+        """Create a scanning line effect across the widget."""
+        if not hasattr(cls, '_scan_position'):
+            cls._scan_position = 0
+        
+        def scan():
+            try:
+                # Get widget dimensions
+                widget.update()
+                width = widget.winfo_width()
+                
+                # Create a temporary highlight effect
+                original_bg = widget.cget('bg')
+                
+                # Create scanning effect by briefly changing background
+                if cls._scan_position % 50 == 0:  # Every 50 cycles
+                    widget.config(bg=cls.ELECTRIC_BLUE)
+                    widget.after(50, lambda: widget.config(bg=original_bg))
+                
+                cls._scan_position += 1
+                widget.after(100, scan)
+            except:
+                pass
+        
+        scan()
