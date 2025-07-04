@@ -22,7 +22,7 @@ args = "Start application"
 
 [[workflows.workflow.tasks]]
 task = "workflow.run"
-args = "YouTube Downloader"
+args = "Neural Extractor"
 
 [[workflows.workflow]]
 name = "Start application"
@@ -34,7 +34,7 @@ args = "gunicorn --bind 0.0.0.0:5000 --reuse-port --reload main:app"
 waitForPort = 5000
 
 [[workflows.workflow]]
-name = "YouTube Downloader"
+name = "Neural Extractor"
 author = "agent"
 
 [[workflows.workflow.tasks]]

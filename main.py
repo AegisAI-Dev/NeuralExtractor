@@ -7,8 +7,8 @@ from dependencies import check_and_install_dependencies
 check_and_install_dependencies()
 
 # After ensuring dependencies are installed, import the application
-from youtube_downloader import YouTubeDownloaderApp
+from youtube_downloader import NeuralExtractor
 
 if __name__ == "__main__":
-    app = YouTubeDownloaderApp()
+    app = NeuralExtractor()
     app.mainloop()
