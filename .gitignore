@@ -1,0 +1,68 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+env/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*.sublime-project
+*.sublime-workspace
+
+# Logs
+logs/*.log
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Project specific
+*.backup
+requirements.*.backup
+*.pyc
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Build artifacts
+*.exe
+*.msi
+*.dmg
+*.AppImage
+*.deb
+*.rpm
+
+# Tool caches
+.ruff_cache/
+.mypy_cache/
+
+# Environment variables
+.env
+.env.*
+
+# Downloaded media (prevent accidental commits)
+*.mp4
+*.mkv
+*.webm
+*.m4a
+*.mp3
+*.part
+*.ytdl
+*.vtt
+*.srt
