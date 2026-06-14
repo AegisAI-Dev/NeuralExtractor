@@ -2,14 +2,10 @@
 
 import json
 import logging
-import platform
 import sys
-import threading
 import urllib.request
-from pathlib import Path
-from typing import Optional
 
-from PyQt6.QtCore import QObject, pyqtSignal, QThread
+from PyQt6.QtCore import QObject, QThread, pyqtSignal
 from PyQt6.QtWidgets import QApplication
 
 from neural_extractor.config import GITHUB_REPO, VERSION, get_data_dir
@@ -31,9 +27,10 @@ def parse_version(version_str: str) -> tuple[int, ...]:
 
 class UpdaterSignals(QObject):
     """Signals for the Updater."""
+
     update_available = pyqtSignal(str)  # Emits the new version string
-    download_progress = pyqtSignal(int) # Emits 0-100 progress
-    update_ready = pyqtSignal(str, str) # Emits (version, temp_exe_path)
+    download_progress = pyqtSignal(int)  # Emits 0-100 progress
+    update_ready = pyqtSignal(str, str)  # Emits (version, temp_exe_path)
     error = pyqtSignal(str)
 
 
@@ -51,11 +48,13 @@ class UpdaterThread(QThread):
         try:
             # We only support auto-updating Windows EXEs right now
             if sys.platform != "win32" or not getattr(sys, "frozen", False):
-                logger.info("Updater: Not running on Windows as a frozen EXE, skipping update check.")
+                logger.info(
+                    "Updater: Not running on Windows as a frozen EXE, skipping update check."
+                )
                 return
 
             api_url = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
-            
+
             # 1. Fetch latest release info
             req = urllib.request.Request(api_url, headers={"User-Agent": "NeuralExtractor-Updater"})
             try:
@@ -73,7 +72,9 @@ class UpdaterThread(QThread):
             current_version = parse_version(VERSION)
 
             if latest_version <= current_version:
-                logger.info(f"Updater: App is up to date (current: {VERSION}, latest: {latest_version_str})")
+                logger.info(
+                    f"Updater: App is up to date (current: {VERSION}, latest: {latest_version_str})"
+                )
                 return
 
             logger.info(f"Updater: Update found! Version {latest_version_str} is available.")
@@ -87,7 +88,7 @@ class UpdaterThread(QThread):
                 if name.endswith(".exe"):
                     exe_asset = asset
                     break
-            
+
             if not exe_asset:
                 logger.warning("Updater: No .exe asset found in the release.")
                 return
@@ -97,7 +98,7 @@ class UpdaterThread(QThread):
 
             # 3. Download the executable to a temporary file
             temp_exe = self.temp_dir / f"NeuralExtractor_{latest_version_str}.exe"
-            
+
             # Clean up old updates if they exist
             for old_file in self.temp_dir.glob("*.exe"):
                 if old_file.name != temp_exe.name:
@@ -107,7 +108,9 @@ class UpdaterThread(QThread):
                         pass
 
             # Download with progress
-            req_dl = urllib.request.Request(download_url, headers={"User-Agent": "NeuralExtractor-Updater"})
+            req_dl = urllib.request.Request(
+                download_url, headers={"User-Agent": "NeuralExtractor-Updater"}
+            )
             with urllib.request.urlopen(req_dl, timeout=30) as response:
                 with open(temp_exe, "wb") as f:
                     downloaded = 0
@@ -127,18 +130,18 @@ class UpdaterThread(QThread):
             logger.error(f"Updater error: {e}", exc_info=True)
             self.signals.error.emit(str(e))
 
+
 def apply_update(temp_exe_path: str) -> None:
     """Creates a batch script to replace the running executable and restarts."""
-    import os
     import subprocess
     import sys
-    
+
     if not getattr(sys, "frozen", False):
         return  # Only works for frozen PyInstaller exes
 
     current_exe = sys.executable
     bat_path = get_data_dir() / "apply_update.bat"
-    
+
     # Write the batch script
     bat_content = f"""@echo off
 echo Installing Neural Extractor Update...
@@ -149,12 +152,9 @@ del "%~f0"
 """
     with open(bat_path, "w", encoding="utf-8") as f:
         f.write(bat_content)
-    
+
     # Launch the batch script detached without showing a window
-    subprocess.Popen(
-        ["cmd.exe", "/c", str(bat_path)],
-        creationflags=subprocess.CREATE_NO_WINDOW
-    )
-    
+    subprocess.Popen(["cmd.exe", "/c", str(bat_path)], creationflags=subprocess.CREATE_NO_WINDOW)
+
     # Exit the current app so the batch script can overwrite it
     QApplication.quit() if QApplication.instance() else sys.exit(0)

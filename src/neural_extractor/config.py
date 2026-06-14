@@ -1,8 +1,8 @@
 """Configuration constants for Neural Extractor."""
 
 import os
-from pathlib import Path
 import sys
+from pathlib import Path
 from typing import Final
 
 # Version
@@ -23,18 +23,21 @@ WINDOW_TITLE: Final[str] = "Neural Extractor"
 WINDOW_GEOMETRY: Final[str] = "800x600"
 WINDOW_MIN_SIZE: Final[tuple[int, int]] = (700, 500)
 
+
 # Paths
 def get_base_dir() -> Path:
     """Return project root (development) or _MEIPASS (frozen)."""
-    if getattr(sys, 'frozen', False):
+    if getattr(sys, "frozen", False):
         return Path(sys._MEIPASS)
     return Path(__file__).parent.parent.parent
+
 
 def get_data_dir() -> Path:
     """Return user-writable data directory for logs etc."""
     data_dir = Path(os.environ.get("APPDATA", Path.home())) / "NeuralExtractor"
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
+
 
 def get_assets_dir() -> Path:
     """Get the assets directory path."""
@@ -44,6 +47,7 @@ def get_assets_dir() -> Path:
         assets_dir = Path("assets")
     return assets_dir.resolve()
 
+
 def get_bin_dir() -> Path:
     """Get the bin directory path for executables like ffmpeg."""
     bin_dir = get_base_dir() / "bin"
@@ -51,9 +55,12 @@ def get_bin_dir() -> Path:
         bin_dir = Path("bin")
     return bin_dir.resolve()
 
+
 ASSETS_DIR: Final[Path] = get_assets_dir()
 BIN_DIR: Final[Path] = get_bin_dir()
-ICON_ICO: Final[Path] = ASSETS_DIR / "NeuralExtractoricon.ico"  # Windows .ico (multi-size 16-512 px)
+ICON_ICO: Final[Path] = (
+    ASSETS_DIR / "NeuralExtractoricon.ico"
+)  # Windows .ico (multi-size 16-512 px)
 ICON_PNG: Final[Path] = ASSETS_DIR / "NeuralExtractorIcon.png"  # macOS / Linux .png (512×512)
 
 # Defaults
@@ -74,7 +81,18 @@ QUALITY_OPTIONS: Final[list[str]] = [
 
 # Subtitle languages
 SUBTITLE_LANGUAGES: Final[list[str]] = [
-    "en", "nl", "de", "fr", "es", "it", "tr", "ru", "ar", "zh-Hans", "ja", "ko"
+    "en",
+    "nl",
+    "de",
+    "fr",
+    "es",
+    "it",
+    "tr",
+    "ru",
+    "ar",
+    "zh-Hans",
+    "ja",
+    "ko",
 ]
 
 # Limits
@@ -85,11 +103,10 @@ ANIMATION_INTERVAL_MS: Final[int] = 16  # ~60 FPS
 
 # YouTube URL patterns
 YOUTUBE_URL_REGEX: Final[str] = (
-    r'^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/'
-    r'(watch\?v=|playlist\?list=|mix\/|watch\?v=.*&list=).*$'
+    r"^(https?\:\/\/)?(www\.youtube\.com|youtu\.?be)\/"
+    r"(watch\?v=|playlist\?list=|mix\/|watch\?v=.*&list=).*$"
 )
 
 # Thumbnail URLs
 THUMBNAIL_BASE_URL: Final[str] = "https://img.youtube.com/vi/{video_id}/"
 THUMBNAIL_OPTIONS: Final[list[str]] = ["maxresdefault.jpg", "hqdefault.jpg"]
-

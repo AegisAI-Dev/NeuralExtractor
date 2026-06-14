@@ -3,4 +3,3 @@
 from neural_extractor.core.downloader import Downloader
 
 __all__ = ["Downloader"]
-

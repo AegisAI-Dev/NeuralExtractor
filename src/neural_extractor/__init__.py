@@ -9,4 +9,3 @@ except ImportError:
     from neural_extractor.gui.main_window import NeuralExtractor
 
 __all__ = ["NeuralExtractor", "__version__"]
-
