@@ -121,6 +121,23 @@ self.iconphoto(True, ImageTk.PhotoImage(img))
 
 ## Build & Distribution (PyInstaller)
 
+### GitHub Release auto-update
+The PyQt6 app checks the latest GitHub Release from `GITHUB_REPO` in
+`src/neural_extractor/config.py`. Windows users running the bundled `.exe` are
+offered an update when the latest release tag is higher than the bundled app
+version and the release contains a `.exe` asset.
+
+To publish an update:
+1. Bump the same version in `pyproject.toml`, `src/neural_extractor/config.py`
+   and `src/neural_extractor/__init__.py`.
+2. Commit and push the change.
+3. Create and push a matching tag, for example `v2.0.1`, or run the
+   **Build and Publish Windows EXE** workflow manually with that tag.
+
+The workflow builds `dist/NeuralExtractor.exe`, uploads it as a workflow
+artifact, and publishes it to the GitHub Release so installed Windows EXEs can
+download it automatically on startup.
+
 ### Quick CLI build (Windows)
 ```powershell
 pyinstaller --onefile --windowed `

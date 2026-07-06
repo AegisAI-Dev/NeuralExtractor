@@ -6,8 +6,8 @@ from pathlib import Path
 from typing import Final
 
 # Version
-VERSION: Final[str] = "2.0"
-GITHUB_REPO: Final[str] = "NeuralShield/NeuralExtractor"  # Update dit zodra de repo openbaar is
+VERSION: Final[str] = "2.0.0"
+GITHUB_REPO: Final[str] = "AegisAI-Dev/NeuralExtractor"
 
 # Colors
 BG_COLOR: Final[str] = "#1a2233"  # Navy blue

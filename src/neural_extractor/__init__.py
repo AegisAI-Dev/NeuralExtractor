@@ -1,6 +1,6 @@
 """Neural Extractor - YouTube video downloader and extractor."""
 
-__version__ = "2.0"
+__version__ = "2.0.0"
 
 # Try to use PyQt6 GUI (v2), fall back to Tkinter GUI (v1)
 try:
