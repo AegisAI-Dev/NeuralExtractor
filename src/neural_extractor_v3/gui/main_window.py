@@ -1185,13 +1185,13 @@ class MainWindow(QMainWindow):
         self.cookie_file = Path(path)
         self.cookie_edit.setText(path)
         self.settings.setValue("cookie_file", path)
-        self.log(f"Cookies loaded: {path}")
+        self.log(f"cookies.txt loaded: {self.cookie_file.name}")
 
     def clear_cookie_file(self) -> None:
         self.cookie_file = None
         self.cookie_edit.clear()
         self.settings.remove("cookie_file")
-        self.log("Cookies cleared")
+        self.log("cookies.txt cleared; browser cookie fallback will be used if available")
 
     def open_output_folder(self) -> None:
         self.output_dir.mkdir(parents=True, exist_ok=True)

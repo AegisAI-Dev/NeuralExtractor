@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from neural_extractor_v3.core.auth import AuthStrategy
 from neural_extractor_v3.core.downloader import DownloadEngine
 from neural_extractor_v3.models import DownloadOptions, MediaMode, PlaylistMode
 
@@ -57,3 +58,21 @@ def test_full_playlist_keeps_playlist_enabled(tmp_path):
 
     assert opts["noplaylist"] is False
     assert "%(playlist" in opts["outtmpl"]
+
+
+def test_auth_strategy_is_merged_into_ydl_options(tmp_path):
+    engine = make_engine(tmp_path)
+    auth = AuthStrategy(
+        kind="browser",
+        display_name="Chrome",
+        attempted_auth=True,
+        ydl_options={
+            "cookiesfrombrowser": ("chrome",),
+            "extractor_args": {"youtube": {"player_client": ["default"]}},
+        },
+    )
+
+    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123", auth)
+
+    assert opts["cookiesfrombrowser"] == ("chrome",)
+    assert opts["extractor_args"] == {"youtube": {"player_client": ["default"]}}

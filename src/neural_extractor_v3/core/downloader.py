@@ -9,6 +9,13 @@ from typing import Any
 import yt_dlp
 
 from neural_extractor_v3.config import QUALITY_PRESETS, THROTTLE_SAFE_OPTIONS, bin_dir
+from neural_extractor_v3.core.auth import (
+    AuthResolution,
+    AuthStrategy,
+    clean_authentication_error,
+    is_authentication_error,
+    resolve_auth_strategies,
+)
 from neural_extractor_v3.core.subtitles import subtitle_postprocessor, subtitle_ydl_options
 from neural_extractor_v3.models import (
     DownloadJob,
@@ -63,15 +70,48 @@ class DownloadEngine:
 
         url = self.prepare_url(job.url)
         self.options.output_dir.mkdir(parents=True, exist_ok=True)
+        auth_resolution = resolve_auth_strategies(self.options.cookie_file)
 
-        try:
-            self._log(f"Starting {self.options.media_mode.label}: {url}")
-            with yt_dlp.YoutubeDL(self.build_ydl_options(job.url)) as ydl:
-                ydl.download([url])
-        except DownloadCancelledError:
-            return DownloadResult(job.job_id, False, "Download cancelled by user", self._files_seen)
-        except Exception as exc:
-            return DownloadResult(job.job_id, False, f"Download failed: {exc}", self._files_seen)
+        for message in auth_resolution.messages:
+            self._log(message)
+
+        last_auth_error = ""
+        for index, auth_strategy in enumerate(auth_resolution.strategies):
+            try:
+                self._log(f"Starting {self.options.media_mode.label}: {url}")
+                self._log_auth_strategy(auth_strategy, retry=index > 0)
+                self._download_with_strategy(url, job.url, auth_strategy)
+                break
+            except DownloadCancelledError:
+                return DownloadResult(job.job_id, False, "Download cancelled by user", self._files_seen)
+            except Exception as exc:
+                error_text = str(exc)
+                if is_authentication_error(error_text):
+                    last_auth_error = error_text
+                    self._log(self._auth_failure_log(auth_strategy))
+                    if self._has_auth_retry(auth_resolution, index):
+                        continue
+                    return DownloadResult(
+                        job.job_id,
+                        False,
+                        clean_authentication_error(self._auth_was_attempted(auth_resolution)),
+                        self._files_seen,
+                    )
+                return DownloadResult(
+                    job.job_id,
+                    False,
+                    f"Download failed: {self._clean_error_message(error_text)}",
+                    self._files_seen,
+                )
+        else:
+            return DownloadResult(
+                job.job_id,
+                False,
+                clean_authentication_error(self._auth_was_attempted(auth_resolution))
+                if last_auth_error
+                else "Download failed before yt-dlp could start.",
+                self._files_seen,
+            )
 
         message = "Download completed"
         if self._files_seen:
@@ -83,7 +123,11 @@ class DownloadEngine:
             return normalize_single_video_url(url)
         return normalize_user_url(url)
 
-    def build_ydl_options(self, url: str) -> dict[str, Any]:
+    def build_ydl_options(
+        self,
+        url: str,
+        auth_strategy: AuthStrategy | None = None,
+    ) -> dict[str, Any]:
         playlist = should_download_playlist(url, self.options.playlist_mode.value)
         outtmpl = self._output_template(playlist)
         postprocessors = self._postprocessors()
@@ -109,9 +153,8 @@ class DownloadEngine:
         if local_bin.exists():
             opts["ffmpeg_location"] = str(local_bin)
 
-        if self.options.cookie_file and self.options.cookie_file.exists():
-            opts["cookiefile"] = str(self.options.cookie_file)
-            opts["extractor_args"] = {"youtube": {"player_client": ["default"]}}
+        if auth_strategy:
+            opts.update(auth_strategy.ydl_options)
 
         if self.options.media_mode in {MediaMode.THUMBNAIL_ONLY, MediaMode.SUBTITLES_ONLY}:
             opts["skip_download"] = True
@@ -135,6 +178,20 @@ class DownloadEngine:
             opts["postprocessors"] = postprocessors
 
         return opts
+
+    def _download_with_strategy(
+        self,
+        prepared_url: str,
+        original_url: str,
+        auth_strategy: AuthStrategy,
+    ) -> None:
+        ydl_opts = self.build_ydl_options(original_url, auth_strategy=auth_strategy)
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            # Explicit preflight uses the same YoutubeDL instance and auth options as final download.
+            ydl.extract_info(prepared_url, download=False)
+            retcode = ydl.download([prepared_url])
+            if retcode:
+                raise RuntimeError(f"yt-dlp returned exit code {retcode}")
 
     def _output_template(self, playlist: bool) -> str:
         if playlist:
@@ -211,3 +268,33 @@ class DownloadEngine:
     def _log(self, message: str) -> None:
         if self.log_callback:
             self.log_callback(message)
+
+    def _log_auth_strategy(self, auth_strategy: AuthStrategy, retry: bool = False) -> None:
+        prefix = "Retrying with" if retry else "Using"
+        if auth_strategy.is_cookie_file:
+            self._log(f"{prefix} cookies.txt for YouTube authentication.")
+        elif auth_strategy.is_browser:
+            self._log(f"{prefix} browser cookies for YouTube authentication: {auth_strategy.display_name}.")
+        else:
+            self._log(
+                "Authentication unavailable: no cookies.txt and no supported browser cookies. "
+                "Public videos may still download."
+            )
+
+    def _auth_failure_log(self, auth_strategy: AuthStrategy) -> str:
+        if auth_strategy.is_cookie_file:
+            return "cookies.txt appears expired or invalid; trying fallback if available."
+        if auth_strategy.is_browser:
+            return "browser cookies appear expired, locked, or invalid."
+        return "YouTube requested authentication, but no cookies are available."
+
+    def _has_auth_retry(self, resolution: AuthResolution, index: int) -> bool:
+        return any(strategy.attempted_auth for strategy in resolution.strategies[index + 1 :])
+
+    def _auth_was_attempted(self, resolution: AuthResolution) -> bool:
+        return any(strategy.attempted_auth for strategy in resolution.strategies)
+
+    def _clean_error_message(self, error_text: str) -> str:
+        if is_authentication_error(error_text):
+            return clean_authentication_error(True)
+        return error_text
