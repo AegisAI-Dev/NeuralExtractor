@@ -9,6 +9,8 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+BROWSER_FALLBACK_ORDER = ("chrome", "edge", "brave", "firefox")
+
 SUPPORTED_BROWSER_NAMES = {
     "brave": "Brave",
     "chrome": "Chrome",
@@ -67,9 +69,10 @@ class AuthResolution:
     messages: list[str]
     cookie_file_status: CookieFileStatus
     browser_source: BrowserCookieSource | None
+    browser_sources: list[BrowserCookieSource]
 
 
-BrowserDetector = Callable[[], BrowserCookieSource | None]
+BrowserDetector = Callable[[], list[BrowserCookieSource]]
 
 
 def inspect_cookie_file(cookie_file: Path | None) -> CookieFileStatus:
@@ -107,48 +110,52 @@ def inspect_cookie_file(cookie_file: Path | None) -> CookieFileStatus:
     return CookieFileStatus(path, False, "cookies.txt contains no YouTube/Google cookie rows")
 
 
-def detect_browser_cookie_source() -> BrowserCookieSource | None:
-    """Return the first supported browser profile found on this machine."""
-    candidates: list[tuple[str, Path]]
+def detect_browser_cookie_sources() -> list[BrowserCookieSource]:
+    """Return supported browser profiles in fallback order."""
+    path_by_browser: dict[str, Path]
     if sys.platform == "win32":
         local = Path(os.environ.get("LOCALAPPDATA", "")).expanduser()
         roaming = Path(os.environ.get("APPDATA", "")).expanduser()
-        candidates = [
-            ("chrome", local / "Google" / "Chrome" / "User Data"),
-            ("edge", local / "Microsoft" / "Edge" / "User Data"),
-            ("firefox", roaming / "Mozilla" / "Firefox" / "Profiles"),
-            ("brave", local / "BraveSoftware" / "Brave-Browser" / "User Data"),
-        ]
+        path_by_browser = {
+            "chrome": local / "Google" / "Chrome" / "User Data",
+            "edge": local / "Microsoft" / "Edge" / "User Data",
+            "brave": local / "BraveSoftware" / "Brave-Browser" / "User Data",
+            "firefox": roaming / "Mozilla" / "Firefox" / "Profiles",
+        }
     elif sys.platform == "darwin":
         support = Path.home() / "Library" / "Application Support"
-        candidates = [
-            ("chrome", support / "Google" / "Chrome"),
-            ("edge", support / "Microsoft Edge"),
-            ("firefox", support / "Firefox" / "Profiles"),
-            ("brave", support / "BraveSoftware" / "Brave-Browser"),
-        ]
+        path_by_browser = {
+            "chrome": support / "Google" / "Chrome",
+            "edge": support / "Microsoft Edge",
+            "brave": support / "BraveSoftware" / "Brave-Browser",
+            "firefox": support / "Firefox" / "Profiles",
+        }
     else:
         config = Path.home() / ".config"
-        candidates = [
-            ("chrome", config / "google-chrome"),
-            ("edge", config / "microsoft-edge"),
-            ("firefox", Path.home() / ".mozilla" / "firefox"),
-            ("brave", config / "BraveSoftware" / "Brave-Browser"),
-        ]
+        path_by_browser = {
+            "chrome": config / "google-chrome",
+            "edge": config / "microsoft-edge",
+            "brave": config / "BraveSoftware" / "Brave-Browser",
+            "firefox": Path.home() / ".mozilla" / "firefox",
+        }
 
-    for browser, profile_path in candidates:
+    sources: list[BrowserCookieSource] = []
+    for browser in BROWSER_FALLBACK_ORDER:
+        profile_path = path_by_browser[browser]
         if profile_path.exists():
-            return BrowserCookieSource(
-                browser=browser,
-                display_name=SUPPORTED_BROWSER_NAMES[browser],
-                profile_path=profile_path,
+            sources.append(
+                BrowserCookieSource(
+                    browser=browser,
+                    display_name=SUPPORTED_BROWSER_NAMES[browser],
+                    profile_path=profile_path,
+                )
             )
-    return None
+    return sources
 
 
 def resolve_auth_strategies(
     cookie_file: Path | None,
-    browser_detector: BrowserDetector = detect_browser_cookie_source,
+    browser_detector: BrowserDetector = detect_browser_cookie_sources,
 ) -> AuthResolution:
     """Build ordered auth strategies for yt-dlp.
 
@@ -177,23 +184,25 @@ def resolve_auth_strategies(
     else:
         messages.append("cookies.txt not loaded")
 
-    browser_source = browser_detector()
-    if browser_source:
+    browser_sources = browser_detector()
+    if browser_sources:
+        browser_names = ", ".join(source.display_name for source in browser_sources)
         if strategies:
-            messages.append(f"browser cookie fallback available: {browser_source.display_name}")
+            messages.append(f"browser cookie fallback available: {browser_names}")
         else:
-            messages.append(f"browser cookies available: {browser_source.display_name}")
-        strategies.append(
-            AuthStrategy(
-                kind="browser",
-                display_name=browser_source.display_name,
-                attempted_auth=True,
-                ydl_options={
-                    "cookiesfrombrowser": (browser_source.browser,),
-                    "extractor_args": {"youtube": {"player_client": ["default"]}},
-                },
+            messages.append(f"browser cookies available: {browser_names}")
+        for browser_source in browser_sources:
+            strategies.append(
+                AuthStrategy(
+                    kind="browser",
+                    display_name=browser_source.display_name,
+                    attempted_auth=True,
+                    ydl_options={
+                        "cookiesfrombrowser": (browser_source.browser,),
+                        "extractor_args": {"youtube": {"player_client": ["default"]}},
+                    },
+                )
             )
-        )
     else:
         messages.append("browser cookies unavailable: no Chrome, Edge, Firefox, or Brave profile found")
 
@@ -211,12 +220,53 @@ def resolve_auth_strategies(
         strategies=strategies,
         messages=messages,
         cookie_file_status=cookie_status,
-        browser_source=browser_source,
+        browser_source=browser_sources[0] if browser_sources else None,
+        browser_sources=browser_sources,
     )
+
+
+def is_live_event_ended_error(error_text: str) -> bool:
+    """Return True when YouTube reports an ended live event."""
+    lowered = error_text.lower()
+    return "this live event has ended" in lowered
+
+
+def clean_live_event_ended_error() -> str:
+    return "This live event has ended and is not currently downloadable."
+
+
+def is_browser_cookie_extraction_error(error_text: str) -> bool:
+    """Return True for local browser cookie database/decryption failures."""
+    lowered = error_text.lower()
+    patterns = (
+        "could not copy chrome cookie database",
+        "could not copy edge cookie database",
+        "could not copy brave cookie database",
+        "could not copy firefox cookie database",
+        "could not copy",
+        "cookie database",
+        "database is locked",
+        "database table is locked",
+        "failed to decrypt",
+        "could not decrypt",
+        "unable to decrypt",
+        "keyring",
+        "secretstorage",
+        "browser cookies",
+        "cookies from browser",
+    )
+    return any(pattern in lowered for pattern in patterns)
+
+
+def clean_browser_cookie_extraction_error() -> str:
+    return "Browser cookie extraction failed. Close your browser or export cookies.txt manually."
 
 
 def is_authentication_error(error_text: str) -> bool:
     """Return True when a yt-dlp error is likely auth/cookie related."""
+    if is_live_event_ended_error(error_text) or is_browser_cookie_extraction_error(error_text):
+        return False
+
     lowered = error_text.lower()
     patterns = (
         "sign in to confirm",

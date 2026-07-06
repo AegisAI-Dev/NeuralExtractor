@@ -4,6 +4,8 @@ from neural_extractor_v3.core.auth import AuthStrategy
 from neural_extractor_v3.core.downloader import DownloadEngine
 from neural_extractor_v3.models import DownloadOptions, MediaMode, PlaylistMode
 
+PUBLIC_VIDEO_TEST_URL = "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+
 
 def make_engine(tmp_path: Path, **overrides) -> DownloadEngine:
     options = DownloadOptions(output_dir=tmp_path, **overrides)
@@ -76,3 +78,18 @@ def test_auth_strategy_is_merged_into_ydl_options(tmp_path):
 
     assert opts["cookiesfrombrowser"] == ("chrome",)
     assert opts["extractor_args"] == {"youtube": {"player_client": ["default"]}}
+
+
+def test_clean_error_message_removes_yt_dlp_github_links(tmp_path):
+    engine = make_engine(tmp_path)
+    message = engine._clean_error_message(
+        "ERROR: Something failed. Please report this issue at "
+        "https://github.com/yt-dlp/yt-dlp/issues?q=abc"
+    )
+
+    assert "github.com/yt-dlp" not in message
+    assert message == "ERROR: Something failed."
+
+
+def test_public_video_test_url_is_normal_video_url():
+    assert PUBLIC_VIDEO_TEST_URL == "https://www.youtube.com/watch?v=jNQXAC9IVRw"

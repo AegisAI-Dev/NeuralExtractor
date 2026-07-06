@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Callable
 from pathlib import Path
 from typing import Any
@@ -13,7 +14,11 @@ from neural_extractor_v3.core.auth import (
     AuthResolution,
     AuthStrategy,
     clean_authentication_error,
+    clean_browser_cookie_extraction_error,
+    clean_live_event_ended_error,
     is_authentication_error,
+    is_browser_cookie_extraction_error,
+    is_live_event_ended_error,
     resolve_auth_strategies,
 )
 from neural_extractor_v3.core.subtitles import subtitle_postprocessor, subtitle_ydl_options
@@ -76,6 +81,7 @@ class DownloadEngine:
             self._log(message)
 
         last_auth_error = ""
+        browser_cookie_error = ""
         for index, auth_strategy in enumerate(auth_resolution.strategies):
             try:
                 self._log(f"Starting {self.options.media_mode.label}: {url}")
@@ -86,6 +92,25 @@ class DownloadEngine:
                 return DownloadResult(job.job_id, False, "Download cancelled by user", self._files_seen)
             except Exception as exc:
                 error_text = str(exc)
+                if is_live_event_ended_error(error_text):
+                    self._log(clean_live_event_ended_error())
+                    return DownloadResult(
+                        job.job_id,
+                        False,
+                        clean_live_event_ended_error(),
+                        self._files_seen,
+                    )
+                if is_browser_cookie_extraction_error(error_text):
+                    browser_cookie_error = error_text
+                    self._log(self._browser_cookie_failure_log(auth_strategy))
+                    if self._has_browser_cookie_retry(auth_resolution, index):
+                        continue
+                    return DownloadResult(
+                        job.job_id,
+                        False,
+                        clean_browser_cookie_extraction_error(),
+                        self._files_seen,
+                    )
                 if is_authentication_error(error_text):
                     last_auth_error = error_text
                     self._log(self._auth_failure_log(auth_strategy))
@@ -109,6 +134,8 @@ class DownloadEngine:
                 False,
                 clean_authentication_error(self._auth_was_attempted(auth_resolution))
                 if last_auth_error
+                else clean_browser_cookie_extraction_error()
+                if browser_cookie_error
                 else "Download failed before yt-dlp could start.",
                 self._files_seen,
             )
@@ -288,13 +315,29 @@ class DownloadEngine:
             return "browser cookies appear expired, locked, or invalid."
         return "YouTube requested authentication, but no cookies are available."
 
+    def _browser_cookie_failure_log(self, auth_strategy: AuthStrategy) -> str:
+        if auth_strategy.is_browser:
+            return f"Browser cookie extraction failed for {auth_strategy.display_name}; trying fallback if available."
+        if auth_strategy.is_cookie_file:
+            return "cookies.txt could not be used; trying browser cookie fallback if available."
+        return "Browser cookie extraction failed."
+
     def _has_auth_retry(self, resolution: AuthResolution, index: int) -> bool:
         return any(strategy.attempted_auth for strategy in resolution.strategies[index + 1 :])
+
+    def _has_browser_cookie_retry(self, resolution: AuthResolution, index: int) -> bool:
+        return any(strategy.is_browser for strategy in resolution.strategies[index + 1 :])
 
     def _auth_was_attempted(self, resolution: AuthResolution) -> bool:
         return any(strategy.attempted_auth for strategy in resolution.strategies)
 
     def _clean_error_message(self, error_text: str) -> str:
+        if is_live_event_ended_error(error_text):
+            return clean_live_event_ended_error()
+        if is_browser_cookie_extraction_error(error_text):
+            return clean_browser_cookie_extraction_error()
         if is_authentication_error(error_text):
             return clean_authentication_error(True)
-        return error_text
+        cleaned = re.sub(r"https://github\.com/yt-dlp/yt-dlp/issues\S*", "", error_text)
+        cleaned = re.sub(r"(?i)please report this issue.*", "", cleaned)
+        return " ".join(cleaned.split()).strip() or "Download failed."
