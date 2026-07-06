@@ -1,0 +1,76 @@
+name: Build and Release Neural Extractor V3
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: "Release tag to publish, for example v3.0.1"
+        required: true
+        default: "v3.0.0"
+
+permissions:
+  contents: write
+
+jobs:
+  windows-exe:
+    name: Build Windows EXE
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: "pip"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install --upgrade --upgrade-strategy eager -e ".[dev,build]"
+
+      - name: Validate
+        shell: pwsh
+        run: |
+          python -m ruff check src tests main.py
+          python -m compileall -q src main.py
+          $env:PYTHONPATH = "$PWD\src"
+          python -m pytest tests -q
+
+      - name: Build EXE
+        run: python -m PyInstaller NeuralExtractorV3.spec --clean --noconfirm
+
+      - name: Rename and checksum
+        shell: pwsh
+        run: |
+          $tag = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ github.event.inputs.release_tag }}" } else { "${{ github.ref_name }}" }
+          $version = $tag.TrimStart("v")
+          $exe = "dist\NeuralExtractorV3.exe"
+          $versioned = "dist\NeuralExtractorV3-$version-windows-x64.exe"
+          Copy-Item $exe $versioned -Force
+          Get-FileHash $versioned -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash)  $(Split-Path $versioned -Leaf)" } |
+            Set-Content "$versioned.sha256"
+
+      - name: Upload workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NeuralExtractorV3-windows-x64
+          path: |
+            dist/NeuralExtractorV3*.exe
+            dist/NeuralExtractorV3*.sha256
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag || github.ref_name }}
+          name: Neural Extractor V3 ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.release_tag || github.ref_name }}
+          generate_release_notes: true
+          files: |
+            dist/NeuralExtractorV3*.exe
+            dist/NeuralExtractorV3*.sha256

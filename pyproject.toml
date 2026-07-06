@@ -1,0 +1,63 @@
+[project]
+name = "neural-extractor-v3"
+version = "3.0.0"
+description = "Professional YouTube video, audio, playlist, subtitle, and thumbnail extractor"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [
+    {name = "Neuralshield & 0xRootNull"}
+]
+keywords = ["youtube", "downloader", "video", "audio", "subtitles", "thumbnail"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: End Users/Desktop",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Multimedia :: Video",
+]
+dependencies = [
+    "yt-dlp>=2026.7.4",
+    "PyQt6>=6.11.0",
+    "pillow>=12.3.0",
+    "requests>=2.34.2",
+    "youtube-transcript-api>=1.2.4",
+]
+
+[project.optional-dependencies]
+build = [
+    "pyinstaller>=6.21.0",
+]
+dev = [
+    "pytest>=9.1.1",
+    "ruff>=0.15.20",
+    "mypy>=2.1.0",
+]
+
+[build-system]
+requires = ["setuptools>=83.0", "wheel>=0.47.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "N", "W", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
