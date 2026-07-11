@@ -1,16 +1,16 @@
 [project]
-name = "neural-extractor"
-version = "2.0.0"
-description = "A modern, user-friendly application for downloading YouTube videos, thumbnails, and subtitles"
+name = "neural-extractor-v3"
+version = "3.0.2"
+description = "Professional YouTube video, audio, playlist, subtitle, and thumbnail extractor"
 readme = "README.md"
 requires-python = ">=3.10"
 license = {text = "MIT"}
 authors = [
     {name = "Neuralshield & 0xRootNull"}
 ]
-keywords = ["youtube", "downloader", "video", "extractor"]
+keywords = ["youtube", "downloader", "video", "audio", "subtitles", "thumbnail"]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Intended Audience :: End Users/Desktop",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
@@ -21,13 +21,10 @@ classifiers = [
 ]
 dependencies = [
     "yt-dlp>=2026.7.4",
+    "PyQt6>=6.11.0",
     "pillow>=12.3.0",
     "requests>=2.34.2",
     "youtube-transcript-api>=1.2.4",
-    "PyQt6>=6.11.0",
-    "curl-cffi>=0.15.0",
-    "cffi>=2.0.0",
-    "rich>=15.0.0",
 ]
 
 [project.optional-dependencies]
@@ -35,21 +32,17 @@ build = [
     "pyinstaller>=6.21.0",
 ]
 dev = [
+    "pytest>=9.1.1",
     "ruff>=0.15.20",
     "mypy>=2.1.0",
-    "pytest>=9.1.1",
-    "pytest-cov>=7.1.0",
 ]
 
 [build-system]
 requires = ["setuptools>=83.0", "wheel>=0.47.0"]
 build-backend = "setuptools.build_meta"
 
-[tool.setuptools]
-packages = ["neural_extractor"]
-
-[tool.setuptools.package-dir]
-"" = "src"
+[tool.setuptools.packages.find]
+where = ["src"]
 
 [tool.ruff]
 line-length = 100
@@ -63,16 +56,8 @@ ignore = ["E501"]
 quote-style = "double"
 indent-style = "space"
 
-[tool.mypy]
-python_version = "3.11"
-warn_return_any = true
-warn_unused_configs = true
-disallow_untyped_defs = false
-ignore_missing_imports = true
-
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 python_files = ["test_*.py"]
 python_classes = ["Test*"]
 python_functions = ["test_*"]
-addopts = "-v --cov=src --cov-report=term-missing --cov-report=html"
