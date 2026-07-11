@@ -1,6 +1,7 @@
 from neural_extractor_v3.models import PlaylistMode
 from neural_extractor_v3.utils import (
     extract_video_id,
+    is_youtube_mix_url,
     is_youtube_url,
     normalize_single_video_url,
     sanitize_filename,
@@ -26,6 +27,14 @@ def test_playlist_decision_modes():
     assert should_download_playlist(url, PlaylistMode.AUTO.value)
     assert should_download_playlist(url, PlaylistMode.FULL.value)
     assert not should_download_playlist(url, PlaylistMode.SINGLE.value)
+
+
+def test_mix_url_is_not_treated_as_playlist():
+    url = "https://www.youtube.com/watch?v=abc123&list=RDabc123&start_radio=1"
+    assert is_youtube_mix_url(url)
+    assert normalize_single_video_url(url) == "https://www.youtube.com/watch?v=abc123"
+    assert not should_download_playlist(url, PlaylistMode.AUTO.value)
+    assert not should_download_playlist(url, PlaylistMode.FULL.value)
 
 
 def test_sanitize_filename_removes_windows_reserved_chars():

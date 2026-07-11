@@ -27,7 +27,7 @@ def test_cookie_file_is_priority_when_valid(tmp_path):
     browser = BrowserCookieSource("chrome", "Chrome", tmp_path / "Chrome")
     resolution = resolve_auth_strategies(cookie_file, browser_detector=lambda: [browser])
 
-    assert [strategy.kind for strategy in resolution.strategies] == ["cookies_file", "browser"]
+    assert [strategy.kind for strategy in resolution.strategies] == ["cookies_file", "browser", "none"]
     assert resolution.strategies[0].ydl_options["cookiefile"] == str(cookie_file)
     assert resolution.strategies[1].ydl_options["cookiesfrombrowser"] == ("chrome",)
 
@@ -36,7 +36,7 @@ def test_browser_cookies_are_used_when_cookie_file_missing(tmp_path):
     browser = BrowserCookieSource("edge", "Edge", tmp_path / "Edge")
     resolution = resolve_auth_strategies(None, browser_detector=lambda: [browser])
 
-    assert [strategy.kind for strategy in resolution.strategies] == ["browser"]
+    assert [strategy.kind for strategy in resolution.strategies] == ["browser", "none"]
     assert resolution.strategies[0].ydl_options["cookiesfrombrowser"] == ("edge",)
     assert any("cookies.txt not loaded" in message for message in resolution.messages)
 
@@ -46,7 +46,7 @@ def test_invalid_cookie_file_falls_back_to_browser(tmp_path):
     browser = BrowserCookieSource("firefox", "Firefox", tmp_path / "Firefox")
     resolution = resolve_auth_strategies(cookie_file, browser_detector=lambda: [browser])
 
-    assert [strategy.kind for strategy in resolution.strategies] == ["browser"]
+    assert [strategy.kind for strategy in resolution.strategies] == ["browser", "none"]
     assert "invalid" in resolution.messages[0]
 
 
@@ -88,7 +88,9 @@ def test_browser_fallback_order_and_multiple_strategies(tmp_path):
 
     resolution = resolve_auth_strategies(None, browser_detector=lambda: sources)
 
-    assert tuple(strategy.ydl_options["cookiesfrombrowser"][0] for strategy in resolution.strategies) == (
+    browser_strategies = [strategy for strategy in resolution.strategies if strategy.is_browser]
+
+    assert tuple(strategy.ydl_options["cookiesfrombrowser"][0] for strategy in browser_strategies) == (
         "chrome",
         "edge",
         "brave",
@@ -107,6 +109,13 @@ def test_browser_cookie_extraction_error_is_not_auth_error():
     )
 
 
+def test_failed_to_load_cookies_is_browser_cookie_extraction_error():
+    error = "ERROR: failed to load cookies"
+
+    assert is_browser_cookie_extraction_error(error)
+    assert not is_authentication_error(error)
+
+
 def test_live_event_ended_is_not_auth_error():
     error = "ERROR: [youtube] abc123: This live event has ended."
 
@@ -115,3 +124,9 @@ def test_live_event_ended_is_not_auth_error():
     assert clean_live_event_ended_error() == (
         "This live event has ended and is not currently downloadable."
     )
+
+
+def test_youtube_n_challenge_failure_is_not_auth_error():
+    error = "WARNING: [youtube] n challenge solving failed. Only images are available."
+
+    assert not is_authentication_error(error)

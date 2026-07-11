@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -24,6 +25,7 @@ from PyQt6.QtWidgets import (
     QMainWindow,
     QMessageBox,
     QProgressBar,
+    QProgressDialog,
     QPushButton,
     QScrollArea,
     QSizePolicy,
@@ -38,13 +40,29 @@ from PyQt6.QtWidgets import (
 from neural_extractor_v3.config import (
     APP_NAME,
     AUDIO_BITRATES,
+    BUILD_LABEL,
     QUALITY_PRESETS,
     SUBTITLE_LANGUAGES,
     VERSION,
     assets_dir,
 )
+from neural_extractor_v3.core.diagnostics import run_support_diagnostics
 from neural_extractor_v3.core.downloader import DownloadEngine
-from neural_extractor_v3.core.updater import UpdateChecker, UpdateInfo
+from neural_extractor_v3.core.js_runtime import (
+    MISSING_JS_RUNTIME_MESSAGE,
+    ensure_youtube_js_runtime,
+)
+from neural_extractor_v3.core.update_installer import (
+    PreparedUpdate,
+    assess_installation_capability,
+    prepare_and_launch_update,
+)
+from neural_extractor_v3.core.updater import (
+    UpdateChecker,
+    UpdateDownloader,
+    UpdateError,
+    UpdateInfo,
+)
 from neural_extractor_v3.models import (
     DownloadJob,
     DownloadOptions,
@@ -162,7 +180,7 @@ class UpdateCheckWorker(QThread):
 
     update_available = pyqtSignal(object)
     up_to_date = pyqtSignal()
-    error = pyqtSignal(str)
+    error = pyqtSignal(str, str)
 
     def __init__(self, current_version: str) -> None:
         super().__init__()
@@ -171,14 +189,92 @@ class UpdateCheckWorker(QThread):
     def run(self) -> None:
         try:
             info = UpdateChecker().check(self.current_version)
-        except Exception as exc:
-            self.error.emit(str(exc))
+        except UpdateError as exc:
+            self.error.emit(exc.code, exc.user_message)
+            return
+        except Exception:
+            self.error.emit(
+                "network_failure",
+                "Could not check the official GitHub release. Check your connection and try again.",
+            )
             return
 
         if info:
             self.update_available.emit(info)
         else:
             self.up_to_date.emit()
+
+
+class UpdateInstallWorker(QThread):
+    """Download, verify, and launch the detached updater without blocking Qt."""
+
+    progress = pyqtSignal(int, str)
+    prepared = pyqtSignal(object)
+    error = pyqtSignal(str, str)
+    cancelled = pyqtSignal()
+
+    def __init__(self, info: UpdateInfo) -> None:
+        super().__init__()
+        self.info = info
+        self.cancel_requested = False
+
+    def request_cancel(self) -> None:
+        self.cancel_requested = True
+        self.requestInterruption()
+
+    def _cancelled(self) -> bool:
+        return self.cancel_requested or self.isInterruptionRequested()
+
+    def run(self) -> None:
+        try:
+            staged = UpdateDownloader().stage(
+                self.info,
+                progress_callback=self.progress.emit,
+                cancel_callback=self._cancelled,
+            )
+            if self._cancelled():
+                raise UpdateError("cancelled", "Update download cancelled.")
+            prepared = prepare_and_launch_update(
+                self.info,
+                staged,
+                parent_pid=os.getpid(),
+                progress_callback=self.progress.emit,
+            )
+        except UpdateError as exc:
+            if exc.code == "cancelled":
+                self.cancelled.emit()
+            else:
+                self.error.emit(exc.code, exc.user_message)
+            return
+        except Exception:
+            self.error.emit(
+                "installation_failure",
+                "The update could not be prepared safely. The current application was not changed.",
+            )
+            return
+        self.prepared.emit(prepared)
+
+
+class DiagnosticsWorker(QThread):
+    """Run support diagnostics without blocking the Qt event loop."""
+
+    line = pyqtSignal(str)
+    error = pyqtSignal(str)
+
+    def __init__(self, options: DownloadOptions, probe_url: str | None) -> None:
+        super().__init__()
+        self.options = options
+        self.probe_url = probe_url
+
+    def run(self) -> None:
+        try:
+            report = run_support_diagnostics(self.options, self.probe_url)
+        except Exception as exc:
+            self.error.emit(str(exc))
+            return
+
+        for line in report.lines():
+            self.line.emit(line)
 
 
 class MainWindow(QMainWindow):
@@ -192,7 +288,12 @@ class MainWindow(QMainWindow):
         self.progress_by_job_id: dict[str, QProgressBar] = {}
         self.worker: DownloadWorker | None = None
         self.update_worker: UpdateCheckWorker | None = None
+        self.update_install_worker: UpdateInstallWorker | None = None
+        self.update_progress_dialog: QProgressDialog | None = None
+        self.update_install_outcome = ""
+        self.diagnostics_worker: DiagnosticsWorker | None = None
         self.update_check_silent = False
+        self.js_runtime_status = ensure_youtube_js_runtime()
 
         self.output_dir = Path(
             str(self.settings.value("output_dir", str(Path.home() / "Downloads")))
@@ -207,6 +308,10 @@ class MainWindow(QMainWindow):
         self._build_ui()
         self._update_mode_controls()
         self._refresh_queue_summary()
+        self.log(f"{APP_NAME} {VERSION} build {BUILD_LABEL} ready")
+        self.log(self.js_runtime_status.diagnostic)
+        if not self.js_runtime_status.found:
+            QTimer.singleShot(500, self._show_js_runtime_warning)
         self.statusBar().showMessage("Ready")
         QTimer.singleShot(1800, lambda: self.check_for_updates(silent=True))
 
@@ -939,6 +1044,10 @@ class MainWindow(QMainWindow):
         self.update_button = QPushButton("Check Updates")
         self.update_button.setToolTip("Check the latest GitHub Release for a newer V3 build")
         self.update_button.clicked.connect(lambda: self.check_for_updates(silent=False))
+        self.diagnostics_button = QPushButton("Diagnostics")
+        self.diagnostics_button.setToolTip("Run a safe environment report for support")
+        self.diagnostics_button.clicked.connect(self.run_diagnostics)
+        top.addWidget(self.diagnostics_button)
         top.addWidget(self.update_button)
         top.addWidget(open_folder)
         layout.addLayout(top)
@@ -1130,6 +1239,9 @@ class MainWindow(QMainWindow):
     def start_queue(self) -> None:
         if self.worker and self.worker.isRunning():
             return
+        if self.diagnostics_worker and self.diagnostics_worker.isRunning():
+            QMessageBox.information(self, APP_NAME, "Wait for diagnostics to finish before starting downloads.")
+            return
         if not self.jobs and not self.add_to_queue():
             return
 
@@ -1162,6 +1274,36 @@ class MainWindow(QMainWindow):
         self.table.setRowCount(0)
         self.log_box.clear()
         self._refresh_queue_summary()
+
+    def run_diagnostics(self) -> None:
+        if self.worker and self.worker.isRunning():
+            QMessageBox.information(self, APP_NAME, "Stop the queue before running diagnostics.")
+            return
+        if self.diagnostics_worker and self.diagnostics_worker.isRunning():
+            self.statusBar().showMessage("Diagnostics already running")
+            return
+
+        self.log("Starting environment diagnostics")
+        self.statusBar().showMessage("Running diagnostics")
+        if hasattr(self, "diagnostics_button"):
+            self.diagnostics_button.setEnabled(False)
+
+        self.diagnostics_worker = DiagnosticsWorker(
+            self._collect_options(),
+            self._diagnostic_probe_url(),
+        )
+        self.diagnostics_worker.line.connect(self.log)
+        self.diagnostics_worker.error.connect(self.on_diagnostics_error)
+        self.diagnostics_worker.finished.connect(self.on_diagnostics_finished)
+        self.diagnostics_worker.start()
+
+    def _diagnostic_probe_url(self) -> str | None:
+        for url in split_urls(self.url_edit.toPlainText()):
+            if is_youtube_url(url):
+                return url
+        if self.jobs:
+            return self.jobs[0].url
+        return None
         self.statusBar().showMessage("Queue cleared")
 
     def browse_output(self) -> None:
@@ -1198,6 +1340,10 @@ class MainWindow(QMainWindow):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.output_dir)))
 
     def check_for_updates(self, silent: bool = False) -> None:
+        if self.update_install_worker and self.update_install_worker.isRunning():
+            if not silent:
+                self.statusBar().showMessage("An update installation is already in progress")
+            return
         if self.update_worker and self.update_worker.isRunning():
             if not silent:
                 self.statusBar().showMessage("Update check already running")
@@ -1221,29 +1367,155 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(f"Update available: {info.tag_name}")
         self.log(f"Update available: {info.tag_name}")
 
-        target_url = info.download_url or info.html_url
-        body = info.body.strip()
+        capability = assess_installation_capability(info.manifest)
+        body = " ".join(info.body.split())
         if len(body) > 650:
             body = body[:650].rstrip() + "..."
+        release_name = " ".join(info.name.split())[:160] or info.tag_name
+        size_mb = info.download_size / (1024 * 1024)
 
         message = (
-            f"{info.name} is available.\n\n"
+            f"{release_name} is available.\n\n"
             f"Current version: {VERSION}\n"
-            f"Latest version: {info.version}\n\n"
-            "Open the GitHub download page now?"
+            f"Latest version: {info.version}\n"
+            f"Download size: {size_mb:.1f} MB\n\n"
         )
         if body:
-            message += f"\n\nRelease notes:\n{body}"
+            message += f"Release notes:\n{body}\n\n"
 
-        reply = QMessageBox.question(
-            self,
-            "Update Available",
-            message,
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-            QMessageBox.StandardButton.Yes,
-        )
-        if reply == QMessageBox.StandardButton.Yes and target_url:
-            QDesktopServices.openUrl(QUrl(target_url))
+        dialog = QMessageBox(self)
+        dialog.setWindowTitle("Update Available")
+        dialog.setIcon(QMessageBox.Icon.Information)
+        if capability.available:
+            message += (
+                "The package will be downloaded and verified before installation. "
+                "Neural Extractor will restart after you confirm this action."
+            )
+            install_button = dialog.addButton(
+                "Download and Install",
+                QMessageBox.ButtonRole.AcceptRole,
+            )
+            manual_button = None
+        else:
+            message += (
+                "Automatic installation is unavailable on this copy.\n\n"
+                f"Reason: {capability.reason}\n\n"
+                "You can open the verified release download page and install it manually."
+            )
+            install_button = None
+            manual_button = dialog.addButton(
+                "Open Download Page",
+                QMessageBox.ButtonRole.ActionRole,
+            )
+        dialog.addButton("Later", QMessageBox.ButtonRole.RejectRole)
+        dialog.setText(message)
+        dialog.exec()
+
+        clicked = dialog.clickedButton()
+        if install_button is not None and clicked is install_button:
+            self.start_update_install(info)
+        elif manual_button is not None and clicked is manual_button:
+            QDesktopServices.openUrl(QUrl(info.html_url))
+
+    def start_update_install(self, info: UpdateInfo) -> None:
+        if self.update_install_worker and self.update_install_worker.isRunning():
+            return
+        if self.worker and self.worker.isRunning():
+            QMessageBox.information(
+                self,
+                APP_NAME,
+                "Stop the download queue before installing an update.",
+            )
+            return
+        if self.diagnostics_worker and self.diagnostics_worker.isRunning():
+            QMessageBox.information(
+                self,
+                APP_NAME,
+                "Wait for diagnostics to finish before installing an update.",
+            )
+            return
+        self.log(f"Starting verified update download: {info.tag_name}")
+        self.statusBar().showMessage("Downloading update")
+        self._set_update_install_state(True)
+
+        dialog = QProgressDialog("Downloading update", "Cancel", 0, 100, self)
+        dialog.setWindowTitle("Neural Extractor Update")
+        dialog.setWindowModality(Qt.WindowModality.WindowModal)
+        dialog.setMinimumDuration(0)
+        dialog.setAutoClose(False)
+        dialog.setAutoReset(False)
+        dialog.setValue(0)
+        self.update_progress_dialog = dialog
+
+        worker = UpdateInstallWorker(info)
+        self.update_install_worker = worker
+        self.update_install_outcome = "running"
+        worker.progress.connect(self.on_update_install_progress)
+        worker.prepared.connect(self.on_update_install_prepared)
+        worker.error.connect(self.on_update_install_error)
+        worker.cancelled.connect(self.on_update_install_cancelled)
+        worker.finished.connect(self.on_update_install_finished)
+        dialog.canceled.connect(self.cancel_update_install)
+        worker.start()
+        dialog.show()
+
+    def cancel_update_install(self) -> None:
+        if not self.update_install_worker or not self.update_install_worker.isRunning():
+            return
+        if self.update_progress_dialog:
+            self.update_progress_dialog.setLabelText("Cancelling update download...")
+        self.update_install_worker.request_cancel()
+
+    def on_update_install_progress(self, percent: int, message: str) -> None:
+        if self.update_progress_dialog:
+            self.update_progress_dialog.setValue(percent)
+            self.update_progress_dialog.setLabelText(message)
+        self.statusBar().showMessage(message)
+
+    def on_update_install_prepared(self, prepared: PreparedUpdate) -> None:
+        self.update_install_outcome = "restart"
+        self.log(f"Verified update prepared; helper process {prepared.helper_pid} is ready")
+        self.statusBar().showMessage("Update verified. Neural Extractor will restart now.")
+        if self.update_progress_dialog:
+            self.update_progress_dialog.setCancelButton(None)
+            self.update_progress_dialog.setValue(100)
+            self.update_progress_dialog.setLabelText(
+                "Update verified. Neural Extractor will restart now."
+            )
+        QTimer.singleShot(900, self._quit_for_update)
+
+    def on_update_install_error(self, code: str, message: str) -> None:
+        self.update_install_outcome = "error"
+        self.log(f"Update failed ({code}): {message}")
+        self.statusBar().showMessage("Update failed; the current application was not replaced")
+        if self.update_progress_dialog:
+            self.update_progress_dialog.close()
+            self.update_progress_dialog = None
+        QMessageBox.warning(self, "Update Failed", message)
+
+    def on_update_install_cancelled(self) -> None:
+        self.update_install_outcome = "cancelled"
+        self.log("Update download cancelled; the current application was not changed")
+        self.statusBar().showMessage("Update cancelled")
+        if self.update_progress_dialog:
+            self.update_progress_dialog.close()
+            self.update_progress_dialog = None
+
+    def on_update_install_finished(self) -> None:
+        self.update_install_worker = None
+        if self.update_install_outcome != "restart":
+            self._set_update_install_state(False)
+
+    def _quit_for_update(self) -> None:
+        application = QApplication.instance()
+        if application:
+            application.quit()
+
+    def _set_update_install_state(self, running: bool) -> None:
+        self.start_button.setEnabled(not running)
+        self.clear_button.setEnabled(not running)
+        self.update_button.setEnabled(not running)
+        self.diagnostics_button.setEnabled(not running)
 
     def on_update_up_to_date(self) -> None:
         if self.update_check_silent:
@@ -1252,17 +1524,33 @@ class MainWindow(QMainWindow):
         self.log("No update available")
         QMessageBox.information(self, APP_NAME, "You are running the latest version.")
 
-    def on_update_error(self, error: str) -> None:
+    def on_update_error(self, code: str, error: str) -> None:
         if self.update_check_silent:
             return
         self.statusBar().showMessage("Update check failed")
-        self.log(f"Update check failed: {error}")
+        self.log(f"Update check failed ({code}): {error}")
         QMessageBox.warning(self, APP_NAME, f"Could not check for updates:\n{error}")
 
     def on_update_check_finished(self) -> None:
-        if hasattr(self, "update_button"):
+        if hasattr(self, "update_button") and not (
+            self.update_install_worker and self.update_install_worker.isRunning()
+        ):
             self.update_button.setEnabled(True)
         self.update_worker = None
+
+    def on_diagnostics_error(self, error: str) -> None:
+        self.log(f"Diagnostics failed: {error}")
+        self.statusBar().showMessage("Diagnostics failed")
+
+    def on_diagnostics_finished(self) -> None:
+        self.log("Diagnostics finished")
+        self.statusBar().showMessage("Diagnostics finished")
+        if hasattr(self, "diagnostics_button"):
+            self.diagnostics_button.setEnabled(True)
+        self.diagnostics_worker = None
+
+    def _show_js_runtime_warning(self) -> None:
+        QMessageBox.warning(self, APP_NAME, MISSING_JS_RUNTIME_MESSAGE)
 
     def _collect_options(self) -> DownloadOptions:
         mode = self._current_mode()
@@ -1364,6 +1652,8 @@ class MainWindow(QMainWindow):
         self.start_button.setEnabled(not running)
         self.clear_button.setEnabled(not running)
         self.stop_button.setEnabled(running)
+        if hasattr(self, "diagnostics_button"):
+            self.diagnostics_button.setEnabled(not running)
         for widget in self._run_locked_widgets():
             widget.setEnabled(not running)
         if not running:
@@ -1374,6 +1664,23 @@ class MainWindow(QMainWindow):
         self.log_box.append(f"[{datetime.now():%H:%M:%S}] {message}")
 
     def closeEvent(self, event) -> None:  # noqa: N802
+        if self.update_install_worker and self.update_install_worker.isRunning():
+            reply = QMessageBox.question(
+                self,
+                APP_NAME,
+                "An update is being downloaded and verified. Cancel it and close?",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+            if reply != QMessageBox.StandardButton.Yes:
+                event.ignore()
+                return
+            self.update_install_worker.request_cancel()
+            self.update_install_worker.wait(5000)
+            if self.update_install_worker and self.update_install_worker.isRunning():
+                self.statusBar().showMessage("Waiting for the update download to cancel safely")
+                event.ignore()
+                return
         if self.worker and self.worker.isRunning():
             reply = QMessageBox.question(
                 self,

@@ -206,7 +206,16 @@ def resolve_auth_strategies(
     else:
         messages.append("browser cookies unavailable: no Chrome, Edge, Firefox, or Brave profile found")
 
-    if not strategies:
+    if strategies:
+        strategies.append(
+            AuthStrategy(
+                kind="none",
+                display_name="no authentication",
+                attempted_auth=False,
+                ydl_options={},
+            )
+        )
+    else:
         strategies.append(
             AuthStrategy(
                 kind="none",
@@ -254,6 +263,9 @@ def is_browser_cookie_extraction_error(error_text: str) -> bool:
         "secretstorage",
         "browser cookies",
         "cookies from browser",
+        "failed to load cookies",
+        "could not load cookies",
+        "failed loading cookies",
     )
     return any(pattern in lowered for pattern in patterns)
 

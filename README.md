@@ -75,29 +75,32 @@ dist\NeuralExtractorV3.exe
 ## GitHub Release Pipeline
 
 V3 includes a GitHub Actions workflow at `.github/workflows/build-release.yml`.
-Use this folder as the repository root, then publish a release by pushing a tag:
-
-```powershell
-git tag v3.0.1
-git push origin v3.0.1
-```
-
 The workflow will:
 
+- require a numeric release version matching both source version files,
 - install Python dependencies,
 - run Ruff, compileall, and tests,
-- build `NeuralExtractorV3.exe` with PyInstaller,
-- create a versioned Windows asset,
-- generate a SHA256 checksum,
-- publish both files to the GitHub Release.
+- build the Windows x64 `NeuralExtractorV3.exe` with PyInstaller,
+- create the exact versioned Windows asset,
+- generate its SHA-256 checksum and strict JSON manifest,
+- publish the EXEs, checksum, and manifest to the GitHub Release.
 
-You can also run the workflow manually with `workflow_dispatch` and provide a release tag.
+It runs for tags matching `v*.*.*` and supports `workflow_dispatch` with an
+explicit version. The manual action appears only after the workflow is on the
+default branch. See [docs/UPDATE_ARCHITECTURE.md](docs/UPDATE_ARCHITECTURE.md)
+for the GitHub Desktop and GitHub web release procedure.
 
 ## App Updates
 
-On startup, the desktop app silently checks the latest GitHub Release. The `Check Updates`
-button runs the same check manually. When a newer release exists, V3 offers to open the
-download URL for the newest `.exe` asset.
+On startup, the desktop app silently checks the latest stable GitHub Release. The
+`Check Updates` button runs the same check manually. Packaged version 3.0.2 and
+later can download the exact versioned EXE, validate its strict manifest and
+SHA-256, install through a detached helper, restart, confirm startup, and roll
+back to the verified backup when startup fails. Installation always requires a
+clear user action.
+
+Version 3.0.1 must be upgraded to 3.0.2 manually once. Source-mode or non-writable
+installs retain the manual release-page fallback.
 
 The default release repository is:
 
@@ -105,8 +108,8 @@ The default release repository is:
 AegisAI-Dev/NeuralExtractor
 ```
 
-To use another repo, change `GITHUB_REPO` in `src/neural_extractor_v3/config.py`, or set
-the `NEURAL_EXTRACTOR_GITHUB_REPO` environment variable before launching the app.
+The automatic update source is intentionally pinned and is not configurable at
+runtime. The EXE is SHA-256 verified but is not Authenticode publisher-signed.
 
 ## Notes
 

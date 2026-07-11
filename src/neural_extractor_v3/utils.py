@@ -76,11 +76,20 @@ def has_playlist_marker(url: str) -> bool:
     return bool(list_id or parsed.path.startswith("/playlist"))
 
 
+def is_youtube_mix_url(url: str) -> bool:
+    parsed = urlparse(normalize_user_url(url))
+    query = parse_qs(parsed.query)
+    list_id = query.get("list", [""])[0] or ""
+    return list_id.upper().startswith("RD") or query.get("start_radio", [""])[0] == "1"
+
+
 def should_download_playlist(url: str, playlist_mode: str) -> bool:
     if playlist_mode == "single":
         return False
+    if is_youtube_mix_url(url):
+        return False
     if playlist_mode == "full":
-        return True
+        return has_playlist_marker(url)
     return has_playlist_marker(url)
 
 

@@ -7,10 +7,11 @@ import sys
 from pathlib import Path
 
 APP_NAME = "Neural Extractor V3"
-VERSION = "3.0.0"
+VERSION = "3.0.2"
+BUILD_LABEL = "http403-retry-bootstrap-auto-updater"
 WINDOW_TITLE = f"{APP_NAME} {VERSION}"
 
-GITHUB_REPO = os.environ.get("NEURAL_EXTRACTOR_GITHUB_REPO", "AegisAI-Dev/NeuralExtractor")
+GITHUB_REPO = "AegisAI-Dev/NeuralExtractor"
 GITHUB_RELEASES_URL = f"https://github.com/{GITHUB_REPO}/releases"
 GITHUB_LATEST_RELEASE_API = f"https://api.github.com/repos/{GITHUB_REPO}/releases/latest"
 UPDATE_CHECK_TIMEOUT_SECONDS = 8
@@ -24,6 +25,10 @@ QUALITY_PRESETS: dict[str, int | None] = {
     "480p": 480,
     "360p": 360,
 }
+
+YTDLP_SOCKET_TIMEOUT_SECONDS = 30
+YOUTUBE_EJS_REMOTE_COMPONENT = "ejs:github"
+YOUTUBE_REMOTE_COMPONENTS = [YOUTUBE_EJS_REMOTE_COMPONENT]
 
 AUDIO_BITRATES = ["320", "256", "192", "128"]
 
@@ -51,6 +56,7 @@ YOUTUBE_HOSTS = {
 }
 
 THROTTLE_SAFE_OPTIONS = {
+    "socket_timeout": YTDLP_SOCKET_TIMEOUT_SECONDS,
     "sleep_interval": 1,
     "max_sleep_interval": 5,
     "sleep_interval_requests": 1,
@@ -78,6 +84,12 @@ def bin_dir() -> Path:
 
 
 def app_data_dir() -> Path:
-    data_dir = Path.home() / "NeuralExtractorV3"
+    if sys.platform == "win32":
+        local_app_data = Path(
+            os.environ.get("LOCALAPPDATA", Path.home() / "AppData" / "Local")
+        )
+        data_dir = local_app_data / "NeuralExtractorV3"
+    else:
+        data_dir = Path.home() / ".local" / "share" / "NeuralExtractorV3"
     data_dir.mkdir(parents=True, exist_ok=True)
     return data_dir
