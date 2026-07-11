@@ -1,205 +1,118 @@
-# Neural Extractor v2.0.0
+# Neural Extractor V3
 
-Neural Extractor is a modern, user-friendly application for Windows, Linux, and Mac that lets you easily download YouTube videos, thumbnails, and subtitles (SRT, WebVTT). The app supports single videos, playlists, batches, and Mixes, and offers a professional, colorful interface with a clear logo and icon.
+Neural Extractor V3 is a clean rebuild of the app as a separate professional edition. It downloads single videos, full playlists, YouTube Mixes, batches of links, MP3/M4A audio, SRT subtitles, thumbnails, and optional metadata sidecars.
 
-## Prefer a standalone .exe?
-This repository contains the open-source Python code for maximum transparency and cross-platform support. 
+## What V3 Includes
 
-If you are on Windows and prefer a ready-to-use `.exe` installer without having to install Python, you can download the official compiled version directly from our website:
-👉 **[Download Neural Extractor (.exe) from Neuralshield](https://neuralshield.avalax.art)**
+- Video downloads as MP4 with selectable quality up to best available.
+- Audio downloads as MP3 or M4A with bitrate presets.
+- Full playlist and Mix support, plus current-video-only mode.
+- Batch queue: paste one URL per line and process them in order.
+- Subtitles saved as `.srt`, including auto-generated subtitles when needed.
+- Thumbnail download as JPG, with optional embedding for audio files.
+- Optional `cookies.txt` support for age-restricted or session-sensitive videos.
+- Optional metadata JSON output.
+- CLI mode for scripted downloads.
+- PyQt6 desktop interface with progress, queue status, and logs.
 
-## Installation from Source (Python)
-1. **Install Python 3.11+**
-   - [Download Python](https://www.python.org/downloads/)
-2. **Open a terminal in this folder**
-3. **Install the required packages:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-   *(Optional)* You can also use `uv` for faster installation, as an `uv.lock` file is provided:
-   ```bash
-   uv sync
-   ```
-4. **Start the app:**
-   ```bash
-   python main.py
-   ```
+## Start
 
-## Development & Testing
+From this folder:
 
-Neural Extractor v2.0.0 uses a highly modular structure (`src/neural_extractor/`) with strict type hinting, automated linting, and comprehensive test coverage.
-
-- **Run tests locally:** `pytest`
-- **Run linting:** `ruff check .`
-- **Run type checking:** `mypy src/`
-
-## Features
-- Download YouTube videos in various qualities
-- Download thumbnails (YouTube images) automatically
-- Download subtitles in WebVTT and SRT formats, with language selection
-  - Native/auto subtitle download via yt-dlp
-  - Fallback to youtube-transcript-api for AI-translated subtitles
-  - Automatic ASR (auto-generated) translation support
-- **Dutch subtitle workflow with three-level fallback:**
-  - Level 1: Native NL-track from YouTube (yt-dlp)
-  - Level 2: YouTube-Transcript-API with auto-translation to Dutch
-  - Level 3: Local Whisper transcription (requires Whisper installation)
-  - Real-time status updates in GUI
-  - Async processing to prevent GUI blocking
-- Batch download: multiple links at once
-- Playlist and Mix support
-- Modern, colorful GUI (navy, teal, orange)
-- Professional icon and logo
-- Log and progress bar
-
-## Visual Effects
-The GUI features a pulsing neon glow effect on the main headers, implemented using `QGraphicsDropShadowEffect` and `QPropertyAnimation`. The glow tweens its blur radius seamlessly to create a subtle breathing effect. This can be toggled on/off via the "Animations" checkbox in the options panel.
-
-## Subtitles & Translations
-The app includes a robust subtitle workflow that guarantees an `.srt` or `.vtt` file in your preferred language (with dedicated handling for Dutch):
-
-### GUI Usage
-- Check "Download subtitles (WebVTT & SRT)"
-- Select desired language from the dropdown (or use "Altijd NL-ondertitels" for Dutch)
-- Subtitles are saved alongside the video file
-
-### CLI Usage
-```bash
-python main.py --url "https://youtube.com/watch?v=VIDEO_ID" --subs nl
-```
-
-Subtitle modes:
-- `nl` (default): Try native NL-track, then API, then Whisper
-- `nl_auto`: Force API fallback
-- `nl_whisper`: Force local Whisper transcription
-- `none`: Disable subtitles
-
-### Requirements for Whisper Fallback
-- Install Whisper: `pip install openai-whisper`
-- FFmpeg must be installed and in PATH
-- First run downloads the Whisper model (~150MB for base model)
-
-## Icons & Platforms
-
-| Platform | Icon file | Shown in title bar | Shown in taskbar/dock |
-|---|---|---|---|
-| **Windows 11** | `assets/NeuralExtractoricon.ico` (multi-size 16–512 px) | ✅ | ✅ (script + .exe) |
-| **macOS Sonoma** | `assets/NeuralExtractorIcon.png` (512 × 512, transparent) | ✅ | ✅ |
-| **Ubuntu 24.04** | `assets/NeuralExtractorIcon.png` | ✅ | ✅ |
-
-### How it works
-
-**PyQt6 GUI (v2 – default)** – `src/neural_extractor/gui/main_window_v2.py`
-```python
-# set_app_icon() called in __init__:
-icon = QIcon("assets/NeuralExtractoricon.ico")   # Windows
-icon = QIcon("assets/NeuralExtractorIcon.png")   # macOS / Linux
-self.setWindowIcon(icon)   # title bar
-self.app.setWindowIcon(icon)  # dock / taskbar
-
-# Windows taskbar fix (prevents grouping under python.exe):
-import ctypes
-ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(
-    "Neuralshield.NeuralExtractor.v2"
-)
-```
-
-**Tkinter GUI (v1 – fallback)** – `src/neural_extractor/gui/main_window.py`
-```python
-# Windows
-self.iconbitmap(default="assets/NeuralExtractoricon.ico")
-
-# macOS / Linux
-img = Image.open("assets/NeuralExtractorIcon.png")
-self.iconphoto(True, ImageTk.PhotoImage(img))
-```
-
-### High-DPI & dark-mode notes
-- PyQt6 has **built-in high-DPI support** (no manual attribute flags needed on Qt 6).
-- The `.ico` file contains sizes from **16 px to 512 px** so Windows auto-selects the right size at any DPI scale (100 %–200 %+).
-- The PNG has a **transparent background** so it composites correctly on any dock/panel colour.
-
-## Build & Distribution (PyInstaller)
-
-### GitHub Release auto-update
-The PyQt6 app checks the latest GitHub Release from `GITHUB_REPO` in
-`src/neural_extractor/config.py`. Windows users running the bundled `.exe` are
-offered an update when the latest release tag is higher than the bundled app
-version and the release contains a `.exe` asset.
-
-To publish an update:
-1. Bump the same version in `pyproject.toml`, `src/neural_extractor/config.py`
-   and `src/neural_extractor/__init__.py`.
-2. Commit and push the change.
-3. Create and push a matching tag, for example `v2.0.1`, or run the
-   **Build and Publish Windows EXE** workflow manually with that tag.
-
-The workflow builds `dist/NeuralExtractor.exe`, uploads it as a workflow
-artifact, and publishes it to the GitHub Release so installed Windows EXEs can
-download it automatically on startup.
-
-### Quick CLI build (Windows)
 ```powershell
-pyinstaller --onefile --windowed `
-    --name NeuralExtractor `
-    --icon assets/NeuralExtractoricon.ico `
-    --add-data "assets/NeuralExtractoricon.ico;assets" `
-    --add-data "assets/NeuralExtractorIcon.png;assets" `
-    --add-data "assets/background.png;assets" `
-    --add-data "assets/backgroundrightpanel.png;assets" `
-    main.py
+python -m pip install -r requirements.txt
+$env:PYTHONPATH = "$PWD\src"
+python main.py
 ```
 
-### Quick CLI build (macOS / Linux)
-```bash
-pyinstaller --onefile --windowed \
-    --name NeuralExtractor \
-    --icon assets/NeuralExtractorIcon.png \
-    --add-data "assets/NeuralExtractorIcon.png:assets" \
-    --add-data "assets/background.png:assets" \
-    --add-data "assets/backgroundrightpanel.png:assets" \
-    main.py
-```
-> **Note:** On macOS, PyInstaller automatically converts the `.png` to `.icns`.  
-> On Linux the `--icon` flag is ignored at build time; the icon is set at runtime via `QIcon`.
+Or run:
 
-### Using the included .spec file
 ```powershell
-pyinstaller NeuralExtractor.spec
-```
-The `NeuralExtractor.spec` file already includes:
-- `datas` entries for both `NeuralExtractoricon.ico` and `NeuralExtractorIcon.png`
-- `icon='assets/NeuralExtractoricon.ico'` embedded into the `.exe` resource table
-
-To build for **macOS** from the spec, change the `icon=` line in `EXE()`:
-```python
-icon='assets/NeuralExtractorIcon.png',  # PyInstaller converts to .icns
+start.bat
 ```
 
-### Runtime path resolution in the bundle
-`sys._MEIPASS` points to the temporary folder where PyInstaller unpacks assets.
-Both GUI modules detect this automatically:
-```python
-if getattr(sys, 'frozen', False):
-    base_path = Path(sys._MEIPASS)   # bundled
-else:
-    base_path = Path(__file__).resolve().parent.parent.parent.parent  # dev
-icon_path = base_path / "assets" / "NeuralExtractoricon.ico"
+## CLI Examples
+
+Download a video with Dutch SRT subtitles and thumbnail:
+
+```powershell
+$env:PYTHONPATH = "$PWD\src"
+python main.py --url "https://www.youtube.com/watch?v=VIDEO_ID" --mode video --subs nl
 ```
 
-## Frequently Asked Questions
-- **Why no .exe?**
-  - For maximum transparency and trust. You can inspect the code yourself.
-- **How do I get the icon in the Windows taskbar when running as a script?**
-  - The app uses `SetCurrentProcessExplicitAppUserModelID` via `ctypes` to force
-    Windows to display the custom icon in the taskbar even when running as a Python
-    script. No .exe required.
-- **Python not found?**
-  - Add Python to your PATH or install Python 3.11+.
+Download a full playlist as MP3:
 
-## Support
-For questions or issues, email AegisAI@duck.com or visit https://www.Neuralshield.dev.
+```powershell
+$env:PYTHONPATH = "$PWD\src"
+python main.py --url "https://www.youtube.com/playlist?list=PLAYLIST_ID" --mode audio_mp3 --playlist full
+```
 
----
+Download subtitles only:
 
-Made with ❤️ by Neuralshield & 0xRootNull.
+```powershell
+$env:PYTHONPATH = "$PWD\src"
+python main.py --url "https://youtu.be/VIDEO_ID" --mode subtitles_only --subs nl
+```
+
+## Build Windows EXE
+
+```powershell
+pyinstaller NeuralExtractorV3.spec --clean --noconfirm
+```
+
+Or run:
+
+```powershell
+build.bat
+```
+
+The built executable is written to:
+
+```text
+dist\NeuralExtractorV3.exe
+```
+
+## GitHub Release Pipeline
+
+V3 includes a GitHub Actions workflow at `.github/workflows/build-release.yml`.
+The workflow will:
+
+- require a numeric release version matching both source version files,
+- install Python dependencies,
+- run Ruff, compileall, and tests,
+- build the Windows x64 `NeuralExtractorV3.exe` with PyInstaller,
+- create the exact versioned Windows asset,
+- generate its SHA-256 checksum and strict JSON manifest,
+- publish the EXEs, checksum, and manifest to the GitHub Release.
+
+It runs for tags matching `v*.*.*` and supports `workflow_dispatch` with an
+explicit version. The manual action appears only after the workflow is on the
+default branch. See [docs/UPDATE_ARCHITECTURE.md](docs/UPDATE_ARCHITECTURE.md)
+for the GitHub Desktop and GitHub web release procedure.
+
+## App Updates
+
+On startup, the desktop app silently checks the latest stable GitHub Release. The
+`Check Updates` button runs the same check manually. Packaged version 3.0.2 and
+later can download the exact versioned EXE, validate its strict manifest and
+SHA-256, install through a detached helper, restart, confirm startup, and roll
+back to the verified backup when startup fails. Installation always requires a
+clear user action.
+
+Version 3.0.1 must be upgraded to 3.0.2 manually once. Source-mode or non-writable
+installs retain the manual release-page fallback.
+
+The default release repository is:
+
+```text
+AegisAI-Dev/NeuralExtractor
+```
+
+The automatic update source is intentionally pinned and is not configurable at
+runtime. The EXE is SHA-256 verified but is not Authenticode publisher-signed.
+
+## Notes
+
+- FFmpeg is required for merging video/audio, MP3 conversion, thumbnail embedding, and SRT conversion. If a local `bin` folder exists, V3 will use it automatically.
+- Use a Netscape-format `cookies.txt` file when YouTube blocks a download that works in your browser.
+- Respect YouTube terms, creator rights, and local law.
