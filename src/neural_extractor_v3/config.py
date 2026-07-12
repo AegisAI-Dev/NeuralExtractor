@@ -6,9 +6,17 @@ import os
 import sys
 from pathlib import Path
 
+
+def _env_seconds(name: str, default: int, minimum: int) -> int:
+    try:
+        value = int(os.environ.get(name, str(default)))
+    except ValueError:
+        return default
+    return max(minimum, value)
+
 APP_NAME = "Neural Extractor V3"
-VERSION = "3.0.2"
-BUILD_LABEL = "http403-retry-bootstrap-auto-updater"
+VERSION = "3.0.3"
+BUILD_LABEL = "youtube-no-cookie-first-process-timeout-recovery"
 WINDOW_TITLE = f"{APP_NAME} {VERSION}"
 
 GITHUB_REPO = "AegisAI-Dev/NeuralExtractor"
@@ -27,6 +35,18 @@ QUALITY_PRESETS: dict[str, int | None] = {
 }
 
 YTDLP_SOCKET_TIMEOUT_SECONDS = 30
+YTDLP_INACTIVITY_TIMEOUT_SECONDS = _env_seconds(
+    "NEURAL_EXTRACTOR_YTDLP_INACTIVITY_TIMEOUT_SECONDS", 300, 30
+)
+YTDLP_ATTEMPT_TOTAL_TIMEOUT_SECONDS = _env_seconds(
+    "NEURAL_EXTRACTOR_YTDLP_ATTEMPT_TOTAL_TIMEOUT_SECONDS", 21_600, 300
+)
+YTDLP_STATUS_HEARTBEAT_SECONDS = _env_seconds(
+    "NEURAL_EXTRACTOR_YTDLP_STATUS_HEARTBEAT_SECONDS", 15, 5
+)
+YTDLP_TERMINATION_GRACE_SECONDS = _env_seconds(
+    "NEURAL_EXTRACTOR_YTDLP_TERMINATION_GRACE_SECONDS", 3, 1
+)
 YOUTUBE_EJS_REMOTE_COMPONENT = "ejs:github"
 YOUTUBE_REMOTE_COMPONENTS = [YOUTUBE_EJS_REMOTE_COMPONENT]
 

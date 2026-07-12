@@ -1,752 +1,610 @@
-import sys
-from pathlib import Path
+from __future__ import annotations
 
-from neural_extractor_v3.config import YTDLP_SOCKET_TIMEOUT_SECONDS
+import pytest
 from neural_extractor_v3.core import downloader as downloader_module
-from neural_extractor_v3.core.auth import AuthResolution, AuthStrategy, CookieFileStatus
+from neural_extractor_v3.core.auth import (
+    AuthResolution,
+    AuthStrategy,
+    BrowserCookieSource,
+    CookieFileStatus,
+)
 from neural_extractor_v3.core.downloader import (
     AUDIO_M4A_SELECTOR,
     AUDIO_MP3_SELECTOR,
-    BEST_VIDEO_SELECTOR,
-    HTTP_403_FINAL_MESSAGE,
-    HTTP_403_MAX_ATTEMPTS,
-    PROGRESSIVE_VIDEO_SELECTOR,
+    DEFAULT_YOUTUBE_CLIENTS,
+    MAX_DOWNLOAD_ATTEMPTS,
     VIDEO_MP4_SELECTOR,
     DownloadEngine,
     YtdlpCapturedOutput,
     YtdlpRunError,
+    YtdlpRunResult,
+    recover_stale_download_processes,
 )
-from neural_extractor_v3.core.js_runtime import (
-    MISSING_CHALLENGE_SOLVER_COMPONENT_MESSAGE,
-    MISSING_JS_RUNTIME_MESSAGE,
-    JavaScriptRuntimeStatus,
-    is_youtube_challenge_component_error,
-    is_youtube_challenge_runtime_error,
+from neural_extractor_v3.core.js_runtime import JavaScriptRuntimeStatus
+from neural_extractor_v3.core.youtube_errors import FailureCategory
+from neural_extractor_v3.models import (
+    DownloadJob,
+    DownloadOptions,
+    MediaMode,
+    PlaylistMode,
 )
-from neural_extractor_v3.models import DownloadJob, DownloadOptions, MediaMode, PlaylistMode
 
 PUBLIC_VIDEO_TEST_URL = "https://www.youtube.com/watch?v=jNQXAC9IVRw"
 
 
-def make_engine(tmp_path: Path, **overrides) -> DownloadEngine:
+def _mock_runtime(monkeypatch, tmp_path, *, found=True):
+    path = tmp_path / "node.exe" if found else None
+    monkeypatch.setattr(
+        downloader_module,
+        "ensure_youtube_js_runtime",
+        lambda: JavaScriptRuntimeStatus(
+            found=found,
+            name="node" if found else "",
+            path=path,
+            version="v22.17.0" if found else "",
+        ),
+    )
+
+
+def _resolution(tmp_path, *, cookie=True, browsers=("chrome", "edge", "brave", "firefox")):
+    strategies = [AuthStrategy("none", "no authentication", {}, attempted_auth=False)]
+    cookie_path = tmp_path / "cookies.txt" if cookie else None
+    messages = []
+    if cookie_path:
+        cookie_path.write_text(
+            "# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tFALSE\t0\tSID\tsecret\n",
+            encoding="utf-8",
+        )
+        strategies.append(
+            AuthStrategy(
+                "cookies_file",
+                "cookies.txt",
+                {"cookiefile": str(cookie_path)},
+                attempted_auth=True,
+            )
+        )
+        messages.append("cookies.txt available: cookies.txt (held for authenticated fallback)")
+    else:
+        messages.append("cookies.txt not loaded")
+
+    sources = []
+    for browser in browsers:
+        display = browser.title()
+        source = BrowserCookieSource(browser, display, tmp_path / display)
+        sources.append(source)
+        strategies.append(
+            AuthStrategy(
+                "browser",
+                display,
+                {"cookiesfrombrowser": (browser,)},
+                attempted_auth=True,
+            )
+        )
+    if sources:
+        messages.append(
+            "browser cookie fallback available: "
+            + ", ".join(source.display_name for source in sources)
+        )
+    status = CookieFileStatus(
+        cookie_path,
+        bool(cookie_path),
+        "cookies.txt contains YouTube/Google cookies" if cookie_path else "cookies.txt not loaded",
+    )
+    return AuthResolution(
+        strategies=strategies,
+        messages=messages,
+        cookie_file_status=status,
+        browser_source=sources[0] if sources else None,
+        browser_sources=sources,
+    )
+
+
+def _mock_resolution(monkeypatch, resolution):
+    monkeypatch.setattr(
+        downloader_module,
+        "resolve_auth_strategies",
+        lambda _cookie_file: resolution,
+    )
+
+
+def _engine(tmp_path, **overrides):
     options = DownloadOptions(output_dir=tmp_path, **overrides)
     return DownloadEngine(options)
 
 
-def _mock_runtime(
-    monkeypatch,
-    *,
-    found: bool = True,
-    path: Path | None = None,
-) -> JavaScriptRuntimeStatus:
-    status = JavaScriptRuntimeStatus(
-        found=found,
-        name="node" if found else "",
-        path=path,
-        version="v22.17.0" if found else "",
-    )
-    monkeypatch.setattr(downloader_module, "ensure_youtube_js_runtime", lambda: status)
-    return status
+def _auth_id(options):
+    if options.get("cookiefile"):
+        return "cookies.txt"
+    if options.get("cookiesfrombrowser"):
+        return options["cookiesfrombrowser"][0]
+    return "none"
 
 
-def _mock_auth(monkeypatch) -> None:
-    resolution = AuthResolution(
-        strategies=[
-            AuthStrategy(
-                kind="none",
-                display_name="no authentication",
-                ydl_options={},
-                attempted_auth=False,
-            )
-        ],
-        messages=[],
-        cookie_file_status=CookieFileStatus(None, False, "cookies.txt not loaded"),
-        browser_source=None,
-        browser_sources=[],
-    )
-    monkeypatch.setattr(downloader_module, "resolve_auth_strategies", lambda _cookie_file: resolution)
+def _clients(options):
+    return tuple(options["extractor_args"]["youtube"]["player_client"])
 
 
-def _mock_cookie_and_browser_auth(
-    monkeypatch,
-    tmp_path: Path,
-    browsers: tuple[str, ...] = ("edge",),
-) -> Path:
-    cookie_file = tmp_path / "cookies.txt"
-    cookie_file.write_text(
-        "# Netscape HTTP Cookie File\n.youtube.com\tTRUE\t/\tFALSE\t0\tSID\tsecret-value\n",
-        encoding="utf-8",
-    )
-    strategies = [
-        AuthStrategy(
-            kind="cookies_file",
-            display_name="cookies.txt",
-            attempted_auth=True,
-            ydl_options={
-                "cookiefile": str(cookie_file),
-                "extractor_args": {"youtube": {"player_client": ["default"]}},
-            },
-        )
-    ]
-    for browser in browsers:
-        strategies.append(
-            AuthStrategy(
-                kind="browser",
-                display_name=browser.title(),
-                attempted_auth=True,
-                ydl_options={
-                    "cookiesfrombrowser": (browser,),
-                    "extractor_args": {"youtube": {"player_client": ["default"]}},
-                },
-            )
-        )
-    strategies.append(
-        AuthStrategy(
-            kind="none",
-            display_name="no authentication",
-            attempted_auth=False,
-            ydl_options={},
-        )
-    )
-    resolution = AuthResolution(
-        strategies=strategies,
-        messages=[],
-        cookie_file_status=CookieFileStatus(cookie_file, True, "valid"),
-        browser_source=None,
-        browser_sources=[],
-    )
-    monkeypatch.setattr(downloader_module, "resolve_auth_strategies", lambda _cookie_file: resolution)
-    return cookie_file
-
-
-def _attempt_key(ydl_opts) -> tuple[str, str, tuple[str, ...]]:
-    if ydl_opts.get("cookiefile"):
-        auth = "cookies.txt"
-    elif ydl_opts.get("cookiesfrombrowser"):
-        auth = str(ydl_opts["cookiesfrombrowser"][0])
-    else:
-        auth = "none"
-    clients = tuple(ydl_opts["extractor_args"]["youtube"]["player_client"])
-    return auth, str(ydl_opts["format"]), clients
-
-
-def _raise_media_http_403(engine, prepared_url, ydl_opts) -> None:
-    output = YtdlpCapturedOutput(
-        stderr=["ERROR: unable to download video data: HTTP Error 403: Forbidden"]
-    )
-    raise YtdlpRunError(
-        engine._yt_dlp_command(prepared_url, ydl_opts),
-        output,
+def _error(message, options, *, category_hint=None, phase="download"):
+    return YtdlpRunError(
+        "yt-dlp <redacted>",
+        YtdlpCapturedOutput(stderr=[message]),
         exit_code=1,
-        phase="download",
-        format_selector=str(ydl_opts["format"]),
-        player_clients=tuple(ydl_opts["extractor_args"]["youtube"]["player_client"]),
+        phase=phase,
+        format_selector=str(options.get("format") or ""),
+        player_clients=_clients(options),
+        category_hint=category_hint,
     )
 
 
-def test_video_quality_generates_height_limited_selector(tmp_path):
-    engine = make_engine(tmp_path, media_mode=MediaMode.VIDEO, quality="1080p Full HD")
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123")
+def test_public_video_first_attempt_uses_no_cookies_even_when_cookie_file_exists(
+    tmp_path, monkeypatch
+):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path)
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+    logs = []
 
-    assert "bv*[height<=1080][ext=mp4]+ba[ext=m4a]" in opts["format"]
-    assert opts["format"].endswith("bv*+ba/b")
-    assert opts["merge_output_format"] == "mp4"
-    assert opts["noplaylist"] is True
-    assert opts["socket_timeout"] == YTDLP_SOCKET_TIMEOUT_SECONDS
+    def succeed(self, url, options, *, discover_only=False):
+        calls.append((_auth_id(options), discover_only))
+        return YtdlpRunResult()
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", succeed)
+    engine = DownloadEngine(
+        DownloadOptions(output_dir=tmp_path, cookie_file=resolution.cookie_file_status.path),
+        log_callback=logs.append,
+    )
+
+    result = engine.download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert result.success
+    assert calls == [("none", False)]
+    assert any("cookies.txt available" in log for log in logs)
+    assert not any("Using cookies.txt" in log for log in logs)
+    assert any("auth=none" in log for log in logs)
 
 
-def test_youtube_js_runtime_is_passed_to_yt_dlp_options_and_command(tmp_path, monkeypatch):
-    node_path = tmp_path / "node.exe"
-    _mock_runtime(monkeypatch, path=node_path)
-    engine = make_engine(tmp_path)
+def test_authentication_specific_failure_enables_cookie_file_fallback(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, browsers=())
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
 
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123")
-    command = engine._yt_dlp_command("https://www.youtube.com/watch?v=abc123", opts)
+    def auth_then_success(self, url, options, *, discover_only=False):
+        calls.append(_auth_id(options))
+        if len(calls) == 1:
+            raise _error("ERROR: Sign in to confirm your age. Use --cookies", options)
+        return YtdlpRunResult()
 
-    assert opts["js_runtimes"] == {"node": {"path": str(node_path)}}
-    assert opts["remote_components"] == ["ejs:github"]
-    assert "--js-runtimes" in command
-    assert "node:" in command
-    assert str(node_path) in command
-    assert "--remote-components ejs:github" in command
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", auth_then_success)
+
+    result = _engine(tmp_path, cookie_file=resolution.cookie_file_status.path).download(
+        DownloadJob(PUBLIC_VIDEO_TEST_URL)
+    )
+
+    assert result.success
+    assert calls == ["none", "cookies.txt"]
 
 
-def test_missing_youtube_js_runtime_stops_media_download_cleanly(tmp_path, monkeypatch):
-    logs: list[str] = []
-    _mock_runtime(monkeypatch, found=False)
-    _mock_auth(monkeypatch)
+def test_generic_http_403_never_triggers_cookie_or_browser_fallback(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path)
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
 
-    def fail_run(self, prepared_url, ydl_opts):
-        raise AssertionError("yt-dlp should not run without a YouTube JS runtime")
+    def always_403(self, url, options, *, discover_only=False):
+        calls.append((_auth_id(options), discover_only, _clients(options)))
+        raise _error(
+            "ERROR: unable to download video data: HTTP Error 403: Forbidden",
+            options,
+        )
 
-    monkeypatch.setattr(downloader_module.DownloadEngine, "_run_yt_dlp", fail_run)
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", always_403)
 
+    result = _engine(tmp_path, cookie_file=resolution.cookie_file_status.path).download(
+        DownloadJob(PUBLIC_VIDEO_TEST_URL)
+    )
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.HTTP_403_MEDIA_REJECTED.value
+    assert all(call[0] == "none" for call in calls)
+    assert calls[0][2] == DEFAULT_YOUTUBE_CLIENTS
+    assert len(calls) == 3  # primary, one clean retry, one bounded alternative discovery
+
+
+def test_cookie_file_http_403_is_not_repeated_and_browser_fallback_is_controlled(
+    tmp_path, monkeypatch
+):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, browsers=("chrome",))
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+
+    def run(self, url, options, *, discover_only=False):
+        auth = _auth_id(options)
+        calls.append(auth)
+        if auth == "none":
+            raise _error("ERROR: Login required. Use --cookies", options)
+        if auth == "cookies.txt":
+            raise _error(
+                "ERROR: unable to download video data: HTTP Error 403: Forbidden",
+                options,
+            )
+        return YtdlpRunResult()
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", run)
+
+    result = _engine(tmp_path, cookie_file=resolution.cookie_file_status.path).download(
+        DownloadJob(PUBLIC_VIDEO_TEST_URL)
+    )
+
+    assert result.success
+    assert calls == ["none", "cookies.txt", "chrome"]
+
+
+def test_chrome_cookie_lock_disables_chrome_for_remainder_of_job(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, cookie=False, browsers=("chrome", "firefox"))
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+
+    def run(self, url, options, *, discover_only=False):
+        auth = _auth_id(options)
+        calls.append(auth)
+        if auth == "none":
+            raise _error("ERROR: Sign in to confirm you're not a bot. Use --cookies", options)
+        if auth == "chrome":
+            raise _error("ERROR: Could not copy Chrome cookie database", options)
+        return YtdlpRunResult()
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", run)
+
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert result.success
+    assert calls == ["none", "chrome", "firefox"]
+    assert calls.count("chrome") == 1
+
+
+def test_dpapi_failure_disables_provider_without_node_guidance(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, cookie=False, browsers=("edge", "brave"))
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+    logs = []
+
+    def run(self, url, options, *, discover_only=False):
+        auth = _auth_id(options)
+        calls.append(auth)
+        if auth == "none":
+            raise _error("ERROR: Login required. Use --cookies", options)
+        if auth == "edge":
+            raise _error("ERROR: Failed to decrypt cookies with Windows DPAPI", options)
+        return YtdlpRunResult()
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", run)
     engine = DownloadEngine(DownloadOptions(output_dir=tmp_path), log_callback=logs.append)
-    result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
 
-    assert not result.success
-    assert result.message == MISSING_JS_RUNTIME_MESSAGE
-    assert "JavaScript runtime for YouTube challenge: not found" in logs
-
-
-def test_n_challenge_error_is_not_retried_as_format_fallback(tmp_path, monkeypatch):
-    node_path = tmp_path / "node.exe"
-    _mock_runtime(monkeypatch, path=node_path)
-    _mock_auth(monkeypatch)
-    calls: list[str] = []
-
-    def fail_with_n_challenge(self, prepared_url, ydl_opts):
-        calls.append(ydl_opts["format"])
-        output = YtdlpCapturedOutput(
-            stderr=[
-                "WARNING: [youtube] n challenge solving failed",
-                "WARNING: Only images are available for download",
-                "ERROR: Requested format is not available",
-            ]
-        )
-        raise YtdlpRunError("yt-dlp", output, exit_code=1)
-
-    monkeypatch.setattr(downloader_module.DownloadEngine, "_run_yt_dlp", fail_with_n_challenge)
-
-    engine = make_engine(tmp_path)
-    result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
-
-    assert is_youtube_challenge_runtime_error(
-        "WARNING: [youtube] n challenge solving failed\nWARNING: Only images are available"
-    )
-    assert not result.success
-    assert result.message == MISSING_JS_RUNTIME_MESSAGE
-    assert calls == [VIDEO_MP4_SELECTOR]
-
-
-def test_missing_challenge_component_is_not_retried_as_format_fallback(tmp_path, monkeypatch):
-    node_path = tmp_path / "node.exe"
-    _mock_runtime(monkeypatch, path=node_path)
-    _mock_auth(monkeypatch)
-    calls: list[str] = []
-
-    def fail_with_missing_component(self, prepared_url, ydl_opts):
-        calls.append(ydl_opts["format"])
-        output = YtdlpCapturedOutput(
-            stderr=[
-                "WARNING: Remote component challenge solver script was skipped. "
-                "Enable downloads with --remote-components ejs:github.",
-                "ERROR: Requested format is not available",
-            ]
-        )
-        raise YtdlpRunError("yt-dlp", output, exit_code=1)
-
-    monkeypatch.setattr(downloader_module.DownloadEngine, "_run_yt_dlp", fail_with_missing_component)
-
-    engine = make_engine(tmp_path)
-    result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
-
-    assert is_youtube_challenge_component_error("remote component challenge solver script was skipped")
-    assert not result.success
-    assert result.message == MISSING_CHALLENGE_SOLVER_COMPONENT_MESSAGE
-    assert calls == [VIDEO_MP4_SELECTOR]
-
-
-def test_plain_format_error_still_retries_with_remote_components_enabled(tmp_path, monkeypatch):
-    node_path = tmp_path / "node.exe"
-    _mock_runtime(monkeypatch, path=node_path)
-    _mock_auth(monkeypatch)
-    calls: list[str] = []
-
-    def format_unavailable_once(self, prepared_url, ydl_opts):
-        calls.append(ydl_opts["format"])
-        if len(calls) == 1:
-            output = YtdlpCapturedOutput(stderr=["ERROR: Requested format is not available"])
-            command = self._yt_dlp_command(prepared_url, ydl_opts)
-            raise YtdlpRunError(command, output, exit_code=1)
-
-    monkeypatch.setattr(downloader_module.DownloadEngine, "_run_yt_dlp", format_unavailable_once)
-
-    engine = make_engine(tmp_path)
-    result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
+    result = engine.download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
 
     assert result.success
-    assert calls == [VIDEO_MP4_SELECTOR, BEST_VIDEO_SELECTOR]
+    assert calls == ["none", "edge", "brave"]
+    assert not any("install node" in log.lower() for log in logs)
+    assert not any("solver unavailable" in log.lower() for log in logs)
 
 
-def test_media_http_403_retries_with_browser_cookies_and_stops_on_success(
-    tmp_path,
-    monkeypatch,
-):
-    logs: list[str] = []
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    cookie_file = _mock_cookie_and_browser_auth(monkeypatch, tmp_path, ("edge", "firefox"))
-    calls: list[tuple[str, str, tuple[str, ...]]] = []
+def test_authenticated_browser_order_is_bounded_deterministic_and_unique(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path)
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
 
-    def fail_cookie_file_then_succeed(self, prepared_url, ydl_opts):
-        calls.append(_attempt_key(ydl_opts))
+    def always_auth_failure(self, url, options, *, discover_only=False):
+        calls.append(_auth_id(options))
+        raise _error("ERROR: Login required. Use --cookies", options)
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", always_auth_failure)
+
+    result = _engine(tmp_path, cookie_file=resolution.cookie_file_status.path).download(
+        DownloadJob(PUBLIC_VIDEO_TEST_URL)
+    )
+
+    assert not result.success
+    assert calls == ["none", "cookies.txt", "chrome", "edge", "brave", "firefox"]
+    assert len(calls) == MAX_DOWNLOAD_ATTEMPTS
+    assert len(calls) == len(set(calls))
+
+
+def test_inactivity_timeout_starts_one_clean_no_cookie_retry(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, cookie=False, browsers=())
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+
+    def timeout_then_success(self, url, options, *, discover_only=False):
+        calls.append(_auth_id(options))
         if len(calls) == 1:
-            _raise_media_http_403(self, prepared_url, ydl_opts)
+            raise _error(
+                "Network inactivity timeout",
+                options,
+                category_hint=FailureCategory.NETWORK_INACTIVITY_TIMEOUT,
+            )
+        return YtdlpRunResult()
 
-    monkeypatch.setattr(
-        downloader_module.DownloadEngine,
-        "_run_yt_dlp",
-        fail_cookie_file_then_succeed,
-    )
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", timeout_then_success)
 
-    engine = DownloadEngine(
-        DownloadOptions(output_dir=tmp_path, cookie_file=cookie_file),
-        log_callback=logs.append,
-    )
-    result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
 
     assert result.success
-    assert calls == [
-        ("cookies.txt", VIDEO_MP4_SELECTOR, ("default",)),
-        ("edge", VIDEO_MP4_SELECTOR, ("default",)),
-    ]
-    assert "HTTP 403 with cookies.txt. Retrying with browser cookies from Edge." in logs
-    assert not any(PROGRESSIVE_VIDEO_SELECTOR in log for log in logs)
+    assert calls == ["none", "none"]
 
 
-def test_http_403_browser_cookie_extraction_failure_skips_to_next_browser(
-    tmp_path,
-    monkeypatch,
-):
-    logs: list[str] = []
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    cookie_file = _mock_cookie_and_browser_auth(monkeypatch, tmp_path, ("chrome", "edge"))
-    calls: list[tuple[str, str, tuple[str, ...]]] = []
+def test_cancel_stops_new_attempts_and_returns_typed_result(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path)
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
 
-    def fail_cookie_then_skip_locked_chrome(self, prepared_url, ydl_opts):
-        calls.append(_attempt_key(ydl_opts))
-        if len(calls) == 1:
-            _raise_media_http_403(self, prepared_url, ydl_opts)
-        if ydl_opts.get("cookiesfrombrowser") == ("chrome",):
-            raise YtdlpRunError(
-                "yt-dlp",
-                YtdlpCapturedOutput(stderr=["ERROR: Could not copy Chrome cookie database"]),
-                exit_code=1,
-                phase="preflight",
-            )
-
-    monkeypatch.setattr(
-        downloader_module.DownloadEngine,
-        "_run_yt_dlp",
-        fail_cookie_then_skip_locked_chrome,
-    )
-
-    engine = DownloadEngine(
-        DownloadOptions(output_dir=tmp_path, cookie_file=cookie_file),
-        log_callback=logs.append,
-    )
-    result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
-
-    assert result.success
-    assert [call[0] for call in calls] == ["cookies.txt", "chrome", "edge"]
-    assert any("cookie extraction failure" in log for log in logs)
-
-
-def test_non_403_after_cascade_start_does_not_reenter_outer_auth_loop(
-    tmp_path,
-    monkeypatch,
-):
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    cookie_file = _mock_cookie_and_browser_auth(monkeypatch, tmp_path, ("edge",))
-    calls: list[tuple[str, str, tuple[str, ...]]] = []
-
-    def fail_with_403_then_auth(self, prepared_url, ydl_opts):
-        call = _attempt_key(ydl_opts)
-        calls.append(call)
-        if call[1] == PROGRESSIVE_VIDEO_SELECTOR:
-            raise YtdlpRunError(
-                "yt-dlp",
-                YtdlpCapturedOutput(stderr=["ERROR: Sign in to confirm you're not a bot"]),
-                exit_code=1,
-                phase="preflight",
-                format_selector=call[1],
-                player_clients=call[2],
-            )
-        _raise_media_http_403(self, prepared_url, ydl_opts)
-
-    monkeypatch.setattr(
-        downloader_module.DownloadEngine,
-        "_run_yt_dlp",
-        fail_with_403_then_auth,
-    )
-
-    result = DownloadEngine(
-        DownloadOptions(output_dir=tmp_path, cookie_file=cookie_file)
-    ).download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
-
-    assert not result.success
-    assert calls == [
-        ("cookies.txt", VIDEO_MP4_SELECTOR, ("default",)),
-        ("edge", VIDEO_MP4_SELECTOR, ("default",)),
-        ("cookies.txt", PROGRESSIVE_VIDEO_SELECTOR, ("default",)),
-    ]
-
-
-def test_http_403_cascade_is_bounded_unique_and_reports_final_error_once(
-    tmp_path,
-    monkeypatch,
-):
-    logs: list[str] = []
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    browsers = ("chrome", "edge", "brave", "firefox")
-    cookie_file = _mock_cookie_and_browser_auth(monkeypatch, tmp_path, browsers)
-    calls: list[tuple[str, str, tuple[str, ...]]] = []
-
-    def always_403(self, prepared_url, ydl_opts):
-        calls.append(_attempt_key(ydl_opts))
-        _raise_media_http_403(self, prepared_url, ydl_opts)
-
-    monkeypatch.setattr(downloader_module.DownloadEngine, "_run_yt_dlp", always_403)
-
-    engine = DownloadEngine(
-        DownloadOptions(output_dir=tmp_path, cookie_file=cookie_file),
-        log_callback=logs.append,
-    )
-    result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
-
-    assert not result.success
-    assert result.message == HTTP_403_FINAL_MESSAGE
-    assert len(calls) == HTTP_403_MAX_ATTEMPTS
-    assert len(set(calls)) == len(calls)
-    assert [call[0] for call in calls] == [
-        "cookies.txt",
-        "chrome",
-        "edge",
-        "brave",
-        "firefox",
-        "cookies.txt",
-        "cookies.txt",
-        "cookies.txt",
-    ]
-    assert [call[1] for call in calls[-3:]] == [
-        PROGRESSIVE_VIDEO_SELECTOR,
-        PROGRESSIVE_VIDEO_SELECTOR,
-        PROGRESSIVE_VIDEO_SELECTOR,
-    ]
-    assert [call[2] for call in calls[-3:]] == [("default",), ("mweb",), ("web",)]
-    assert sum(log.startswith("HTTP 403 diagnostics:") for log in logs) == 1
-    assert HTTP_403_FINAL_MESSAGE not in logs
-    assert "secret-value" not in "\n".join(logs)
-
-
-def test_duplicate_http_403_profiles_are_not_retried(tmp_path, monkeypatch):
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    _mock_auth(monkeypatch)
-    monkeypatch.setattr(
-        downloader_module,
-        "HTTP_403_CLIENT_FALLBACKS",
-        (("mweb", "default"), ("mweb", "default"), ("web",)),
-    )
-    calls: list[tuple[str, str, tuple[str, ...]]] = []
-
-    def always_403(self, prepared_url, ydl_opts):
-        calls.append(_attempt_key(ydl_opts))
-        _raise_media_http_403(self, prepared_url, ydl_opts)
-
-    monkeypatch.setattr(downloader_module.DownloadEngine, "_run_yt_dlp", always_403)
-
-    result = make_engine(tmp_path).download(
-        DownloadJob("https://www.youtube.com/watch?v=abc123")
-    )
-
-    assert not result.success
-    assert calls == [
-        ("none", VIDEO_MP4_SELECTOR, ("mweb", "default")),
-        ("none", PROGRESSIVE_VIDEO_SELECTOR, ("mweb", "default")),
-        ("none", PROGRESSIVE_VIDEO_SELECTOR, ("web",)),
-    ]
-
-
-def test_non_403_and_preflight_403_do_not_start_media_retry_cascade(
-    tmp_path,
-    monkeypatch,
-):
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    _mock_auth(monkeypatch)
-
-    for phase, message in (
-        ("download", "ERROR: network connection timed out"),
-        ("preflight", "ERROR: unable to download video data: HTTP Error 403: Forbidden"),
-    ):
-        logs: list[str] = []
-        calls: list[str] = []
-
-        def fail_once(self, prepared_url, ydl_opts, *, _phase=phase, _message=message):
-            calls.append(str(ydl_opts["format"]))
-            raise YtdlpRunError(
-                "yt-dlp",
-                YtdlpCapturedOutput(stderr=[_message]),
-                exit_code=1,
-                phase=_phase,
-                format_selector=str(ydl_opts["format"]),
-            )
-
-        monkeypatch.setattr(downloader_module.DownloadEngine, "_run_yt_dlp", fail_once)
-        engine = DownloadEngine(DownloadOptions(output_dir=tmp_path), log_callback=logs.append)
-        result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
-
-        assert not result.success
-        assert calls == [VIDEO_MP4_SELECTOR]
-        assert not any("HTTP 403 retry attempt" in log for log in logs)
-
-
-def test_cancel_stops_http_403_cascade_before_next_profile(tmp_path, monkeypatch):
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    _mock_auth(monkeypatch)
-    calls: list[str] = []
-
-    def cancel_on_first_403(self, prepared_url, ydl_opts):
-        calls.append(str(ydl_opts["format"]))
+    def cancel_on_first(self, url, options, *, discover_only=False):
+        calls.append(_auth_id(options))
         self.cancel()
-        _raise_media_http_403(self, prepared_url, ydl_opts)
+        raise _error(
+            "ERROR: unable to download video data: HTTP Error 403: Forbidden",
+            options,
+        )
 
-    monkeypatch.setattr(
-        downloader_module.DownloadEngine,
-        "_run_yt_dlp",
-        cancel_on_first_403,
-    )
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", cancel_on_first)
 
-    result = make_engine(tmp_path).download(
-        DownloadJob("https://www.youtube.com/watch?v=abc123")
-    )
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
 
     assert not result.success
-    assert result.message == "Download cancelled by user"
-    assert calls == [VIDEO_MP4_SELECTOR]
+    assert result.message == "Download cancelled"
+    assert result.failure_category == FailureCategory.DOWNLOAD_CANCELLED.value
+    assert calls == ["none"]
 
 
-def test_successful_primary_download_never_uses_progressive_403_fallback(
-    tmp_path,
-    monkeypatch,
-):
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    _mock_auth(monkeypatch)
-    calls: list[str] = []
+def test_format_discovery_selects_only_actual_available_ids(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, cookie=False, browsers=())
+    _mock_resolution(monkeypatch, resolution)
+    downloads = []
+    discoveries = []
 
-    def succeed(self, prepared_url, ydl_opts):
-        calls.append(str(ydl_opts["format"]))
+    def run(self, url, options, *, discover_only=False):
+        if discover_only:
+            discoveries.append(str(options["format"]))
+            return YtdlpRunResult(
+                formats=[
+                    {"format_id": "137", "ext": "mp4", "vcodec": "avc1", "acodec": "none", "height": 1080},
+                    {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "abr": 128},
+                ]
+            )
+        downloads.append(str(options["format"]))
+        if len(downloads) == 1:
+            raise _error("ERROR: Requested format is not available", options, phase="preflight")
+        return YtdlpRunResult()
 
-    monkeypatch.setattr(downloader_module.DownloadEngine, "_run_yt_dlp", succeed)
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", run)
 
-    result = make_engine(tmp_path).download(
-        DownloadJob("https://www.youtube.com/watch?v=abc123")
-    )
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
 
     assert result.success
-    assert calls == [VIDEO_MP4_SELECTOR]
+    assert downloads == [VIDEO_MP4_SELECTOR, "137+140"]
+    assert discoveries == [VIDEO_MP4_SELECTOR]
+    assert "best" not in downloads[1]
 
 
-def test_mp3_mode_extracts_audio_and_embeds_thumbnail(tmp_path):
-    engine = make_engine(
+def test_image_only_discovery_does_not_start_media_fallback(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, cookie=False, browsers=())
+    _mock_resolution(monkeypatch, resolution)
+    downloads = []
+
+    def run(self, url, options, *, discover_only=False):
+        if discover_only:
+            return YtdlpRunResult(
+                formats=[
+                    {"format_id": "storyboard", "ext": "mhtml", "vcodec": "none", "acodec": "none"}
+                ]
+            )
+        downloads.append(str(options["format"]))
+        raise _error("ERROR: Requested format is not available", options, phase="preflight")
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", run)
+
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.ONLY_IMAGE_FORMATS_AVAILABLE.value
+    assert downloads == [VIDEO_MP4_SELECTOR]
+
+
+def test_po_token_warning_stops_without_unsafe_workaround(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path)
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+
+    def fail(self, url, options, *, discover_only=False):
+        calls.append(_auth_id(options))
+        raise _error("WARNING: This client requires a PO Token for video playback", options)
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", fail)
+
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.PO_TOKEN_REQUIRED.value
+    assert calls == ["none"]
+
+
+def test_node_found_plus_n_challenge_never_reports_missing_node(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path, found=True)
+    resolution = _resolution(tmp_path, cookie=False, browsers=())
+    _mock_resolution(monkeypatch, resolution)
+
+    def fail(self, url, options, *, discover_only=False):
+        raise _error("WARNING: n challenge solving failed", options)
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", fail)
+
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.UNKNOWN.value
+    assert "unavailable" not in result.message.lower()
+
+
+def test_genuine_missing_runtime_stops_before_attempt(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path, found=False)
+    resolution = _resolution(tmp_path, cookie=False, browsers=())
+    _mock_resolution(monkeypatch, resolution)
+
+    def should_not_run(*args, **kwargs):
+        raise AssertionError("yt-dlp must not start without the required runtime")
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", should_not_run)
+
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.JAVASCRIPT_RUNTIME_UNAVAILABLE.value
+    assert "Install Node.js" in result.message
+
+
+def test_video_quality_generates_height_limited_selector(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    options = _engine(tmp_path, quality="1080p Full HD").build_ydl_options(PUBLIC_VIDEO_TEST_URL)
+
+    assert "height<=1080" in options["format"]
+    assert options["merge_output_format"] == "mp4"
+
+
+def test_mp3_m4a_subtitles_and_thumbnail_options_are_preserved(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    mp3 = _engine(
         tmp_path,
         media_mode=MediaMode.AUDIO_MP3,
         thumbnail=True,
         embed_thumbnail=True,
-        audio_quality="320",
+    ).build_ydl_options(PUBLIC_VIDEO_TEST_URL)
+    m4a = _engine(tmp_path, media_mode=MediaMode.AUDIO_M4A).build_ydl_options(
+        PUBLIC_VIDEO_TEST_URL
     )
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123")
-    post_keys = [processor["key"] for processor in opts["postprocessors"]]
-
-    assert opts["format"] == AUDIO_MP3_SELECTOR
-    assert "merge_output_format" not in opts
-    assert "FFmpegExtractAudio" in post_keys
-    assert "EmbedThumbnail" in post_keys
-    assert opts["writethumbnail"] is True
-
-
-def test_m4a_mode_prefers_m4a_audio_without_mp4_merge(tmp_path):
-    engine = make_engine(tmp_path, media_mode=MediaMode.AUDIO_M4A)
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123")
-
-    assert opts["format"] == AUDIO_M4A_SELECTOR
-    assert "merge_output_format" not in opts
-
-
-def test_subtitle_mode_writes_srt_and_skips_media(tmp_path):
-    engine = make_engine(
+    subtitles = _engine(
         tmp_path,
         media_mode=MediaMode.SUBTITLES_ONLY,
         subtitle_language="nl",
         subtitles=True,
-    )
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123")
-    post_keys = [processor["key"] for processor in opts["postprocessors"]]
+    ).build_ydl_options(PUBLIC_VIDEO_TEST_URL)
 
-    assert opts["skip_download"] is True
-    assert opts["subtitleslangs"] == ["nl"]
-    assert opts["subtitlesformat"].startswith("srt")
-    assert "FFmpegSubtitlesConvertor" in post_keys
-
-
-def test_full_playlist_keeps_playlist_enabled(tmp_path):
-    engine = make_engine(tmp_path, playlist_mode=PlaylistMode.FULL)
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123&list=PL42")
-
-    assert opts["noplaylist"] is False
-    assert "%(playlist" in opts["outtmpl"]
+    assert mp3["format"] == AUDIO_MP3_SELECTOR
+    assert {item["key"] for item in mp3["postprocessors"]} >= {
+        "FFmpegExtractAudio",
+        "EmbedThumbnail",
+    }
+    assert m4a["format"] == AUDIO_M4A_SELECTOR
+    assert "merge_output_format" not in m4a
+    assert subtitles["skip_download"] is True
+    assert subtitles["subtitleslangs"] == ["nl"]
 
 
-def test_full_mode_without_playlist_keeps_single_video(tmp_path):
-    engine = make_engine(tmp_path, playlist_mode=PlaylistMode.FULL)
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123")
-
-    assert opts["noplaylist"] is True
-
-
-def test_mix_url_normalizes_to_single_video_and_logs(tmp_path):
-    logs: list[str] = []
+def test_mix_url_normalizes_to_current_video_only_and_command_has_no_playlist(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    logs = []
     engine = DownloadEngine(
         DownloadOptions(output_dir=tmp_path, playlist_mode=PlaylistMode.FULL),
         log_callback=logs.append,
     )
-
-    prepared_url = engine.prepare_url(
+    prepared = engine.prepare_url(
         "https://www.youtube.com/watch?v=abc123&list=RDabc123&start_radio=1"
     )
-    opts = engine.build_ydl_options(prepared_url)
-    command = engine._yt_dlp_command(prepared_url, opts)
+    options = engine.build_ydl_options(prepared)
+    command = engine._yt_dlp_command(prepared, options)
 
-    assert prepared_url == "https://www.youtube.com/watch?v=abc123"
-    assert opts["noplaylist"] is True
-    assert "playlistend" not in opts
+    assert prepared == "https://www.youtube.com/watch?v=abc123"
+    assert options["noplaylist"] is True
     assert "--no-playlist" in command
     assert "--yes-playlist" not in command
     assert "--playlist-end" not in command
     assert logs == ["YouTube Mix detected. Downloading current video only."]
 
 
-def test_best_video_uses_mp4_selector(tmp_path):
-    engine = make_engine(tmp_path, media_mode=MediaMode.VIDEO, quality="Best available")
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123")
-
-    assert opts["format"] == VIDEO_MP4_SELECTOR
-
-
-def test_auth_strategy_is_merged_into_ydl_options(tmp_path):
-    engine = make_engine(tmp_path)
+def test_auth_options_merge_without_overwriting_selected_client(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
     auth = AuthStrategy(
-        kind="browser",
-        display_name="Chrome",
+        "browser",
+        "Firefox",
+        {"cookiesfrombrowser": ("firefox",)},
         attempted_auth=True,
-        ydl_options={
-            "cookiesfrombrowser": ("chrome",),
-            "extractor_args": {"youtube": {"player_client": ["default"]}},
-        },
+    )
+    engine = _engine(tmp_path)
+    profile = engine._profile(
+        auth,
+        player_clients=("web",),
+        reason="authenticated_fallback",
     )
 
-    opts = engine.build_ydl_options("https://www.youtube.com/watch?v=abc123", auth)
+    options = engine._options_for_attempt_profile(PUBLIC_VIDEO_TEST_URL, profile)
 
-    assert opts["cookiesfrombrowser"] == ("chrome",)
-    assert opts["extractor_args"] == {"youtube": {"player_client": ["default"]}}
+    assert options["cookiesfrombrowser"] == ("firefox",)
+    assert _clients(options) == ("web",)
 
 
-def test_yt_dlp_failure_includes_command_stdout_stderr_and_exit_code(tmp_path, monkeypatch):
-    class FakeYoutubeDL:
-        def __init__(self, opts):
-            self.opts = opts
-            opts["logger"].debug("[debug] stdout from logger")
-            opts["logger"].warning("warning from logger")
+def test_command_and_logs_redact_cookie_path_and_secret_values(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    cookie_path = tmp_path / "cookies.txt"
+    engine = _engine(tmp_path, cookie_file=cookie_path)
+    auth = AuthStrategy(
+        "cookies_file",
+        "cookies.txt",
+        {"cookiefile": str(cookie_path)},
+        attempted_auth=True,
+    )
+    options = engine.build_ydl_options(PUBLIC_VIDEO_TEST_URL, auth)
 
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, traceback):
-            return False
-
-        def extract_info(self, url, download=False):
-            print("stdout line one")
-            print("stderr line one", file=sys.stderr)
-            self.opts["logger"].error("ERROR: Requested format is not available")
-            return {"id": "abc123"}
-
-        def download(self, urls):
-            print("stdout line two")
-            print("stderr line two", file=sys.stderr)
-            return 1
-
-    monkeypatch.setattr(downloader_module.yt_dlp, "YoutubeDL", FakeYoutubeDL)
-
-    engine = make_engine(tmp_path)
-    opts = engine.build_ydl_options(
-        "https://www.youtube.com/watch?v=abc123",
-        AuthStrategy(
-            kind="cookies_file",
-            display_name="cookies.txt",
-            ydl_options={"cookiefile": str(tmp_path / "cookies.txt")},
-            attempted_auth=True,
-        ),
+    command = engine._yt_dlp_command(PUBLIC_VIDEO_TEST_URL, options)
+    cleaned = engine._redact_diagnostic_text(
+        f"cookie=super-secret authorization=token path={cookie_path}"
     )
 
-    try:
-        engine._run_yt_dlp("https://www.youtube.com/watch?v=abc123", opts)
-    except YtdlpRunError as exc:
-        message = exc.full_text()
-    else:
-        raise AssertionError("Expected YtdlpRunError")
-
-    assert "Exit code: 1" in message
-    assert "yt-dlp command:" in message
-    assert "yt-dlp stdout:" in message
-    assert "yt-dlp output:" in message
-    assert "--cookies <cookies.txt>" in message
-    assert str(tmp_path / "cookies.txt") not in message
-    assert "stdout line one" in message
-    assert "stdout line two" in message
-    assert "stderr line one" in message
-    assert "stderr line two" in message
-    assert "ERROR: Requested format is not available" in message
-    assert "WARNING: warning from logger" in message
-
-
-def test_user_result_is_concise_while_activity_log_keeps_ytdlp_diagnostics(
-    tmp_path,
-    monkeypatch,
-):
-    logs: list[str] = []
-    _mock_runtime(monkeypatch, path=tmp_path / "node.exe")
-    _mock_auth(monkeypatch)
-
-    def fail_with_diagnostics(self, prepared_url, ydl_opts):
-        raise YtdlpRunError(
-            self._yt_dlp_command(prepared_url, ydl_opts),
-            YtdlpCapturedOutput(stderr=["ERROR: media fragment failed during test"]),
-            exit_code=1,
-            phase="download",
-        )
-
-    monkeypatch.setattr(
-        downloader_module.DownloadEngine,
-        "_run_yt_dlp",
-        fail_with_diagnostics,
-    )
-    engine = DownloadEngine(DownloadOptions(output_dir=tmp_path), log_callback=logs.append)
-
-    result = engine.download(DownloadJob("https://www.youtube.com/watch?v=abc123"))
-
-    assert not result.success
-    assert result.message == "Download failed: ERROR: media fragment failed during test"
-    assert "yt-dlp command" not in result.message
-    assert any("yt-dlp command:" in entry for entry in logs)
-
-
-def test_http_403_final_message_matches_clean_support_guidance():
-    assert HTTP_403_FINAL_MESSAGE == (
-        "YouTube rejected the media download with HTTP 403. "
-        "Try refreshing cookies, using browser cookies, updating Neural Extractor, "
-        "or lowering format quality."
-    )
-
-
-def test_clean_error_message_removes_yt_dlp_github_links(tmp_path):
-    engine = make_engine(tmp_path)
-    message = engine._clean_error_message(
-        "ERROR: Something failed. Please report this issue at "
-        "https://github.com/yt-dlp/yt-dlp/issues?q=abc"
-    )
-
-    assert "github.com/yt-dlp" not in message
-    assert message == "ERROR: Something failed."
+    assert "--cookies <cookies.txt>" in command
+    assert str(cookie_path) not in command
+    assert "super-secret" not in cleaned
+    assert "authorization=token" not in cleaned
 
 
 def test_public_video_test_url_is_normal_video_url():
     assert PUBLIC_VIDEO_TEST_URL == "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+
+
+def test_attempt_temp_is_isolated_and_stale_owner_state_is_cleaned(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    app_data = tmp_path / "app-data"
+    monkeypatch.setattr(downloader_module, "app_data_dir", lambda: app_data)
+    engine = _engine(tmp_path)
+
+    active = engine._create_attempt_temp()
+    (active / "worker.tmp").write_text("isolated", encoding="utf-8")
+    engine._cleanup_attempt_temp(active)
+
+    stale = app_data / "worker-temp" / "owner-99999999-controlled"
+    stale.mkdir(parents=True)
+    (stale / "leftover.tmp").write_text("stale", encoding="utf-8")
+    monkeypatch.setattr(downloader_module, "is_process_running", lambda _pid: False)
+
+    messages = recover_stale_download_processes()
+
+    assert not active.exists()
+    assert not stale.exists()
+    assert any("Removed stale" in message for message in messages)
+
+
+@pytest.mark.parametrize("mode", [MediaMode.VIDEO, MediaMode.AUDIO_MP3, MediaMode.AUDIO_M4A])
+def test_media_modes_keep_remote_ejs_and_node_runtime(tmp_path, monkeypatch, mode):
+    _mock_runtime(monkeypatch, tmp_path)
+
+    options = _engine(tmp_path, media_mode=mode).build_ydl_options(PUBLIC_VIDEO_TEST_URL)
+
+    assert options["remote_components"] == ["ejs:github"]
+    assert options["js_runtimes"]["node"]["path"].endswith("node.exe")

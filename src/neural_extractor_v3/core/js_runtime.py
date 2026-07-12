@@ -63,13 +63,12 @@ def resolve_youtube_js_runtime() -> JavaScriptRuntimeStatus:
 
 
 def is_youtube_challenge_runtime_error(error_text: str) -> bool:
-    """Return True for YouTube JS challenge failures that masquerade as format errors."""
+    """Return True only when yt-dlp explicitly attributes failure to no JS runtime."""
     lowered = error_text.lower()
     patterns = (
-        "n challenge solving failed",
-        "only images are available",
         "no supported javascript runtime could be found",
-        "supported javascript runtime",
+        "no javascript runtime could be found",
+        "javascript runtime is unavailable",
         "youtube extraction without a js runtime",
     )
     return any(pattern in lowered for pattern in patterns)

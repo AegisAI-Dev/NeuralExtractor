@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import csv
 import io
 import os
@@ -18,7 +17,6 @@ from enum import Enum
 from pathlib import Path
 from uuid import uuid4
 
-import yt_dlp
 from yt_dlp.version import __version__ as ytdlp_version
 
 from neural_extractor_v3.config import (
@@ -38,10 +36,11 @@ from neural_extractor_v3.core.auth import (
     resolve_auth_strategies,
 )
 from neural_extractor_v3.core.downloader import (
-    YtdlpCapturedOutput,
-    YtdlpCaptureLogger,
+    DownloadEngine,
+    YtdlpRunError,
 )
 from neural_extractor_v3.core.js_runtime import ensure_youtube_js_runtime
+from neural_extractor_v3.core.youtube_errors import FailureCategory, classify_youtube_failure
 from neural_extractor_v3.models import DownloadOptions
 
 DEFAULT_DIAGNOSTIC_PROBE_URL = "https://www.youtube.com/watch?v=jNQXAC9IVRw"
@@ -355,24 +354,32 @@ def _add_format_probe(
 ) -> None:
     last_error = ""
     warnings: list[str] = []
+    engine = DownloadEngine(options)
 
     for index, auth_strategy in enumerate(auth_resolution.strategies):
         probe_opts = _format_probe_options(options, auth_strategy, js_runtimes)
-        output = YtdlpCapturedOutput()
-        probe_opts["logger"] = YtdlpCaptureLogger(output)
         command = _format_probe_command(probe_url, probe_opts)
-        captured_stdout = io.StringIO()
-        captured_stderr = io.StringIO()
         try:
-            with contextlib.redirect_stdout(captured_stdout), contextlib.redirect_stderr(
-                captured_stderr
-            ):
-                with yt_dlp.YoutubeDL(probe_opts) as ydl:
-                    info = ydl.extract_info(probe_url, download=False)
-        except Exception as exc:
-            detail = f"{auth_strategy.display_name}: {_one_line(str(exc))}"
+            result = engine._run_yt_dlp(probe_url, probe_opts, discover_only=True)
+        except YtdlpRunError as exc:
+            analysis = classify_youtube_failure(
+                exc.diagnostic_text(),
+                auth_kind=auth_strategy.kind,
+                javascript_runtime_available=engine.js_runtime_status.found,
+            )
+            detail = (
+                f"{auth_strategy.display_name}: {analysis.category.value}: "
+                f"{_one_line(exc.diagnostic_text())}"
+            )
             last_error = detail
-            if index < len(auth_resolution.strategies) - 1:
+            fallback_is_justified = analysis.category in {
+                FailureCategory.AUTHENTICATION_REQUIRED,
+                FailureCategory.COOKIE_FILE_REJECTED,
+                FailureCategory.BROWSER_COOKIE_DATABASE_LOCKED,
+                FailureCategory.BROWSER_COOKIE_DECRYPTION_FAILED,
+                FailureCategory.BROWSER_COOKIE_EXTRACTION_FAILED,
+            }
+            if fallback_is_justified and index < len(auth_resolution.strategies) - 1:
                 warnings.append(detail)
                 continue
             items.append(
@@ -384,8 +391,7 @@ def _add_format_probe(
             )
             return
 
-        formats = info.get("formats") if isinstance(info, dict) else None
-        count = len(formats or [])
+        count = len(result.formats)
         status = DiagnosticStatus.PASS if count else DiagnosticStatus.WARNING
         detail = (
             f"{count} formats from {probe_url}; auth={auth_strategy.display_name}; "

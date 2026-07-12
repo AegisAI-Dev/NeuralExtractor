@@ -5,7 +5,8 @@ from __future__ import annotations
 import os
 import sys
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, field
+from enum import Enum
 from pathlib import Path
 from typing import Any
 
@@ -62,6 +63,23 @@ class AuthStrategy:
     def is_browser(self) -> bool:
         return self.kind == "browser"
 
+    @property
+    def browser(self) -> str | None:
+        if not self.is_browser:
+            return None
+        configured = self.ydl_options.get("cookiesfrombrowser")
+        if isinstance(configured, str):
+            return configured.lower()
+        if isinstance(configured, tuple | list) and configured:
+            return str(configured[0]).lower()
+        return None
+
+    @property
+    def provider_id(self) -> str:
+        if self.is_browser:
+            return f"browser:{self.browser or self.display_name.lower()}"
+        return self.kind
+
 
 @dataclass(frozen=True, slots=True)
 class AuthResolution:
@@ -73,6 +91,70 @@ class AuthResolution:
 
 
 BrowserDetector = Callable[[], list[BrowserCookieSource]]
+
+
+@dataclass(slots=True)
+class AuthenticationState:
+    """Mutable, per-job state for bounded authenticated fallback selection."""
+
+    resolution: AuthResolution
+    authenticated_fallback_justified: bool = False
+    cookie_file_rejected: bool = False
+    cookie_file_rejection_reason: str = ""
+    attempted_provider_ids: set[str] = field(default_factory=set)
+    disabled_browser_reasons: dict[str, str] = field(default_factory=dict)
+
+    def justify_authenticated_fallback(self) -> None:
+        self.authenticated_fallback_justified = True
+
+    def mark_attempted(self, strategy: AuthStrategy) -> None:
+        if strategy.attempted_auth:
+            self.attempted_provider_ids.add(strategy.provider_id)
+
+    def reject_cookie_file(self, reason: str = "") -> None:
+        self.cookie_file_rejected = True
+        self.cookie_file_rejection_reason = reason
+        self.attempted_provider_ids.add("cookies_file")
+
+    def disable_browser(self, browser: str, reason: str) -> None:
+        normalized = browser.strip().lower()
+        if not normalized:
+            return
+        self.disabled_browser_reasons[normalized] = reason
+        self.attempted_provider_ids.add(f"browser:{normalized}")
+
+    def is_browser_disabled(self, browser: str) -> bool:
+        return browser.strip().lower() in self.disabled_browser_reasons
+
+    def eligible_authenticated_strategies(self) -> list[AuthStrategy]:
+        if not self.authenticated_fallback_justified:
+            return []
+
+        eligible: list[AuthStrategy] = []
+        for strategy in self.resolution.strategies:
+            if not strategy.attempted_auth or strategy.provider_id in self.attempted_provider_ids:
+                continue
+            if strategy.is_cookie_file and self.cookie_file_rejected:
+                continue
+            if strategy.is_browser and strategy.browser:
+                if self.is_browser_disabled(strategy.browser):
+                    continue
+            eligible.append(strategy)
+        return eligible
+
+    def next_authenticated_strategy(self) -> AuthStrategy | None:
+        eligible = self.eligible_authenticated_strategies()
+        if not eligible:
+            return None
+        strategy = eligible[0]
+        self.mark_attempted(strategy)
+        return strategy
+
+
+class BrowserCookieFailureKind(str, Enum):
+    LOCKED = "locked"
+    DECRYPTION_FAILED = "decryption_failed"
+    EXTRACTION_FAILED = "extraction_failed"
 
 
 def inspect_cookie_file(cookie_file: Path | None) -> CookieFileStatus:
@@ -159,15 +241,25 @@ def resolve_auth_strategies(
 ) -> AuthResolution:
     """Build ordered auth strategies for yt-dlp.
 
-    cookies.txt is always first when it looks usable. Browser cookies are a fallback.
-    A final unauthenticated strategy remains so public videos still work.
+    Public videos are attempted without authentication first. A valid cookies.txt and
+    detected browser profiles are retained as deterministic authenticated fallbacks.
     """
     messages: list[str] = []
-    strategies: list[AuthStrategy] = []
+    strategies: list[AuthStrategy] = [
+        AuthStrategy(
+            kind="none",
+            display_name="no authentication",
+            attempted_auth=False,
+            ydl_options={},
+        )
+    ]
 
     cookie_status = inspect_cookie_file(cookie_file)
     if cookie_status.valid and cookie_status.path:
-        messages.append(f"cookies.txt found: {cookie_status.display_name}")
+        messages.append(
+            f"cookies.txt available: {cookie_status.display_name} "
+            "(held for authenticated fallback)"
+        )
         strategies.append(
             AuthStrategy(
                 kind="cookies_file",
@@ -175,7 +267,6 @@ def resolve_auth_strategies(
                 attempted_auth=True,
                 ydl_options={
                     "cookiefile": str(cookie_status.path),
-                    "extractor_args": {"youtube": {"player_client": ["default"]}},
                 },
             )
         )
@@ -187,10 +278,7 @@ def resolve_auth_strategies(
     browser_sources = browser_detector()
     if browser_sources:
         browser_names = ", ".join(source.display_name for source in browser_sources)
-        if strategies:
-            messages.append(f"browser cookie fallback available: {browser_names}")
-        else:
-            messages.append(f"browser cookies available: {browser_names}")
+        messages.append(f"browser cookie fallback available: {browser_names}")
         for browser_source in browser_sources:
             strategies.append(
                 AuthStrategy(
@@ -199,30 +287,12 @@ def resolve_auth_strategies(
                     attempted_auth=True,
                     ydl_options={
                         "cookiesfrombrowser": (browser_source.browser,),
-                        "extractor_args": {"youtube": {"player_client": ["default"]}},
                     },
                 )
             )
     else:
-        messages.append("browser cookies unavailable: no Chrome, Edge, Firefox, or Brave profile found")
-
-    if strategies:
-        strategies.append(
-            AuthStrategy(
-                kind="none",
-                display_name="no authentication",
-                attempted_auth=False,
-                ydl_options={},
-            )
-        )
-    else:
-        strategies.append(
-            AuthStrategy(
-                kind="none",
-                display_name="no authentication",
-                attempted_auth=False,
-                ydl_options={},
-            )
+        messages.append(
+            "browser cookies unavailable: no Chrome, Edge, Brave, or Firefox profile found"
         )
 
     return AuthResolution(
@@ -244,34 +314,94 @@ def clean_live_event_ended_error() -> str:
     return "This live event has ended and is not currently downloadable."
 
 
-def is_browser_cookie_extraction_error(error_text: str) -> bool:
-    """Return True for local browser cookie database/decryption failures."""
+def classify_browser_cookie_extraction_error(
+    error_text: str,
+) -> BrowserCookieFailureKind | None:
+    """Classify local browser cookie failures without treating them as media errors."""
     lowered = error_text.lower()
-    patterns = (
+    locked_patterns = (
         "could not copy chrome cookie database",
         "could not copy edge cookie database",
         "could not copy brave cookie database",
         "could not copy firefox cookie database",
-        "could not copy",
-        "cookie database",
         "database is locked",
         "database table is locked",
+        "cookie database is locked",
+    )
+    if any(pattern in lowered for pattern in locked_patterns):
+        return BrowserCookieFailureKind.LOCKED
+
+    decryption_patterns = (
+        "dpapi",
         "failed to decrypt",
         "could not decrypt",
         "unable to decrypt",
         "keyring",
         "secretstorage",
+    )
+    if any(pattern in lowered for pattern in decryption_patterns):
+        return BrowserCookieFailureKind.DECRYPTION_FAILED
+
+    extraction_patterns = (
+        "cookie database",
         "browser cookies",
         "cookies from browser",
         "failed to load cookies",
         "could not load cookies",
         "failed loading cookies",
     )
-    return any(pattern in lowered for pattern in patterns)
+    if any(pattern in lowered for pattern in extraction_patterns):
+        return BrowserCookieFailureKind.EXTRACTION_FAILED
+    return None
 
 
-def clean_browser_cookie_extraction_error() -> str:
-    return "Browser cookie extraction failed. Close your browser or export cookies.txt manually."
+def is_browser_cookie_locked_error(error_text: str) -> bool:
+    return classify_browser_cookie_extraction_error(error_text) == BrowserCookieFailureKind.LOCKED
+
+
+def is_browser_cookie_decryption_error(error_text: str) -> bool:
+    return (
+        classify_browser_cookie_extraction_error(error_text)
+        == BrowserCookieFailureKind.DECRYPTION_FAILED
+    )
+
+
+def is_browser_cookie_extraction_error(error_text: str) -> bool:
+    """Compatibility helper for any local browser cookie extraction failure."""
+    return classify_browser_cookie_extraction_error(error_text) is not None
+
+
+def clean_browser_cookie_failure(
+    kind: BrowserCookieFailureKind,
+    browser_name: str = "",
+) -> str:
+    browser = browser_name.strip()
+    if kind == BrowserCookieFailureKind.LOCKED:
+        if browser:
+            return f"{browser} cookie database is locked. Close {browser} and try again."
+        return "Browser cookie database is locked. Close the browser and try again."
+    if kind == BrowserCookieFailureKind.DECRYPTION_FAILED:
+        suffix = f" for {browser}" if browser else ""
+        return (
+            f"Browser cookie decryption failed{suffix}. "
+            "Try cookies.txt or another signed-in browser."
+        )
+    suffix = f" for {browser}" if browser else ""
+    return (
+        f"Browser cookie extraction failed{suffix}. "
+        "Try cookies.txt or another supported browser."
+    )
+
+
+def clean_browser_cookie_extraction_error(
+    error_text: str = "",
+    browser_name: str = "",
+) -> str:
+    kind = (
+        classify_browser_cookie_extraction_error(error_text)
+        or BrowserCookieFailureKind.EXTRACTION_FAILED
+    )
+    return clean_browser_cookie_failure(kind, browser_name)
 
 
 def is_authentication_error(error_text: str) -> bool:

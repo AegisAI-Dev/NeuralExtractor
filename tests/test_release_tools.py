@@ -6,6 +6,8 @@ from neural_extractor_v3.core.update_manifest import MIN_UPDATE_SIZE_BYTES
 
 from scripts.release_tools import generate_manifest, validate_release_versions
 
+PROJECT_ROOT = Path(__file__).resolve().parents[1]
+
 
 def write_project_versions(root: Path, config_version: str, package_version: str) -> None:
     config = root / "src" / "neural_extractor_v3" / "config.py"
@@ -24,6 +26,10 @@ def test_release_version_validation_requires_tag_and_both_sources_to_match(tmp_p
 
     with pytest.raises(ValueError, match="Release version mismatch"):
         validate_release_versions(tmp_path, "v3.0.3")
+
+
+def test_current_303_source_versions_and_future_release_ref_are_consistent():
+    assert validate_release_versions(PROJECT_ROOT, "v3.0.3") == "3.0.3"
 
 
 def test_release_version_validation_rejects_source_disagreement_and_invalid_semver(tmp_path):
