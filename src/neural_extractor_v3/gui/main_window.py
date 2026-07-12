@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import os
 import sys
+import traceback
 from datetime import datetime
 from pathlib import Path
+from threading import Event, Lock
 
 from PyQt6.QtCore import QSettings, Qt, QThread, QTimer, QUrl, pyqtSignal
 from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QPixmap
@@ -97,8 +99,13 @@ PLAYLIST_TOOLTIP = (
 STATUS_COLORS: tuple[tuple[str, str], ...] = (
     ("Queued", "#8b98ad"),
     ("Starting", "#7cc7ff"),
+    ("Preparing", "#7cc7ff"),
+    ("Active download", "#2dd4bf"),
     ("Downloading", "#2dd4bf"),
+    ("Waiting", "#e8b34b"),
+    ("No response", "#e8b34b"),
     ("Processing", "#e8b34b"),
+    ("Cancelling", "#9aa7bd"),
     ("Done", "#4ade80"),
     ("Failed", "#f16a7c"),
     ("Cancelled", "#9aa7bd"),
@@ -117,7 +124,7 @@ class DownloadWorker(QThread):
 
     progress = pyqtSignal(str, int, str, str)
     job_started = pyqtSignal(str, str)
-    job_finished = pyqtSignal(str, bool, str)
+    job_finished = pyqtSignal(str, bool, str, str)
     log = pyqtSignal(str)
     batch_finished = pyqtSignal()
 
@@ -126,43 +133,110 @@ class DownloadWorker(QThread):
         self.jobs = jobs
         self.options = options
         self.engine: DownloadEngine | None = None
-        self.stop_requested = False
+        self._stop_event = Event()
+        self._state_lock = Lock()
+        self._current_job_id: str | None = None
+        self._last_progress_by_job_id: dict[str, tuple[int, str, str]] = {}
 
-    def request_stop(self) -> None:
-        self.stop_requested = True
-        if self.engine:
-            self.engine.cancel()
+    @property
+    def stop_requested(self) -> bool:
+        return self._stop_event.is_set()
+
+    def current_job_id(self) -> str | None:
+        with self._state_lock:
+            return self._current_job_id
+
+    def request_stop(self) -> str | None:
+        self._stop_event.set()
+        with self._state_lock:
+            engine = self.engine
+            job_id = self._current_job_id
+        if engine:
+            engine.cancel()
+        return job_id
 
     def run(self) -> None:
-        self.engine = DownloadEngine(
-            self.options,
-            progress_callback=self._on_progress,
-            log_callback=self.log.emit,
-        )
+        try:
+            for index, job in enumerate(self.jobs):
+                if self.stop_requested:
+                    self._emit_cancelled_jobs(self.jobs[index:])
+                    break
 
-        for job in self.jobs:
-            if self.stop_requested:
-                self.job_finished.emit(job.job_id, False, "Cancelled")
-                continue
+                with self._state_lock:
+                    self._current_job_id = job.job_id
+                self.job_started.emit(job.job_id, job.url)
 
-            self.job_started.emit(job.job_id, job.url)
-            result = self.engine.download(job)
-            self.job_finished.emit(job.job_id, result.success, result.message)
+                try:
+                    engine = DownloadEngine(
+                        self.options,
+                        progress_callback=self._on_progress,
+                        log_callback=self.log.emit,
+                    )
+                    with self._state_lock:
+                        self.engine = engine
 
-            if self.stop_requested:
-                break
+                    if self.stop_requested:
+                        engine.cancel()
+                        self.job_finished.emit(job.job_id, False, "Cancelled", "cancelled")
+                    else:
+                        result = engine.download(job)
+                        raw_category = getattr(result, "failure_category", "")
+                        failure_category = str(
+                            getattr(raw_category, "value", raw_category) or ""
+                        )
+                        if self.stop_requested and not result.success:
+                            failure_category = "cancelled"
+                        self.job_finished.emit(
+                            job.job_id,
+                            result.success,
+                            result.message,
+                            failure_category,
+                        )
+                except Exception:
+                    self.log.emit("Download worker exception:\n" + traceback.format_exc())
+                    if self.stop_requested:
+                        self.job_finished.emit(job.job_id, False, "Cancelled", "cancelled")
+                    else:
+                        self.job_finished.emit(
+                            job.job_id,
+                            False,
+                            "Download failed unexpectedly. See the Activity Log for details.",
+                            "unknown_ytdlp_failure",
+                        )
+                finally:
+                    with self._state_lock:
+                        self.engine = None
+                        self._current_job_id = None
 
-        self.batch_finished.emit()
+                if self.stop_requested:
+                    self._emit_cancelled_jobs(self.jobs[index + 1 :])
+                    break
+        finally:
+            with self._state_lock:
+                self.engine = None
+                self._current_job_id = None
+            self.batch_finished.emit()
+
+    def _emit_cancelled_jobs(self, jobs: list[DownloadJob]) -> None:
+        for job in jobs:
+            self.job_finished.emit(job.job_id, False, "Cancelled", "cancelled")
 
     def _on_progress(self, event) -> None:
-        if event.status == "downloading":
+        if self.stop_requested:
+            status = "Cancelling"
+        elif event.status == "downloading":
             status = f"Downloading {event.percent}%"
         elif event.status == "finished":
             status = "Processing"
         else:
-            status = event.status.title()
+            raw_status = str(event.status or "Working")
+            status = (
+                raw_status.replace("_", " ").capitalize()
+                if raw_status.islower()
+                else raw_status
+            )
 
-        detail_parts = []
+        detail_parts = ["Cancelling download"] if self.stop_requested else []
         if event.playlist_index and event.playlist_total:
             detail_parts.append(f"{event.playlist_index}/{event.playlist_total}")
         if event.title:
@@ -172,7 +246,12 @@ class DownloadWorker(QThread):
         if event.eta:
             detail_parts.append(f"ETA {event.eta}")
 
-        self.progress.emit(event.job_id, event.percent, status, " | ".join(detail_parts))
+        detail = " | ".join(detail_parts)
+        signature = (event.percent, status, detail)
+        if self._last_progress_by_job_id.get(event.job_id) == signature:
+            return
+        self._last_progress_by_job_id[event.job_id] = signature
+        self.progress.emit(event.job_id, event.percent, status, detail)
 
 
 class UpdateCheckWorker(QThread):
@@ -287,6 +366,8 @@ class MainWindow(QMainWindow):
         self.row_by_job_id: dict[str, int] = {}
         self.progress_by_job_id: dict[str, QProgressBar] = {}
         self.worker: DownloadWorker | None = None
+        self.active_job_id: str | None = None
+        self._close_after_worker_stops = False
         self.update_worker: UpdateCheckWorker | None = None
         self.update_install_worker: UpdateInstallWorker | None = None
         self.update_progress_dialog: QProgressDialog | None = None
@@ -1000,7 +1081,7 @@ class MainWindow(QMainWindow):
         self.stop_button.setObjectName("dangerButton")
         self.stop_button.setMinimumHeight(40)
         self.stop_button.setEnabled(False)
-        self.stop_button.setToolTip("Stop after the current operation finishes")
+        self.stop_button.setToolTip("Cancel the active download and stop the queue")
         self.stop_button.clicked.connect(self.stop_queue)
         self.clear_button = QPushButton("Clear")
         self.clear_button.setMinimumHeight(40)
@@ -1242,27 +1323,58 @@ class MainWindow(QMainWindow):
         if self.diagnostics_worker and self.diagnostics_worker.isRunning():
             QMessageBox.information(self, APP_NAME, "Wait for diagnostics to finish before starting downloads.")
             return
-        if not self.jobs and not self.add_to_queue():
-            return
+        runnable_jobs = self._runnable_jobs()
+        if not runnable_jobs:
+            if not self.add_to_queue():
+                return
+            runnable_jobs = self._runnable_jobs()
+
+        for job in runnable_jobs:
+            row = self.row_by_job_id.get(job.job_id)
+            if row is None:
+                continue
+            self._set_status(row, "Queued")
+            self._set_detail(row, "")
+            progress = self.progress_by_job_id.get(job.job_id)
+            if progress:
+                progress.setValue(0)
 
         options = self._collect_options()
         self._set_running_state(True)
         self.log("Starting queue")
 
-        self.worker = DownloadWorker(list(self.jobs), options)
-        self.worker.job_started.connect(self.on_job_started)
-        self.worker.progress.connect(self.on_progress)
-        self.worker.job_finished.connect(self.on_job_finished)
-        self.worker.log.connect(self.log)
-        self.worker.batch_finished.connect(self.on_batch_finished)
-        self.worker.start()
+        worker = DownloadWorker(runnable_jobs, options)
+        self.worker = worker
+        worker.job_started.connect(self.on_job_started)
+        worker.progress.connect(self.on_progress)
+        worker.job_finished.connect(self.on_job_finished)
+        worker.log.connect(self.log)
+        worker.finished.connect(self.on_batch_finished)
+        worker.start()
 
     def stop_queue(self) -> None:
         if self.worker and self.worker.isRunning():
-            self.log("Stop requested")
-            self.statusBar().showMessage("Stopping after current operation")
-            self.worker.request_stop()
+            self.log("Cancellation requested")
+            worker_job_id = self.worker.request_stop()
+            job_id = self.active_job_id or worker_job_id
+            if job_id:
+                row = self.row_by_job_id.get(job_id)
+                if row is not None:
+                    self._set_status(row, "Cancelling")
+                    self._set_detail(row, "Cancelling download")
+            self.statusBar().showMessage("Cancelling download")
+            self.stop_button.setText("Cancelling...")
             self.stop_button.setEnabled(False)
+
+    def _runnable_jobs(self) -> list[DownloadJob]:
+        runnable_statuses = {"Queued", "Failed", "Cancelled"}
+        jobs: list[DownloadJob] = []
+        for job in self.jobs:
+            row = self.row_by_job_id.get(job.job_id)
+            item = self.table.item(row, 2) if row is not None else None
+            if item is not None and item.text() in runnable_statuses:
+                jobs.append(job)
+        return jobs
 
     def clear_queue(self) -> None:
         if self.worker and self.worker.isRunning():
@@ -1577,6 +1689,7 @@ class MainWindow(QMainWindow):
         row = self.row_by_job_id.get(job_id)
         if row is None:
             return
+        self.active_job_id = job_id
         self._set_status(row, "Starting")
         self._set_detail(row, url)
         self.statusBar().showMessage(f"Starting {url}")
@@ -1585,6 +1698,13 @@ class MainWindow(QMainWindow):
         row = self.row_by_job_id.get(job_id)
         if row is None:
             return
+        current_item = self.table.item(row, 2)
+        if (
+            current_item is not None
+            and current_item.text() == "Cancelling"
+            and status != "Cancelling"
+        ):
+            return
         progress = self.progress_by_job_id.get(job_id)
         if progress:
             progress.setValue(percent)
@@ -1592,13 +1712,29 @@ class MainWindow(QMainWindow):
         self._set_detail(row, detail)
         self.statusBar().showMessage(detail or status)
 
-    def on_job_finished(self, job_id: str, success: bool, message: str) -> None:
+    def on_job_finished(
+        self,
+        job_id: str,
+        success: bool,
+        message: str,
+        failure_category: str = "",
+    ) -> None:
         row = self.row_by_job_id.get(job_id)
         if row is None:
             return
+        normalized_category = failure_category.strip().lower().replace("-", "_").replace(" ", "_")
+        cancelled = normalized_category in {
+            "cancelled",
+            "download_cancelled",
+            "user_cancelled",
+            "user_cancellation",
+        } or message.strip().lower() in {
+            "cancelled",
+            "download cancelled by user",
+        }
         if success:
             status = "Done"
-        elif message == "Cancelled":
+        elif cancelled:
             status = "Cancelled"
         else:
             status = "Failed"
@@ -1608,14 +1744,27 @@ class MainWindow(QMainWindow):
             progress.setValue(100 if success else progress.value())
         self._set_detail(row, message)
         self.log(message)
+        if self.active_job_id == job_id:
+            self.active_job_id = None
         self._refresh_queue_summary()
 
-    def on_batch_finished(self) -> None:
+    def on_batch_finished(self, worker: DownloadWorker | None = None) -> None:
+        if worker is None:
+            sender = self.sender()
+            worker = sender if isinstance(sender, DownloadWorker) else self.worker
+        if worker is not None and self.worker is not worker:
+            return
+        stopped = bool(worker and worker.stop_requested)
         self._set_running_state(False)
-        self.statusBar().showMessage("Queue finished")
-        self.log("Queue finished")
+        self.active_job_id = None
+        message = "Queue stopped" if stopped else "Queue finished"
+        self.statusBar().showMessage(message)
+        self.log(message)
         self.worker = None
         self._refresh_queue_summary()
+        if self._close_after_worker_stops:
+            self._close_after_worker_stops = False
+            QTimer.singleShot(0, self.close)
 
     # ------------------------------------------------------------------ state
 
@@ -1652,6 +1801,7 @@ class MainWindow(QMainWindow):
         self.start_button.setEnabled(not running)
         self.clear_button.setEnabled(not running)
         self.stop_button.setEnabled(running)
+        self.stop_button.setText("Stop")
         if hasattr(self, "diagnostics_button"):
             self.diagnostics_button.setEnabled(not running)
         for widget in self._run_locked_widgets():
@@ -1692,6 +1842,8 @@ class MainWindow(QMainWindow):
             if reply != QMessageBox.StandardButton.Yes:
                 event.ignore()
                 return
-            self.worker.request_stop()
-            self.worker.wait(3000)
+            self._close_after_worker_stops = True
+            self.stop_queue()
+            event.ignore()
+            return
         event.accept()

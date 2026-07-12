@@ -97,3 +97,4 @@ class DownloadResult:
     success: bool
     message: str
     files: list[Path] = field(default_factory=list)
+    failure_category: str = ""

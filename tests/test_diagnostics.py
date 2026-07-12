@@ -2,6 +2,7 @@ import subprocess
 
 from neural_extractor_v3.core import diagnostics
 from neural_extractor_v3.core.auth import AuthResolution, AuthStrategy, CookieFileStatus
+from neural_extractor_v3.core.downloader import YtdlpRunResult
 from neural_extractor_v3.core.js_runtime import JavaScriptRuntimeStatus
 from neural_extractor_v3.models import DownloadOptions
 
@@ -44,19 +45,16 @@ def test_format_probe_is_safe_and_uses_js_runtime(tmp_path, monkeypatch):
         browser_sources=[],
     )
 
-    class FakeYoutubeDL:
-        def __init__(self, opts):
-            captured_opts.update(opts)
+    class FakeDownloadEngine:
+        def __init__(self, options):
+            self.js_runtime_status = JavaScriptRuntimeStatus(
+                True, "node", node_path, "v22.17.0"
+            )
 
-        def __enter__(self):
-            return self
-
-        def __exit__(self, exc_type, exc, traceback):
-            return False
-
-        def extract_info(self, url, download=False):
-            assert download is False
-            return {"formats": [{"format_id": "18"}]}
+        def _run_yt_dlp(self, url, options, *, discover_only=False):
+            assert discover_only
+            captured_opts.update(options)
+            return YtdlpRunResult(formats=[{"format_id": "18"}])
 
     def fake_run_command(args: list[str], *, timeout: int):
         if args and args[0] == "tasklist":
@@ -78,7 +76,7 @@ def test_format_probe_is_safe_and_uses_js_runtime(tmp_path, monkeypatch):
         lambda: JavaScriptRuntimeStatus(True, "node", node_path, "v22.17.0"),
     )
     monkeypatch.setattr(diagnostics, "resolve_auth_strategies", lambda _cookie_file: auth_resolution)
-    monkeypatch.setattr(diagnostics.yt_dlp, "YoutubeDL", FakeYoutubeDL)
+    monkeypatch.setattr(diagnostics, "DownloadEngine", FakeDownloadEngine)
     monkeypatch.setattr(diagnostics, "_run_command", fake_run_command)
 
     report = diagnostics.run_support_diagnostics(
