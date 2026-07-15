@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import hmac
 import os
+import re
 import secrets
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -43,6 +44,7 @@ DOWNLOAD_CHUNK_SIZE = 1024 * 1024
 
 ProgressCallback = Callable[[int, str], None]
 CancelCallback = Callable[[], bool]
+STAGING_TRANSACTION_PATTERN = re.compile(r"^[A-Za-z0-9_-]{32,128}$")
 
 
 class UpdateError(RuntimeError):
@@ -370,14 +372,23 @@ class UpdateDownloader:
         self,
         info: UpdateInfo,
         *,
+        transaction_id: str | None = None,
         progress_callback: ProgressCallback | None = None,
         cancel_callback: CancelCallback | None = None,
     ) -> Path:
+        if transaction_id is not None and not STAGING_TRANSACTION_PATTERN.fullmatch(
+            transaction_id
+        ):
+            raise UpdateError("invalid_transaction", "The update staging transaction is invalid.")
         _validate_https_url(
             info.download_url,
             expected=_official_release_asset_url(info.tag_name, info.manifest.asset_filename),
         )
-        version_dir = _safe_child(self.update_root, info.version, "package")
+        version_dir = (
+            _safe_child(self.update_root, info.version, transaction_id, "package")
+            if transaction_id is not None
+            else _safe_child(self.update_root, info.version, "package")
+        )
         version_dir.mkdir(parents=True, exist_ok=True)
         final_path = _safe_child(version_dir, info.manifest.asset_filename)
 
@@ -388,11 +399,13 @@ class UpdateDownloader:
             with contextlib.suppress(OSError):
                 final_path.unlink()
 
-        self._remove_partial_files(version_dir, info.manifest.asset_filename)
+        partial_identity = transaction_id or secrets.token_urlsafe(36)
         part_path = _safe_child(
             version_dir,
-            f".{info.manifest.asset_filename}.{secrets.token_hex(8)}.part",
+            f".{info.manifest.asset_filename}.{partial_identity}.part",
         )
+        with contextlib.suppress(OSError):
+            part_path.unlink()
         self._progress(progress_callback, 0, "Downloading update")
 
         response: requests.Response | None = None

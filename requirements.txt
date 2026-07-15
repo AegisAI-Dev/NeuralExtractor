@@ -3,4 +3,4 @@ PyQt6>=6.11.0
 pillow>=12.3.0
 requests>=2.34.2
 youtube-transcript-api>=1.2.4
-pyinstaller>=6.21.0
+pyinstaller==6.21.0

@@ -13,6 +13,7 @@ import time
 from pathlib import Path
 
 import pytest
+
 from neural_extractor_v3.core.process_control import (
     OwnedProcessSupervisor,
     ProcessCancelledError,
@@ -24,6 +25,7 @@ from neural_extractor_v3.core.process_control import (
     ProcessTotalTimeoutError,
     RecoveryState,
     is_process_running,
+    process_creation_identity,
     recover_owned_process,
 )
 
@@ -76,6 +78,23 @@ def force_stop_test_process(pid: int) -> None:
         if is_process_running(pid):
             with contextlib.suppress(ProcessLookupError, PermissionError):
                 os.kill(pid, signal.SIGKILL)
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows process handles are required")
+def test_process_creation_identity_is_none_after_exit_with_popen_handle_open() -> None:
+    process = subprocess.Popen(
+        [sys.executable, "-c", "raise SystemExit(0)"],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        shell=False,
+        creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
+    )
+
+    assert process.wait(timeout=5) == 0
+    # Keeping ``process`` alive keeps Popen's native process handle open on
+    # Windows. A terminated process object must not count as a live lifetime.
+    assert process_creation_identity(process.pid) is None
 
 
 def child_tree_script(child_pid_file: Path | None = None) -> str:

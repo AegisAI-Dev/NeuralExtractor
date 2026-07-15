@@ -1,6 +1,7 @@
 import json
 
 import pytest
+
 from neural_extractor_v3.core.update_manifest import (
     EXPECTED_APPLICATION_NAME,
     MANIFEST_SCHEMA_VERSION,
@@ -45,6 +46,8 @@ def test_strict_numeric_versions_accept_newer_and_reject_equal_or_older():
     assert is_newer_version("3.0.3", "3.0.2")
     assert not is_newer_version("3.0.2", "3.0.2")
     assert not is_newer_version("3.0.1", "3.0.2")
+    assert is_newer_version("3.0.4", "3.0.2")
+    assert is_newer_version("3.0.4", "3.0.3")
 
 
 @pytest.mark.parametrize(
@@ -122,6 +125,28 @@ def test_same_version_downgrade_and_too_old_updater_are_rejected():
             manifest_payload(minimum_updater_version="3.0.3"),
             current_version="3.0.2",
         )
+
+
+@pytest.mark.parametrize("current_version", ["3.0.2", "3.0.3"])
+def test_v304_manifest_requires_the_repaired_v304_updater(current_version):
+    with pytest.raises(UpdateValidationError) as error:
+        parse_manifest(
+            manifest_payload(version="3.0.4", minimum_updater_version="3.0.4"),
+            release_version="3.0.4",
+            current_version=current_version,
+        )
+
+    assert error.value.code == "updater_too_old"
+
+
+def test_v304_updater_accepts_a_future_release_with_v304_minimum():
+    manifest = parse_manifest(
+        manifest_payload(version="3.0.5", minimum_updater_version="3.0.4"),
+        release_version="3.0.5",
+        current_version="3.0.4",
+    )
+
+    assert manifest.minimum_updater_version == "3.0.4"
 
 
 def test_unexpected_manifest_fields_are_rejected():

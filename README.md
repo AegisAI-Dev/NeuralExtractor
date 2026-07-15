@@ -93,14 +93,14 @@ for the GitHub Desktop and GitHub web release procedure.
 ## App Updates
 
 On startup, the desktop app silently checks the latest stable GitHub Release. The
-`Check Updates` button runs the same check manually. Packaged version 3.0.2 and
-later can download the exact versioned EXE, validate its strict manifest and
-SHA-256, install through a detached helper, restart, confirm startup, and roll
-back to the verified backup when startup fails. Installation always requires a
-clear user action.
+`Check Updates` button runs the same check manually. V3.0.4 can download a future
+compatible versioned EXE, validate its strict manifest, size, and SHA-256, install
+through a detached helper, restart, confirm startup, and roll back to the verified
+backup when startup fails. Installation always requires a clear user action.
 
-Version 3.0.1 must be upgraded to 3.0.2 manually once. Source-mode or non-writable
-installs retain the manual release-page fallback.
+V3.0.2 and V3.0.3 contain the defective updater handoff and may need one manual
+upgrade to V3.0.4. Source-mode or non-writable installs retain the manual
+release-page fallback.
 
 The default release repository is:
 

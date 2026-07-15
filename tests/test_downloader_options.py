@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+
 from neural_extractor_v3.core import downloader as downloader_module
 from neural_extractor_v3.core.auth import (
     AuthResolution,
