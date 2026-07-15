@@ -26,7 +26,18 @@ ffmpeg_bin_candidates = [
     / "NeuralExtractor"
     / "bin",
 ]
-ffmpeg_bin = next((path for path in ffmpeg_bin_candidates if (path / "ffmpeg.exe").exists()), None)
+ffmpeg_bin = next(
+    (
+        path
+        for path in ffmpeg_bin_candidates
+        if (path / "ffmpeg.exe").exists() and (path / "ffprobe.exe").exists()
+    ),
+    None,
+)
+if node_runtime is None:
+    raise SystemExit("A bundled node.exe is required for the Neural Extractor package.")
+if ffmpeg_bin is None:
+    raise SystemExit("Bundled ffmpeg.exe and ffprobe.exe are required for the Neural Extractor package.")
 
 datas = [
     (str(assets / "NeuralExtractoricon.ico"), "assets"),
@@ -37,15 +48,12 @@ datas = [
     (str(assets / "chevron-down-disabled.png"), "assets"),
 ]
 
-if ffmpeg_bin:
-    datas += [
-        (str(ffmpeg_bin / "ffmpeg.exe"), "bin"),
-        (str(ffmpeg_bin / "ffprobe.exe"), "bin"),
-    ]
+datas += [
+    (str(ffmpeg_bin / "ffmpeg.exe"), "bin"),
+    (str(ffmpeg_bin / "ffprobe.exe"), "bin"),
+]
 
-binaries = []
-if node_runtime:
-    binaries.append((str(node_runtime), "bin"))
+binaries = [(str(node_runtime), "bin")]
 
 a = Analysis(
     ["main.py"],

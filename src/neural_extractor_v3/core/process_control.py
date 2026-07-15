@@ -17,6 +17,7 @@ from __future__ import annotations
 import codecs
 import contextlib
 import ctypes
+import hashlib
 import json
 import os
 import signal
@@ -647,6 +648,25 @@ def is_process_running(pid: int) -> bool:
     return pid > 0 and _process_identity(pid) is not None
 
 
+def process_creation_identity(pid: int) -> str | None:
+    """Return a stable, sanitized identity for one exact process lifetime.
+
+    The underlying token includes the OS process creation identity and resolved
+    executable.  Persisting only its SHA-256 digest lets other recovery systems
+    protect against PID reuse without writing executable paths into ownership
+    records.
+    """
+
+    identity = (
+        _windows_process_identity(pid, fail_on_unknown=True)
+        if os.name == "nt"
+        else _process_identity(pid)
+    )
+    if identity is None:
+        return None
+    return hashlib.sha256(identity.token.encode("utf-8")).hexdigest()
+
+
 def _validate_command(args: Sequence[str | os.PathLike[str]]) -> tuple[str, ...]:
     if isinstance(args, str | bytes | os.PathLike):
         raise TypeError("args must be an argv sequence, not a shell command string")
@@ -926,7 +946,9 @@ def _process_identity(pid: int) -> _ProcessIdentity | None:
     return _procfs_process_identity(pid)
 
 
-def _windows_process_identity(pid: int) -> _ProcessIdentity | None:
+def _windows_process_identity(
+    pid: int, *, fail_on_unknown: bool = False
+) -> _ProcessIdentity | None:
     if os.name != "nt":
         return None
     from ctypes import wintypes
@@ -947,6 +969,9 @@ def _windows_process_identity(pid: int) -> _ProcessIdentity | None:
         ctypes.POINTER(FileTime),
     ]
     get_process_times.restype = wintypes.BOOL
+    get_exit_code = kernel32.GetExitCodeProcess
+    get_exit_code.argtypes = [wintypes.HANDLE, ctypes.POINTER(wintypes.DWORD)]
+    get_exit_code.restype = wintypes.BOOL
     query_image = kernel32.QueryFullProcessImageNameW
     query_image.argtypes = [
         wintypes.HANDLE,
@@ -962,8 +987,22 @@ def _windows_process_identity(pid: int) -> _ProcessIdentity | None:
     process_query_limited_information = 0x1000
     handle = open_process(process_query_limited_information, False, pid)
     if not handle:
+        error = ctypes.get_last_error()
+        if fail_on_unknown and error != 87:  # ERROR_INVALID_PARAMETER means no such PID.
+            if error == 5:
+                raise PermissionError(error, "Process identity query was denied")
+            raise OSError(error, "Process identity query failed")
         return None
     try:
+        exit_code = wintypes.DWORD()
+        if not get_exit_code(handle, ctypes.byref(exit_code)):
+            if fail_on_unknown:
+                error = ctypes.get_last_error()
+                raise OSError(error, "Process exit-state query failed")
+            return None
+        if exit_code.value != 259:  # STILL_ACTIVE
+            return None
+
         created = FileTime()
         exited = FileTime()
         kernel = FileTime()
@@ -975,11 +1014,19 @@ def _windows_process_identity(pid: int) -> _ProcessIdentity | None:
             ctypes.byref(kernel),
             ctypes.byref(user),
         ):
+            if fail_on_unknown:
+                error = ctypes.get_last_error()
+                raise OSError(error, "Process creation-time query failed")
             return None
 
         length = wintypes.DWORD(32_768)
         buffer = ctypes.create_unicode_buffer(length.value)
         if not query_image(handle, 0, buffer, ctypes.byref(length)):
+            if fail_on_unknown:
+                error = ctypes.get_last_error()
+                if error == 5:
+                    raise PermissionError(error, "Process image query was denied")
+                raise OSError(error, "Process image query failed")
             return None
         executable = os.path.normcase(os.path.realpath(buffer.value))
         creation_ticks = (int(created.high) << 32) | int(created.low)

@@ -12,8 +12,10 @@ from neural_extractor_v3.core.downloader import DownloadEngine, recover_stale_do
 from neural_extractor_v3.core.update_installer import (
     cleanup_stale_update_state,
     read_update_recovery_message,
+    recover_stale_update_ownership,
     run_update_helper,
     write_startup_confirmation,
+    write_transaction_startup_confirmation,
 )
 from neural_extractor_v3.models import DownloadJob, DownloadOptions, MediaMode, PlaylistMode
 
@@ -54,6 +56,7 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--apply-update", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--post-update-token", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--post-update-marker", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--post-update-transaction", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--update-rollback-status", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--internal-ytdlp-worker", action="store_true", help=argparse.SUPPRESS)
     return parser.parse_args(argv)
@@ -113,19 +116,36 @@ def run_gui(argv: list[str], args: argparse.Namespace) -> int:
     window = MainWindow()
     window.show()
     recover_stale_download_processes(window.log)
+    if not args.post_update_transaction:
+        recovery = recover_stale_update_ownership(window.log)
+        if recovery.shutdown_required:
+            window.log("Detached updater recovery accepted the transaction; closing safely")
+            QTimer.singleShot(0, app.quit)
+            return app.exec()
 
-    if args.post_update_token and args.post_update_marker:
+    if args.post_update_transaction or (args.post_update_token and args.post_update_marker):
         def confirm_startup() -> None:
             try:
-                write_startup_confirmation(
-                    args.post_update_token,
-                    Path(args.post_update_marker),
-                    version=VERSION,
-                )
+                if args.post_update_transaction:
+                    write_transaction_startup_confirmation(
+                        Path(args.post_update_transaction),
+                        version=VERSION,
+                    )
+                else:
+                    write_startup_confirmation(
+                        args.post_update_token,
+                        Path(args.post_update_marker),
+                        version=VERSION,
+                    )
                 window.log(f"Update startup confirmed for version {VERSION}")
             except Exception:
                 window.log("Update startup confirmation failed; the updater will restore the previous version")
                 QTimer.singleShot(0, app.quit)
+                return
+            try:
+                recover_stale_update_ownership(window.log)
+            except Exception:
+                window.log("Startup was confirmed, but deferred updater cleanup will retry later")
 
         QTimer.singleShot(1200, confirm_startup)
 
@@ -149,6 +169,8 @@ def main(argv: list[str] | None = None) -> int:
         return run_ytdlp_worker()
     if args.apply_update:
         return run_update_helper(Path(args.apply_update))
+    if args.post_update_transaction and (args.post_update_token or args.post_update_marker):
+        return 2
     if bool(args.post_update_token) != bool(args.post_update_marker):
         return 2
     if args.diagnostics:

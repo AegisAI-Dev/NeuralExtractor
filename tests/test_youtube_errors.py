@@ -1,4 +1,5 @@
 import pytest
+
 from neural_extractor_v3.core.youtube_errors import (
     FailureCategory,
     classify_youtube_failure,

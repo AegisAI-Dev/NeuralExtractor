@@ -20,7 +20,7 @@ from neural_extractor_v3.core.update_manifest import (  # noqa: E402
     parse_numeric_version,
 )
 
-BOOTSTRAP_UPDATER_VERSION = "3.0.2"
+BOOTSTRAP_UPDATER_VERSION = "3.0.4"
 
 
 def config_version(project_root: Path) -> str:

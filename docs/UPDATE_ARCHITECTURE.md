@@ -1,11 +1,34 @@
 # Neural Extractor V3 Update Architecture
 
+## Release 3.0.4 transaction-handoff repair
+
+Version 3.0.4 repairs the detached updater transaction used by 3.0.2 and
+3.0.3. Those versions recorded the PID returned by launching a PyInstaller
+one-file helper. That PID belongs to the outer bootloader, while Python helper
+mode can run in its child process. The child therefore rejected its own
+transaction as if a competing updater owned the installation.
+
+Because the defective code is already installed in 3.0.2 and 3.0.3, neither is
+a supported automatic path to 3.0.4. Install 3.0.4 manually once from the
+official GitHub Release. The 3.0.4 manifest deliberately declares
+`minimum_updater_version` 3.0.4. Releases after 3.0.4 can then use the repaired
+automatic updater when their manifests keep a compatible minimum.
+
+V3.0.4 creates a transaction before staging, uses target-scoped ownership keyed
+by the normalized installed EXE, and stores both PID and process-creation
+identity. The GUI reserves only a same-transaction handoff. The Python runtime
+inside the helper atomically assumes installation ownership itself and writes a
+readiness acknowledgement before the GUI exits. A live different transaction
+for the same target remains blocked; a different installation path does not.
+
 ## Release 3.0.2
 
 Version 3.0.2 is the bootstrap release for the Windows self-updater. Version
 3.0.1 can discover a release but cannot replace itself, so users of 3.0.1 must
-install 3.0.2 manually once. A packaged 3.0.2 installation can perform the
-complete confirmed update flow for 3.0.3 and later releases.
+install 3.0.2 manually once. Although 3.0.2 introduced the complete confirmed
+update design, its packaged one-file GUI-to-helper PID handoff is defective.
+3.0.2 and 3.0.3 may fail before replacement and must not be described as a
+reliable automatic path to 3.0.4.
 
 The existing YouTube HTTP 403 retry hardening is included in 3.0.2. Update work
 does not alter download naming, Mix/RDMM normalization, queueing, cancellation,
@@ -102,25 +125,31 @@ A checksum mismatch removes the partial file and cannot reach installation.
    `Download and Install` action.
 2. The app checks packaged Windows mode, official target name, writable install
    directory, safe non-temporary location, and free space.
-3. The running EXE copies itself to
-   `%LOCALAPPDATA%\NeuralExtractorV3\updater-helper\NeuralExtractorV3-Updater.exe`.
-4. It creates a strict transaction with a random token and a single installation
-   lock, then starts the helper with `--apply-update <transaction.json>`.
-5. The GUI exits only after the detached helper is ready.
-6. The helper validates paths, token, lock owner, version, size, disk space, and
-   hashes again, then waits up to a bounded timeout for the GUI process to exit.
+3. The GUI creates a random transaction ID before staging and copies itself to a
+   transaction- and target-specific helper directory.
+4. It persists `handoff_pending` state plus a target-scoped handoff reservation
+   containing the GUI PID and process-creation identity, then starts the helper
+   with `--apply-update <transaction.json>`.
+5. The Python runtime inside the helper validates the same transaction and
+   target, atomically assumes installation ownership with its own PID and
+   creation identity, and acknowledges readiness. The GUI does not store the
+   PyInstaller wrapper PID and exits only after this acknowledgement.
+6. The helper validates paths, ownership, version, size, disk space, and hashes
+   again, then waits for the exact GUI PID and creation identity to exit. PID
+   reuse is treated as the original GUI having exited.
 7. It creates and verifies a backup before copying and replacing the target EXE.
 8. Windows file-lock failures are retried for a bounded number of attempts.
-9. The new EXE starts directly with a token-bound private startup mode. No shell,
-   PowerShell, cmd.exe, batch file, system Python, UAC request, or silent
-   elevation is used.
+9. The new EXE starts directly with only a controlled transaction reference.
+   The confirmation nonce stays inside the transaction file rather than the
+   command line. No shell, PowerShell, cmd.exe, batch file, system Python, UAC
+   request, or silent elevation is used.
 
 ## Startup Confirmation And Rollback
 
 Process creation alone is not success. After the Qt application and main window
-initialize, the new process writes a token- and version-bound marker inside its
-controlled transaction directory. The helper accepts only that exact marker and
-waits for it with a bounded timeout.
+initialize, the new process writes a transaction-, nonce-, version-, PID-, and
+process-creation-bound marker inside its controlled transaction directory. The
+helper accepts only that exact marker and waits for it with a bounded timeout.
 
 After confirmation, the helper records success and removes the backup. If the
 success record itself cannot be written, it keeps the verified backup
@@ -145,7 +174,7 @@ name, outside Windows, in a non-writable directory, or without sufficient free
 space. The app does not request elevation. In these cases the update dialog
 explains the reason and keeps the `Open Download Page` manual fallback.
 
-## Publishing 3.0.2
+## Publishing 3.0.4
 
 The workflow supports tag pushes matching `v*.*.*` and explicit
 `workflow_dispatch`. It validates that the requested release version, runtime
@@ -155,24 +184,24 @@ before dependencies, tests, build, manifest generation, or publishing.
 Recommended owner procedure without Git CLI:
 
 1. In GitHub Desktop, review the local file list and diff.
-2. Commit the complete 3.0.2 source and documentation changes locally.
+2. Commit the complete 3.0.4 source and documentation changes locally.
 3. Push the branch with GitHub Desktop.
 4. Merge that branch into the repository's default branch using the GitHub web
-   interface, then confirm the default branch contains version 3.0.2 and the
+   interface, then confirm the default branch contains version 3.0.4 and the
    updated workflow.
-5. Confirm that tag `v3.0.2` does not already exist. In GitHub Actions, open
+5. Confirm that tag `v3.0.4` does not already exist. In GitHub Actions, open
    `Build and Release Neural Extractor V3`, choose `Run workflow`, select the
-   default branch, enter exactly `3.0.2`, and run it.
+   default branch, enter exactly `3.0.4`, and run it.
 6. Wait for validation, tests, PyInstaller, checksum, manifest, artifact upload,
    and GitHub Release publication to complete.
-7. On the `v3.0.2` release page, verify that the versioned EXE, manifest, checksum,
-   and optional unversioned convenience EXE are present.
+7. On the `v3.0.4` release page, verify that the exact two EXEs, manifest, and
+   checksum are present and that no other release assets were published.
 8. Download the manifest and versioned EXE on a clean Windows profile, compare
    size and SHA-256, launch it, and test the manual update check before announcing
    the release.
 
 `workflow_dispatch` is shown in the Actions UI only after this workflow exists on
-the default branch. The manual run requires a new tag, then creates tag `v3.0.2`
+the default branch. The manual run requires a new tag, then creates tag `v3.0.4`
 and the GitHub Release automatically. An existing tag makes the manual workflow
 fail rather than reusing an ambiguous release target.
 
@@ -180,6 +209,11 @@ fail rather than reusing an ambiguous release target.
 
 - `3.0.1 -> 3.0.2`: detect the release, open its page, close Neural Extractor,
   manually place/run the 3.0.2 EXE once.
-- `3.0.2 -> 3.0.3+`: check, confirm, download, verify, install, restart, confirm
-  startup, and clean up automatically; roll back automatically on failure.
+- `3.0.2/3.0.3 -> 3.0.4`: manually download and run 3.0.4 once because the
+  installed helper handoff is defective. Do not overwrite the old EXE while it
+  is running.
+- `3.0.4 -> later`: check, confirm, download, verify, hand off to the detached
+  helper, restart, confirm startup, and clean up automatically; roll back
+  automatically on failure. Field acceptance still requires a real 3.0.4 to
+  3.0.5 release test.
 - Updates are optional. There are no forced or silent replacements.

@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Exact numeric release version, for example 3.0.2"
+        description: "Exact numeric release version, for example 3.0.4"
         required: true
         type: string
 
@@ -29,6 +29,11 @@ jobs:
           python-version: "3.12"
           architecture: "x64"
           cache: "pip"
+
+      - name: Set up Node.js runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22.17.0"
 
       - name: Validate release version
         id: release
@@ -67,6 +72,40 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install --upgrade --upgrade-strategy eager -e ".[dev,build]"
 
+      - name: Stage verified bundled runtimes
+        shell: pwsh
+        run: |
+          $ffmpegVersion = "autobuild-2026-06-30-13-34"
+          $ffmpegAsset = "ffmpeg-N-125365-g9a01c1cb6a-win64-gpl.zip"
+          $ffmpegSha256 = "52c0383c460f0ec1039088f1591921fb82e3b870b32aab8faf2ff1e5ae14bf9d"
+          $archive = Join-Path $env:RUNNER_TEMP $ffmpegAsset
+          $expanded = Join-Path $env:RUNNER_TEMP "neural-extractor-ffmpeg"
+          $url = "https://github.com/BtbN/FFmpeg-Builds/releases/download/$ffmpegVersion/$ffmpegAsset"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $actualSha256 = (Get-FileHash $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualSha256 -ne $ffmpegSha256) {
+            Write-Error "Pinned FFmpeg archive checksum mismatch."
+            exit 1
+          }
+          Expand-Archive -Path $archive -DestinationPath $expanded -Force
+          $ffmpeg = @(Get-ChildItem $expanded -Recurse -File -Filter ffmpeg.exe)
+          $ffprobe = @(Get-ChildItem $expanded -Recurse -File -Filter ffprobe.exe)
+          if ($ffmpeg.Count -ne 1 -or $ffprobe.Count -ne 1) {
+            Write-Error "Pinned FFmpeg archive did not contain exactly one ffmpeg.exe and ffprobe.exe."
+            exit 1
+          }
+          New-Item -ItemType Directory -Path bin -Force | Out-Null
+          Copy-Item $ffmpeg[0].FullName bin\ffmpeg.exe -Force
+          Copy-Item $ffprobe[0].FullName bin\ffprobe.exe -Force
+          $node = (Get-Command node.exe -ErrorAction Stop).Source
+          Copy-Item $node bin\node.exe -Force
+          & bin\node.exe --version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & bin\ffmpeg.exe -version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & bin\ffprobe.exe -version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
       - name: Validate
         shell: pwsh
         run: |
@@ -77,6 +116,23 @@ jobs:
 
       - name: Build EXE
         run: python -m PyInstaller NeuralExtractorV3.spec --clean --noconfirm
+
+      - name: Verify packaged version and bundled runtimes
+        shell: pwsh
+        run: |
+          $process = Start-Process -FilePath "dist\NeuralExtractorV3.exe" -ArgumentList "--version" -Wait -PassThru -WindowStyle Hidden
+          if ($process.ExitCode -ne 0) {
+            Write-Error "Packaged --version smoke test failed with exit code $($process.ExitCode)."
+            exit 1
+          }
+          $archiveListing = & pyi-archive_viewer "dist\NeuralExtractorV3.exe" -l
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($runtime in @("bin\\node.exe", "bin\\ffmpeg.exe", "bin\\ffprobe.exe")) {
+            if (-not ($archiveListing -match [regex]::Escape($runtime))) {
+              Write-Error "Packaged runtime is missing: $runtime"
+              exit 1
+            }
+          }
 
       - name: Rename and checksum
         shell: pwsh
@@ -89,17 +145,35 @@ jobs:
           Get-FileHash $versioned -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash)  $(Split-Path $versioned -Leaf)" } |
             Set-Content "$versioned.sha256"
-          python scripts/release_tools.py manifest --version $version --exe $versioned --output $manifest --minimum-updater-version 3.0.2
+          python scripts/release_tools.py manifest --version $version --exe $versioned --output $manifest --minimum-updater-version 3.0.4
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $expected = @(
+            "NeuralExtractorV3.exe",
+            "NeuralExtractorV3-$version-windows-x64.exe",
+            "NeuralExtractorV3-$version-windows-x64.exe.sha256",
+            "NeuralExtractorV3-$version-manifest.json"
+          ) | Sort-Object
+          $actual = @(Get-ChildItem dist -File | Select-Object -ExpandProperty Name | Sort-Object)
+          if ((Compare-Object $expected $actual).Count -ne 0) {
+            Write-Error "Release output does not contain the exact required four files."
+            Compare-Object $expected $actual | Format-Table
+            exit 1
+          }
+          $notes = "docs\release-notes\V$version.md"
+          if (-not (Test-Path $notes -PathType Leaf)) {
+            Write-Error "Release notes are missing: $notes"
+            exit 1
+          }
 
       - name: Upload workflow artifact
         uses: actions/upload-artifact@v4
         with:
           name: NeuralExtractorV3-windows-x64
           path: |
-            dist/NeuralExtractorV3*.exe
-            dist/NeuralExtractorV3*.sha256
-            dist/NeuralExtractorV3*-manifest.json
+            dist/NeuralExtractorV3.exe
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-windows-x64.exe
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-windows-x64.exe.sha256
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-manifest.json
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -107,8 +181,11 @@ jobs:
           tag_name: ${{ steps.release.outputs.tag }}
           target_commitish: ${{ github.sha }}
           name: Neural Extractor V3 ${{ steps.release.outputs.tag }}
+          body_path: docs/release-notes/V${{ steps.release.outputs.version }}.md
           generate_release_notes: true
+          fail_on_unmatched_files: true
           files: |
-            dist/NeuralExtractorV3*.exe
-            dist/NeuralExtractorV3*.sha256
-            dist/NeuralExtractorV3*-manifest.json
+            dist/NeuralExtractorV3.exe
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-windows-x64.exe
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-windows-x64.exe.sha256
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-manifest.json

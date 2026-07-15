@@ -1,6 +1,6 @@
 [project]
 name = "neural-extractor-v3"
-version = "3.0.3"
+version = "3.0.4"
 description = "Professional YouTube video, audio, playlist, subtitle, and thumbnail extractor"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -29,7 +29,7 @@ dependencies = [
 
 [project.optional-dependencies]
 build = [
-    "pyinstaller>=6.21.0",
+    "pyinstaller==6.21.0",
 ]
 dev = [
     "pytest>=9.1.1",
@@ -50,7 +50,8 @@ target-version = "py311"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]
-ignore = ["E501"]
+# Python 3.10 remains supported; enum.StrEnum is available only in Python 3.11+.
+ignore = ["E501", "UP042"]
 
 [tool.ruff.format]
 quote-style = "double"

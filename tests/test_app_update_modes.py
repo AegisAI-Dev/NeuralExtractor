@@ -1,6 +1,7 @@
 from pathlib import Path
 
 import pytest
+
 from neural_extractor_v3 import app as app_module
 
 
@@ -30,6 +31,19 @@ def test_post_update_confirmation_arguments_must_be_complete(tmp_path):
 
     assert app_module.main(["--post-update-marker", str(marker)]) == 2
     assert app_module.main(["--post-update-token", "A" * 48]) == 2
+    assert (
+        app_module.main(
+            [
+                "--post-update-transaction",
+                str(tmp_path / "transaction.json"),
+                "--post-update-token",
+                "A" * 48,
+                "--post-update-marker",
+                str(marker),
+            ]
+        )
+        == 2
+    )
 
 
 def test_private_update_arguments_are_hidden_from_help(capsys):
@@ -40,4 +54,5 @@ def test_private_update_arguments_are_hidden_from_help(capsys):
     assert "--apply-update" not in help_text
     assert "--post-update-token" not in help_text
     assert "--post-update-marker" not in help_text
+    assert "--post-update-transaction" not in help_text
     assert "--update-rollback-status" not in help_text

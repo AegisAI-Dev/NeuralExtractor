@@ -59,6 +59,7 @@ from neural_extractor_v3.core.update_installer import (
     assess_installation_capability,
     prepare_and_launch_update,
 )
+from neural_extractor_v3.core.update_ownership import TransactionState, new_transaction_id
 from neural_extractor_v3.core.updater import (
     UpdateChecker,
     UpdateDownloader,
@@ -291,41 +292,74 @@ class UpdateInstallWorker(QThread):
     prepared = pyqtSignal(object)
     error = pyqtSignal(str, str)
     cancelled = pyqtSignal()
+    cancellation_locked = pyqtSignal()
 
     def __init__(self, info: UpdateInfo) -> None:
         super().__init__()
         self.info = info
+        self.transaction_id = new_transaction_id()
+        self.transaction_state = TransactionState.CHECKING
         self.cancel_requested = False
+        self._cancel_lock = Lock()
 
-    def request_cancel(self) -> None:
-        self.cancel_requested = True
-        self.requestInterruption()
+    def request_cancel(self) -> bool:
+        with self._cancel_lock:
+            if self.transaction_state not in {
+                TransactionState.CHECKING,
+                TransactionState.DOWNLOADING,
+                TransactionState.DOWNLOADED,
+            }:
+                return False
+            self.cancel_requested = True
+            self.requestInterruption()
+            return True
+
+    def can_cancel(self) -> bool:
+        with self._cancel_lock:
+            return self.transaction_state in {
+                TransactionState.CHECKING,
+                TransactionState.DOWNLOADING,
+                TransactionState.DOWNLOADED,
+            }
 
     def _cancelled(self) -> bool:
-        return self.cancel_requested or self.isInterruptionRequested()
+        with self._cancel_lock:
+            return self.cancel_requested or self.isInterruptionRequested()
 
     def run(self) -> None:
         try:
+            with self._cancel_lock:
+                self.transaction_state = TransactionState.DOWNLOADING
             staged = UpdateDownloader().stage(
                 self.info,
+                transaction_id=self.transaction_id,
                 progress_callback=self.progress.emit,
                 cancel_callback=self._cancelled,
             )
-            if self._cancelled():
-                raise UpdateError("cancelled", "Update download cancelled.")
+            with self._cancel_lock:
+                self.transaction_state = TransactionState.DOWNLOADED
+                if self.cancel_requested or self.isInterruptionRequested():
+                    raise UpdateError("cancelled", "Update download cancelled.")
+                self.transaction_state = TransactionState.VERIFIED
+            self.cancellation_locked.emit()
             prepared = prepare_and_launch_update(
                 self.info,
                 staged,
                 parent_pid=os.getpid(),
+                transaction_id=self.transaction_id,
                 progress_callback=self.progress.emit,
             )
         except UpdateError as exc:
+            with self._cancel_lock:
+                self.transaction_state = TransactionState.FAILED
             if exc.code == "cancelled":
                 self.cancelled.emit()
             else:
                 self.error.emit(exc.code, exc.user_message)
             return
         except Exception:
+            with self._cancel_lock:
+                self.transaction_state = TransactionState.FAILED
             self.error.emit(
                 "installation_failure",
                 "The update could not be prepared safely. The current application was not changed.",
@@ -1566,6 +1600,7 @@ class MainWindow(QMainWindow):
         worker.prepared.connect(self.on_update_install_prepared)
         worker.error.connect(self.on_update_install_error)
         worker.cancelled.connect(self.on_update_install_cancelled)
+        worker.cancellation_locked.connect(self.on_update_cancellation_locked)
         worker.finished.connect(self.on_update_install_finished)
         dialog.canceled.connect(self.cancel_update_install)
         worker.start()
@@ -1574,9 +1609,19 @@ class MainWindow(QMainWindow):
     def cancel_update_install(self) -> None:
         if not self.update_install_worker or not self.update_install_worker.isRunning():
             return
+        if self.update_install_worker.request_cancel():
+            if self.update_progress_dialog:
+                self.update_progress_dialog.setLabelText("Cancelling update download...")
+            return
+        self.on_update_cancellation_locked()
+
+    def on_update_cancellation_locked(self) -> None:
         if self.update_progress_dialog:
-            self.update_progress_dialog.setLabelText("Cancelling update download...")
-        self.update_install_worker.request_cancel()
+            self.update_progress_dialog.setCancelButton(None)
+            self.update_progress_dialog.setLabelText(
+                "Preparing the secure updater handoff. This step cannot be cancelled."
+            )
+        self.statusBar().showMessage("Preparing secure updater handoff")
 
     def on_update_install_progress(self, percent: int, message: str) -> None:
         if self.update_progress_dialog:
@@ -1586,7 +1631,10 @@ class MainWindow(QMainWindow):
 
     def on_update_install_prepared(self, prepared: PreparedUpdate) -> None:
         self.update_install_outcome = "restart"
-        self.log(f"Verified update prepared; helper process {prepared.helper_pid} is ready")
+        self.log(
+            f"Verified updater handoff accepted by helper process {prepared.helper_pid}; "
+            f"transaction={prepared.transaction_id[:12]}"
+        )
         self.statusBar().showMessage("Update verified. Neural Extractor will restart now.")
         if self.update_progress_dialog:
             self.update_progress_dialog.setCancelButton(None)
@@ -1815,6 +1863,12 @@ class MainWindow(QMainWindow):
 
     def closeEvent(self, event) -> None:  # noqa: N802
         if self.update_install_worker and self.update_install_worker.isRunning():
+            if not self.update_install_worker.can_cancel():
+                self.statusBar().showMessage(
+                    "Secure updater handoff is in progress; Neural Extractor will close when safe"
+                )
+                event.ignore()
+                return
             reply = QMessageBox.question(
                 self,
                 APP_NAME,

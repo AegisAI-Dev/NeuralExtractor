@@ -3,6 +3,7 @@ import json
 from pathlib import Path
 
 import pytest
+
 from neural_extractor_v3.config import GITHUB_LATEST_RELEASE_API, GITHUB_RELEASES_URL, GITHUB_REPO
 from neural_extractor_v3.core.update_manifest import (
     MAX_UPDATE_SIZE_BYTES,
@@ -268,6 +269,37 @@ def test_valid_staged_file_is_verified_and_accepted(tmp_path, package_content):
     assert progress[-1][0] == 90
     assert session.calls[0][1]["verify"] is True
     assert response.closed
+
+
+def test_transaction_scoped_stages_do_not_delete_each_other(tmp_path, package_content):
+    info = validated_update(package_content)
+    session = FakeSession(
+        FakeResponse(
+            url=info.download_url,
+            content=package_content,
+            headers={"Content-Length": str(len(package_content))},
+        ),
+        FakeResponse(
+            url=info.download_url,
+            content=package_content,
+            headers={"Content-Length": str(len(package_content))},
+        ),
+    )
+    downloader = UpdateDownloader(session=session, update_root=tmp_path)
+
+    first = downloader.stage(info, transaction_id="A" * 48)
+    second = downloader.stage(info, transaction_id="B" * 48)
+
+    assert first != second
+    assert first == (
+        tmp_path / info.version / ("A" * 48) / "package" / info.manifest.asset_filename
+    ).resolve()
+    assert second == (
+        tmp_path / info.version / ("B" * 48) / "package" / info.manifest.asset_filename
+    ).resolve()
+    first.unlink()
+    assert not first.exists()
+    assert second.read_bytes() == package_content
 
 
 def test_existing_verified_stage_is_reused_without_network(tmp_path, package_content):
