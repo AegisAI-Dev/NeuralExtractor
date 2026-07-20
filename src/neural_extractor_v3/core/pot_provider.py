@@ -1,6 +1,6 @@
 """Bounded PO Token provider interface and disabled-by-default diagnostics.
 
-V3.0.5 intentionally does not bundle a third-party provider.  Keeping the
+This build intentionally does not bundle a third-party provider. Keeping the
 interface explicit prevents manual token handling and avoids presenting PO
 Token support as a substitute for account authentication.
 """
@@ -65,7 +65,7 @@ class DisabledPoTokenProvider:
             provider_id="none",
             version="",
             diagnostic=(
-                "PO Token provider unavailable: V3.0.5 does not bundle a provider. "
+                "PO Token provider unavailable: this build does not bundle a provider. "
                 "Manual PO Tokens are not accepted."
             ),
         )

@@ -9,7 +9,7 @@ from datetime import datetime
 from pathlib import Path
 from threading import Event, Lock
 
-from PyQt6.QtCore import QSettings, Qt, QThread, QTimer, QUrl, pyqtSignal
+from PyQt6.QtCore import QPoint, QRect, QSettings, Qt, QThread, QTimer, QUrl, pyqtSignal
 from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QPixmap
 from PyQt6.QtWidgets import (
     QApplication,
@@ -67,8 +67,18 @@ from neural_extractor_v3.core.updater import (
     UpdateError,
     UpdateInfo,
 )
-from neural_extractor_v3.core.youtube_connection import ConnectionState, YouTubeConnectionManager
-from neural_extractor_v3.gui.youtube_connection_dialog import YouTubeConnectionDialog
+from neural_extractor_v3.core.youtube_connection import (
+    ConnectionState,
+    ManagedBrowser,
+    YouTubeConnectionManager,
+)
+from neural_extractor_v3.gui.managed_browser_dialog import YouTubeConnectionDialog
+from neural_extractor_v3.gui.responsive_layout import (
+    ResponsiveButtonGrid,
+    clamp_splitter_sizes,
+    clamp_window_rect,
+    logical_viewport_size,
+)
 from neural_extractor_v3.models import (
     DownloadJob,
     DownloadOptions,
@@ -399,7 +409,17 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.settings = QSettings("Neuralshield", "NeuralExtractorV3")
-        self.youtube_connection = YouTubeConnectionManager(self.settings)
+        self.youtube_connections = {
+            ManagedBrowser.CHROME: YouTubeConnectionManager(
+                self.settings,
+                browser=ManagedBrowser.CHROME,
+            ),
+            ManagedBrowser.FIREFOX: YouTubeConnectionManager(
+                self.settings,
+                browser=ManagedBrowser.FIREFOX,
+            ),
+        }
+        self.youtube_connection = self.youtube_connections[ManagedBrowser.CHROME]
         self.jobs: list[DownloadJob] = []
         self.row_by_job_id: dict[str, int] = {}
         self.progress_by_job_id: dict[str, QProgressBar] = {}
@@ -424,11 +444,16 @@ class MainWindow(QMainWindow):
         self.cookie_file = coerce_path(str(self.settings.value("cookie_file", "")))
 
         self.setWindowTitle(f"{APP_NAME} {VERSION}")
-        self.setMinimumSize(1180, 720)
+        self.setMinimumSize(860, 620)
         self.resize(1380, 860)
         self._set_app_icon()
         self._apply_theme()
         self._build_ui()
+        for manager in self.youtube_connections.values():
+            manager.log_callback = self.log
+            for event_message in manager.events:
+                self.log(event_message)
+        QTimer.singleShot(0, self._restore_window_layout)
         self._update_mode_controls()
         self._refresh_queue_summary()
         self.log(f"{APP_NAME} {VERSION} build {BUILD_LABEL} ready")
@@ -852,13 +877,19 @@ class MainWindow(QMainWindow):
         root_layout.setContentsMargins(0, 0, 0, 0)
         root_layout.setSpacing(0)
 
-        splitter = QSplitter(Qt.Orientation.Horizontal)
-        splitter.addWidget(self._build_side_panel())
-        splitter.addWidget(self._build_work_panel())
-        splitter.setSizes([440, 940])
-        splitter.setCollapsible(0, False)
-        splitter.setCollapsible(1, False)
-        root_layout.addWidget(splitter)
+        self.main_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.main_splitter.setObjectName("mainSplitter")
+        self.side_panel = self._build_side_panel()
+        self.work_panel = self._build_work_panel()
+        self.main_splitter.addWidget(self.side_panel)
+        self.main_splitter.addWidget(self.work_panel)
+        self.main_splitter.setSizes([440, 940])
+        self.main_splitter.setStretchFactor(0, 0)
+        self.main_splitter.setStretchFactor(1, 1)
+        self.main_splitter.setHandleWidth(8)
+        self.main_splitter.setCollapsible(0, False)
+        self.main_splitter.setCollapsible(1, False)
+        root_layout.addWidget(self.main_splitter)
         self.setCentralWidget(root)
 
     # ------------------------------------------------------------------ side panel
@@ -866,31 +897,42 @@ class MainWindow(QMainWindow):
     def _build_side_panel(self) -> QWidget:
         panel = QFrame()
         panel.setObjectName("sidePanel")
-        panel.setMinimumWidth(400)
-        panel.setMaximumWidth(540)
+        panel.setMinimumWidth(330)
+        panel.setSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding)
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(22, 20, 22, 18)
         layout.setSpacing(14)
 
         layout.addLayout(self._brand_header())
 
-        scroll = QScrollArea()
-        scroll.setObjectName("sideScroll")
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.Shape.NoFrame)
-        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.settings_scroll = QScrollArea()
+        self.settings_scroll.setObjectName("sideScroll")
+        self.settings_scroll.setWidgetResizable(True)
+        self.settings_scroll.setFrameShape(QFrame.Shape.NoFrame)
+        self.settings_scroll.setHorizontalScrollBarPolicy(
+            Qt.ScrollBarPolicy.ScrollBarAlwaysOff
+        )
 
         content = QWidget()
+        content.setMinimumWidth(0)
+        content.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
         content_layout = QVBoxLayout(content)
         content_layout.setContentsMargins(0, 0, 6, 0)
         content_layout.setSpacing(14)
-        content_layout.addWidget(self._source_group())
-        content_layout.addWidget(self._format_group())
-        content_layout.addWidget(self._extras_group())
-        content_layout.addWidget(self._destination_group())
+        groups = [
+            self._source_group(),
+            self._format_group(),
+            self._extras_group(),
+            self._destination_group(),
+        ]
+        for group in groups:
+            group.setMinimumWidth(0)
+            group.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+            content_layout.addWidget(group)
         content_layout.addStretch(1)
-        scroll.setWidget(content)
-        layout.addWidget(scroll, 1)
+        self.settings_content = content
+        self.settings_scroll.setWidget(content)
+        layout.addWidget(self.settings_scroll, 1)
 
         layout.addLayout(self._action_buttons())
         return panel
@@ -1077,9 +1119,12 @@ class MainWindow(QMainWindow):
 
         self.output_edit = QLineEdit(str(self.output_dir))
         self.output_edit.setReadOnly(True)
-        self.output_edit.setToolTip("Folder where all downloads are saved.")
+        self.output_edit.setMinimumWidth(0)
+        self.output_edit.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        self.output_edit.setToolTip(str(self.output_dir))
         self.browse_output_button = QPushButton("Browse…")
         self.browse_output_button.setToolTip("Choose the output folder")
+        self.browse_output_button.setMinimumWidth(82)
         self.browse_output_button.clicked.connect(self.browse_output)
         output_row = QHBoxLayout()
         output_row.setSpacing(8)
@@ -1091,28 +1136,53 @@ class MainWindow(QMainWindow):
         self.youtube_connection_status = QLabel()
         self.youtube_connection_status.setWordWrap(True)
         self.youtube_connection_status.setObjectName("hintLabel")
-        self.youtube_profile_label = QLabel("Firefox profile: Dedicated Neural Extractor profile")
+        self.youtube_profile_label = QLabel(
+            "Browser: Google Chrome / Profile: Dedicated Neural Extractor profile"
+        )
         self.youtube_profile_label.setObjectName("hintLabel")
-        connection_row = QHBoxLayout()
-        connection_row.setSpacing(6)
-        self.youtube_connect_button = QPushButton("YouTube verbinden")
+        self.youtube_profile_label.setWordWrap(True)
+        self.youtube_connect_button = QPushButton("Google Chrome verbinden")
+        self.youtube_connect_button.setToolTip(
+            "Open the isolated Neural Extractor Google Chrome profile"
+        )
         self.youtube_connect_button.clicked.connect(self.connect_youtube)
-        self.youtube_renew_button = QPushButton("Verbinding vernieuwen")
+        self.youtube_renew_button = QPushButton("Vernieuwen")
+        self.youtube_renew_button.setToolTip("Renew the active managed YouTube connection")
         self.youtube_renew_button.clicked.connect(
             lambda _checked=False: self.connect_youtube(renewal=True)
         )
         self.youtube_test_button = QPushButton("Verbinding testen")
         self.youtube_test_button.clicked.connect(self.test_youtube_connection)
-        self.youtube_disconnect_button = QPushButton("YouTube loskoppelen")
-        self.youtube_disconnect_button.clicked.connect(self.disconnect_youtube)
-        connection_row.addWidget(self.youtube_connect_button)
-        connection_row.addWidget(self.youtube_renew_button)
-        connection_row.addWidget(self.youtube_test_button)
-        connection_row.addWidget(self.youtube_disconnect_button)
-        connection_widget = self._row_widget(connection_row)
+        self.youtube_disconnect_button = QPushButton("Chrome loskoppelen")
+        self.youtube_disconnect_button.clicked.connect(
+            lambda _checked=False: self.disconnect_youtube(browser=ManagedBrowser.CHROME)
+        )
+        self.youtube_firefox_button = QPushButton("Firefox fallback")
+        self.youtube_firefox_button.setToolTip(
+            "Use managed Firefox when Chrome cookies cannot be read securely"
+        )
+        self.youtube_firefox_button.clicked.connect(
+            lambda _checked=False: self.connect_youtube(browser=ManagedBrowser.FIREFOX)
+        )
+        self.youtube_firefox_disconnect_button = QPushButton("Firefox loskoppelen")
+        self.youtube_firefox_disconnect_button.clicked.connect(
+            lambda _checked=False: self.disconnect_youtube(browser=ManagedBrowser.FIREFOX)
+        )
+        self.connection_button_grid = ResponsiveButtonGrid(
+            [
+                self.youtube_connect_button,
+                self.youtube_renew_button,
+                self.youtube_test_button,
+                self.youtube_disconnect_button,
+                self.youtube_firefox_button,
+                self.youtube_firefox_disconnect_button,
+            ],
+            two_column_width=390,
+            four_column_width=760,
+        )
         layout.addWidget(self._labeled("YOUTUBE CONNECTION", self.youtube_connection_status))
         layout.addWidget(self.youtube_profile_label)
-        layout.addWidget(connection_widget)
+        layout.addWidget(self.connection_button_grid)
 
         self.cookie_edit = QLineEdit(str(self.cookie_file) if self.cookie_file else "")
         self.cookie_edit.setPlaceholderText("No cookies file loaded")
@@ -1184,6 +1254,7 @@ class MainWindow(QMainWindow):
     def _build_work_panel(self) -> QWidget:
         panel = QFrame()
         panel.setObjectName("workPanel")
+        panel.setMinimumWidth(440)
         layout = QVBoxLayout(panel)
         layout.setContentsMargins(24, 20, 24, 18)
         layout.setSpacing(12)
@@ -1320,6 +1391,8 @@ class MainWindow(QMainWindow):
             self.youtube_renew_button,
             self.youtube_test_button,
             self.youtube_disconnect_button,
+            self.youtube_firefox_button,
+            self.youtube_firefox_disconnect_button,
             self.legacy_browser_check,
             self.browse_cookie_button,
             self.clear_cookie_button,
@@ -1535,7 +1608,18 @@ class MainWindow(QMainWindow):
     def _refresh_youtube_connection_ui(self) -> None:
         if not hasattr(self, "youtube_connection_status"):
             return
-        snapshot = self.youtube_connection.snapshot()
+        for connection in self.youtube_connections.values():
+            connection.refresh_browser_state()
+        manager = self._connected_connection_manager() or self.youtube_connection
+        snapshot = manager.snapshot()
+        browser_open = next(
+            (
+                connection
+                for connection in self.youtube_connections.values()
+                if connection.browser_is_open()
+            ),
+            None,
+        )
         if snapshot.state == ConnectionState.CONNECTED:
             verified = snapshot.last_verified.replace("T", " ").replace("+00:00", " UTC")
             text = f"Status: Connected · Last verified: {verified or 'unknown'}"
@@ -1550,7 +1634,12 @@ class MainWindow(QMainWindow):
             text = "Status: Needs attention"
         else:
             text = "Status: Not connected"
+        if browser_open is not None:
+            text = f"Status: Browser open / {browser_open.display_name}"
         self.youtube_connection_status.setText(text)
+        self.youtube_profile_label.setText(
+            f"Browser: {manager.display_name} / Profile: Dedicated Neural Extractor profile"
+        )
         connected = snapshot.state == ConnectionState.CONNECTED
         renew = snapshot.state in {
             ConnectionState.CONNECTED,
@@ -1560,14 +1649,30 @@ class MainWindow(QMainWindow):
             ConnectionState.ERROR,
         }
         queue_running = bool(self.worker and self.worker.isRunning())
-        self.youtube_connect_button.setVisible(not connected and not renew)
+        chrome = self.youtube_connections[ManagedBrowser.CHROME]
+        firefox = self.youtube_connections[ManagedBrowser.FIREFOX]
+        self.youtube_connect_button.setVisible(
+            chrome.state not in {ConnectionState.CONNECTED, ConnectionState.BROWSER_OPEN}
+        )
         self.youtube_connect_button.setEnabled(not queue_running)
         self.youtube_renew_button.setVisible(renew)
         self.youtube_renew_button.setEnabled(not queue_running)
         self.youtube_test_button.setEnabled((connected or renew) and not queue_running)
-        self.youtube_disconnect_button.setEnabled(
-            self.youtube_connection.profile_path.exists() and not queue_running
+        self.youtube_disconnect_button.setVisible(chrome.profile_path.exists())
+        self.youtube_disconnect_button.setEnabled(chrome.profile_path.exists() and not queue_running)
+        self.youtube_firefox_button.setVisible(firefox.state != ConnectionState.CONNECTED)
+        self.youtube_firefox_button.setEnabled(not queue_running)
+        self.youtube_firefox_disconnect_button.setVisible(firefox.profile_path.exists())
+        self.youtube_firefox_disconnect_button.setEnabled(
+            firefox.profile_path.exists() and not queue_running
         )
+
+    def _connected_connection_manager(self) -> YouTubeConnectionManager | None:
+        for browser in (ManagedBrowser.CHROME, ManagedBrowser.FIREFOX):
+            manager = self.youtube_connections[browser]
+            if manager.connected_profile() is not None:
+                return manager
+        return None
 
     def _connection_target_url(self) -> str:
         if self._auth_waiting_job_ids:
@@ -1583,44 +1688,69 @@ class MainWindow(QMainWindow):
         *,
         renewal: bool = False,
         target_url: str | None = None,
+        browser: ManagedBrowser | str = ManagedBrowser.CHROME,
     ) -> bool:
         del _checked
+        selected_browser = ManagedBrowser(browser)
+        manager = self.youtube_connections[selected_browser]
         dialog = YouTubeConnectionDialog(
-            self.youtube_connection,
+            manager,
             target_url or self._connection_target_url(),
             renewal=renewal,
             parent=self,
         )
         accepted = dialog.exec() == QDialog.DialogCode.Accepted
         self._refresh_youtube_connection_ui()
+        if (
+            not accepted
+            and dialog.fallback_requested
+            and selected_browser is ManagedBrowser.CHROME
+        ):
+            return self.connect_youtube(
+                renewal=self.youtube_connections[ManagedBrowser.FIREFOX].profile_path.exists(),
+                target_url=target_url,
+                browser=ManagedBrowser.FIREFOX,
+            )
         if accepted:
             self.log(
-                "YouTube connection verified using the dedicated Neural Extractor Firefox profile."
+                f"YouTube connection verified using the dedicated Neural Extractor "
+                f"{manager.display_name} profile."
             )
             self.statusBar().showMessage("YouTube session verified")
         return accepted
 
     def test_youtube_connection(self) -> None:
+        manager = self._connected_connection_manager() or self.youtube_connection
         self.connect_youtube(
-            renewal=self.youtube_connection.snapshot().state == ConnectionState.EXPIRED,
+            renewal=manager.snapshot().state == ConnectionState.EXPIRED,
             target_url=self._connection_target_url(),
+            browser=manager.browser,
         )
 
-    def disconnect_youtube(self) -> None:
+    def disconnect_youtube(
+        self,
+        _checked: bool = False,
+        *,
+        browser: ManagedBrowser | str = ManagedBrowser.CHROME,
+    ) -> None:
+        del _checked
+        manager = self.youtube_connections[ManagedBrowser(browser)]
         reply = QMessageBox.question(
             self,
             "YouTube loskoppelen",
-            "Remove the dedicated YouTube session? Your normal Firefox profile and cookies.txt "
-            "will not be changed.",
+            f"Remove the dedicated {manager.display_name} YouTube session? Normal browser "
+            "profiles and cookies.txt will not be changed.",
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No,
         )
         if reply != QMessageBox.StandardButton.Yes:
             return
-        result = self.youtube_connection.disconnect()
+        result = manager.disconnect()
         self._refresh_youtube_connection_ui()
         if result.success:
-            self.log("YouTube disconnected; the dedicated Firefox profile was removed.")
+            self.log(
+                f"YouTube disconnected; the dedicated {manager.display_name} profile was removed."
+            )
             QMessageBox.information(self, APP_NAME, result.message)
             return
         message = result.message
@@ -1635,6 +1765,7 @@ class MainWindow(QMainWindow):
             return
         self.output_dir = Path(folder)
         self.output_edit.setText(str(self.output_dir))
+        self.output_edit.setToolTip(str(self.output_dir))
         self.settings.setValue("output_dir", str(self.output_dir))
         self.log(f"Output folder: {self.output_dir}")
 
@@ -1902,6 +2033,7 @@ class MainWindow(QMainWindow):
         mode = self._current_mode()
         subtitle_enabled = self.subtitle_check.isChecked() or mode == MediaMode.SUBTITLES_ONLY
         thumbnail_enabled = self.thumbnail_check.isChecked() or mode == MediaMode.THUMBNAIL_ONLY
+        connection = self._connected_connection_manager()
         return DownloadOptions(
             output_dir=self.output_dir,
             media_mode=mode,
@@ -1915,7 +2047,8 @@ class MainWindow(QMainWindow):
             embed_thumbnail=self.embed_thumb_check.isChecked(),
             metadata_json=self.metadata_check.isChecked(),
             cookie_file=self.cookie_file,
-            dedicated_firefox_profile=self.youtube_connection.connected_profile(),
+            dedicated_browser=connection.browser.value if connection else None,
+            dedicated_browser_profile=connection.connected_profile() if connection else None,
             guided_youtube_auth=True,
             legacy_browser_fallback=self.legacy_browser_check.isChecked(),
         )
@@ -1965,6 +2098,7 @@ class MainWindow(QMainWindow):
             "youtube_session_expired",
             "dedicated_profile_invalid",
             "browser_cookie_database_locked",
+            "browser_cookie_decryption_failed",
             "browser_cookie_extraction_failed",
         }
         if (
@@ -1980,7 +2114,8 @@ class MainWindow(QMainWindow):
             )
             return
         if not success and normalized_category == "youtube_session_expired":
-            self.youtube_connection.mark_expired(message)
+            manager = self._connected_connection_manager() or self.youtube_connection
+            manager.mark_expired(message)
             self._refresh_youtube_connection_ui()
         cancelled = normalized_category in {
             "cancelled",
@@ -2020,8 +2155,9 @@ class MainWindow(QMainWindow):
         self.log(f"Authentication required ({failure_category}): {message}")
         if self.active_job_id == job_id:
             self.active_job_id = None
-        if self.youtube_connection.profile_path.exists():
-            self.youtube_connection.mark_expired(message)
+        manager = self._connected_connection_manager() or self.youtube_connection
+        if manager.profile_path.exists():
+            manager.mark_expired(message)
         self._refresh_youtube_connection_ui()
         self._refresh_queue_summary()
         if not self._auth_dialog_active:
@@ -2033,9 +2169,14 @@ class MainWindow(QMainWindow):
             self._auth_dialog_active = False
             return
         target_url = self._connection_target_url()
-        snapshot = self.youtube_connection.snapshot()
-        renewal = bool(snapshot.last_verified or self.youtube_connection.profile_path.exists())
-        accepted = self.connect_youtube(renewal=renewal, target_url=target_url)
+        manager = self._connected_connection_manager() or self.youtube_connection
+        snapshot = manager.snapshot()
+        renewal = bool(snapshot.last_verified or manager.profile_path.exists())
+        accepted = self.connect_youtube(
+            renewal=renewal,
+            target_url=target_url,
+            browser=manager.browser,
+        )
         pending = set(self._auth_waiting_job_ids)
         self._auth_waiting_job_ids.clear()
         self._auth_dialog_active = False
@@ -2127,6 +2268,116 @@ class MainWindow(QMainWindow):
     def log(self, message: str) -> None:
         self.log_box.append(f"[{datetime.now():%H:%M:%S}] {message}")
 
+    def _restore_window_layout(self) -> None:
+        geometry = self.settings.value("ui/window_geometry")
+        if geometry is not None:
+            self.restoreGeometry(geometry)
+        screen = self.screen() or QApplication.primaryScreen()
+        if screen is not None:
+            self.setGeometry(
+                clamp_window_rect(
+                    self.geometry(),
+                    screen.availableGeometry(),
+                    self.minimumSize(),
+                )
+            )
+
+        raw_sizes = self.settings.value("ui/main_splitter_sizes", [440, 940])
+        if not isinstance(raw_sizes, list | tuple):
+            raw_sizes = [440, 940]
+        usable = max(
+            0,
+            self.main_splitter.width() - self.main_splitter.handleWidth(),
+        )
+        sizes = clamp_splitter_sizes(
+            usable,
+            raw_sizes,
+            minimum_left=self.side_panel.minimumWidth(),
+            minimum_right=max(440, self.work_panel.minimumWidth()),
+        )
+        self.main_splitter.setSizes(list(sizes))
+
+    def _save_window_layout(self) -> None:
+        self.settings.setValue("ui/window_geometry", self.saveGeometry())
+        self.settings.setValue("ui/main_splitter_sizes", self.main_splitter.sizes())
+        self.settings.sync()
+
+    def _scroll_widget_reachable(self, widget: QWidget) -> bool:
+        self.settings_scroll.ensureWidgetVisible(widget, 4, 4)
+        QApplication.processEvents()
+        origin = widget.mapTo(self.settings_scroll.viewport(), QPoint(0, 0))
+        mapped = QRect(origin, widget.size())
+        return widget.isVisibleTo(self) and mapped.intersects(self.settings_scroll.viewport().rect())
+
+    def responsive_layout_smoke_checks(self) -> dict[str, bool]:
+        """Exercise widget geometry offline for unit and packaged smokes."""
+        original_size = self.size()
+        original_splitter = self.main_splitter.sizes()
+        self.resize(self.minimumSize())
+        self.main_splitter.setSizes([330, max(440, self.width() - 338)])
+        QApplication.processEvents()
+        self.connection_button_grid.set_available_width_for_test(
+            self.connection_button_grid.width()
+        )
+        browse_visible = self._scroll_widget_reachable(self.browse_output_button)
+        buttons_visible = all(
+            self._scroll_widget_reachable(button)
+            for button in (
+                self.youtube_connect_button,
+                self.youtube_renew_button,
+                self.youtube_test_button,
+                self.youtube_disconnect_button,
+                self.youtube_firefox_button,
+                self.youtube_firefox_disconnect_button,
+            )
+            if not button.isHidden()
+        )
+        narrow_path_width = self.output_edit.width()
+        narrow_columns = self.connection_button_grid.column_count
+
+        self.resize(max(1280, self.minimumWidth()), max(720, self.minimumHeight()))
+        self.main_splitter.setSizes([540, max(440, self.width() - 548)])
+        QApplication.processEvents()
+        self.connection_button_grid.set_available_width_for_test(
+            self.connection_button_grid.width()
+        )
+        wide_path_width = self.output_edit.width()
+        moved_splitter = self.main_splitter.sizes()[0] > 400
+        scenarios = (
+            (1280, 720, 1.0),
+            (1366, 768, 1.0),
+            (1920, 1080, 1.0),
+            (1920, 1080, 1.25),
+            (1920, 1080, 1.5),
+        )
+        dpi_supported = all(
+            logical_viewport_size(width, height, scale).width() >= self.minimumWidth()
+            and logical_viewport_size(width, height, scale).height() >= self.minimumHeight()
+            for width, height, scale in scenarios
+        )
+        checks = {
+            "window_resizable": self.maximumWidth() > self.minimumWidth(),
+            "browse_visible_at_minimum": browse_visible,
+            "output_path_expands": wide_path_width > narrow_path_width,
+            "connection_buttons_accessible": buttons_visible,
+            "narrow_buttons_stack": narrow_columns == 1,
+            "settings_vertically_scrollable": (
+                self.settings_scroll.verticalScrollBar().maximum() > 0
+                or self.settings_content.sizeHint().height()
+                <= self.settings_scroll.viewport().height()
+            ),
+            "no_horizontal_settings_scroll": (
+                self.settings_scroll.horizontalScrollBar().maximum() == 0
+            ),
+            "splitter_adjustable": moved_splitter,
+            "queue_and_log_usable": self.table.width() > 0 and self.log_box.height() > 0,
+            "dpi_scenarios_supported": dpi_supported,
+        }
+        self.resize(original_size)
+        self.main_splitter.setSizes(original_splitter)
+        QApplication.processEvents()
+        return checks
+
     def closeEvent(self, event) -> None:  # noqa: N802
         if self.update_install_worker and self.update_install_worker.isRunning():
             if not self.update_install_worker.can_cancel():
@@ -2166,4 +2417,5 @@ class MainWindow(QMainWindow):
             self.stop_queue()
             event.ignore()
             return
+        self._save_window_layout()
         event.accept()

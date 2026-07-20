@@ -322,11 +322,9 @@ def test_browser_open_state_recovers_after_restart_from_profile_lock(tmp_path):
     (profile / "parent.lock").write_text("locked", encoding="utf-8")
     settings.setValue("youtube_connection/state", "browser_open")
     second = manager_for(tmp_path, settings=settings)
-    assert second.state == ConnectionState.BROWSER_OPEN
-
-    (profile / "parent.lock").unlink()
-    third = manager_for(tmp_path, settings=settings)
-    assert third.state == ConnectionState.WAITING_FOR_LOGIN
+    assert second.state == ConnectionState.WAITING_FOR_LOGIN
+    assert not (profile / "parent.lock").exists()
+    assert "Recovered stale managed-browser profile state." in second.events
 
 
 def test_cookies_database_alone_never_marks_connection_verified(tmp_path):
@@ -408,11 +406,10 @@ def test_locked_or_failed_disconnect_preserves_recoverable_profile(tmp_path, mon
     lock = profile / "parent.lock"
     lock.write_text("locked", encoding="utf-8")
     result = manager.disconnect()
-    assert not result.success
-    assert result.code == "locked"
-    assert profile.exists()
+    assert result.success
+    assert not profile.exists()
 
-    lock.unlink()
+    profile = manager.create_profile()
     monkeypatch.setattr(connection_module.shutil, "rmtree", lambda _path: (_ for _ in ()).throw(PermissionError()))
     result = manager.disconnect()
     assert not result.success

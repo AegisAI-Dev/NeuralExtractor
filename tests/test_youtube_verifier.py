@@ -6,6 +6,7 @@ from neural_extractor_v3.core.downloader import (
     YtdlpRunError,
     YtdlpRunResult,
 )
+from neural_extractor_v3.core.youtube_connection import ManagedBrowser
 from neural_extractor_v3.core.youtube_verifier import verify_dedicated_youtube_profile
 
 
@@ -67,4 +68,60 @@ def test_mocked_verification_classifies_rotated_session_separately(tmp_path, mon
     assert not result.success
     assert result.code == "expired"
     assert "cookie" not in result.message.casefold()
+
+
+def test_chrome_verification_uses_managed_provider_and_classifies_app_bound_failure(
+    tmp_path,
+    monkeypatch,
+):
+    captured = {}
+
+    class FakeEngine:
+        def __init__(self, options, **_kwargs):
+            captured["options"] = options
+            self.js_runtime_status = SimpleNamespace(found=True)
+
+        def run_authentication_preflight(self, url, profile, browser):
+            captured["call"] = (url, profile, browser)
+            raise YtdlpRunError(
+                "yt-dlp <redacted>",
+                YtdlpCapturedOutput(stderr=["Failed to decrypt with DPAPI"]),
+                exit_code=1,
+            )
+
+    monkeypatch.setattr(verifier_module, "DownloadEngine", FakeEngine)
+    profile = tmp_path / "chrome-profile"
+    result = verify_dedicated_youtube_profile(
+        profile,
+        "https://www.youtube.com/watch?v=abc123",
+        browser=ManagedBrowser.CHROME,
+    )
+    assert not result.success
+    assert result.code == "cookie_decryption_failed"
+    assert "managed Firefox" in result.message
+    assert captured["options"].dedicated_browser == "chrome"
+    assert captured["options"].dedicated_browser_profile == profile
+    assert captured["call"][2] is ManagedBrowser.CHROME
+
+
+def test_chrome_extraction_failure_never_reports_connected(tmp_path, monkeypatch):
+    class FakeEngine:
+        def __init__(self, *_args, **_kwargs):
+            self.js_runtime_status = SimpleNamespace(found=True)
+
+        def run_authentication_preflight(self, *_args):
+            raise YtdlpRunError(
+                "yt-dlp <redacted>",
+                YtdlpCapturedOutput(stderr=["Failed to load cookies from browser"]),
+                exit_code=1,
+            )
+
+    monkeypatch.setattr(verifier_module, "DownloadEngine", FakeEngine)
+    result = verify_dedicated_youtube_profile(
+        tmp_path / "chrome-profile",
+        "https://www.youtube.com/watch?v=abc123",
+        browser="chrome",
+    )
+    assert not result.success
+    assert result.code == "cookie_extraction_unsupported"
 

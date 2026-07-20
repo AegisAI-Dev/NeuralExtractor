@@ -142,7 +142,7 @@ def classify_youtube_failure(
 
     lowered = (error_text or "").lower()
 
-    if auth_kind == "dedicated_firefox" and any(
+    if auth_kind in {"dedicated_browser", "dedicated_firefox"} and any(
         pattern in lowered for pattern in _ACCOUNT_ACCESS_PATTERNS
     ):
         return FailureAnalysis(
@@ -151,7 +151,7 @@ def classify_youtube_failure(
             authentication_specific=True,
         )
 
-    if auth_kind == "dedicated_firefox" and (
+    if auth_kind in {"dedicated_browser", "dedicated_firefox"} and (
         any(pattern in lowered for pattern in _EXPIRED_COOKIE_PATTERNS)
         or any(pattern in lowered for pattern in _DEDICATED_SESSION_REJECTION_PATTERNS)
     ):
@@ -280,6 +280,10 @@ def _is_cookie_decryption_failure(lowered: str) -> bool:
             "could not decrypt",
             "unable to decrypt",
             "decrypt cookie",
+            "app-bound",
+            "app bound",
+            "application-bound",
+            "cookie version: \"v20\"",
         )
     )
 

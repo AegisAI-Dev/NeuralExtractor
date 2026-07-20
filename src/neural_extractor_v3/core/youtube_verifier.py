@@ -1,4 +1,4 @@
-"""Bounded yt-dlp preflight for the managed Firefox YouTube session."""
+"""Bounded yt-dlp preflight for a managed-browser YouTube session."""
 
 from __future__ import annotations
 
@@ -7,13 +7,19 @@ from pathlib import Path
 from neural_extractor_v3.config import app_data_dir
 from neural_extractor_v3.core.downloader import DownloadEngine, YtdlpRunError
 from neural_extractor_v3.core.process_control import ProcessLimits
-from neural_extractor_v3.core.youtube_connection import VerificationResult
+from neural_extractor_v3.core.youtube_connection import ManagedBrowser, VerificationResult
 from neural_extractor_v3.core.youtube_errors import FailureCategory, classify_youtube_failure
 from neural_extractor_v3.models import DownloadOptions, MediaMode, PlaylistMode
 
 
-def verify_dedicated_youtube_profile(profile_path: Path, target_url: str) -> VerificationResult:
+def verify_dedicated_youtube_profile(
+    profile_path: Path,
+    target_url: str,
+    *,
+    browser: ManagedBrowser | str = ManagedBrowser.FIREFOX,
+) -> VerificationResult:
     """Verify session usability without downloading media."""
+    selected_browser = ManagedBrowser(browser)
     options = DownloadOptions(
         output_dir=app_data_dir() / "youtube" / "verification-output",
         media_mode=MediaMode.VIDEO,
@@ -23,7 +29,8 @@ def verify_dedicated_youtube_profile(profile_path: Path, target_url: str) -> Ver
         thumbnail=False,
         embed_thumbnail=False,
         metadata_json=False,
-        dedicated_firefox_profile=profile_path,
+        dedicated_browser=selected_browser.value,
+        dedicated_browser_profile=profile_path,
         guided_youtube_auth=True,
         legacy_browser_fallback=False,
     )
@@ -39,17 +46,24 @@ def verify_dedicated_youtube_profile(profile_path: Path, target_url: str) -> Ver
         ),
     )
     try:
-        result = engine.run_authentication_preflight(target_url, profile_path)
+        if selected_browser is ManagedBrowser.FIREFOX:
+            result = engine.run_authentication_preflight(target_url, profile_path)
+        else:
+            result = engine.run_authentication_preflight(
+                target_url,
+                profile_path,
+                selected_browser,
+            )
     except YtdlpRunError as exc:
         if exc.category_hint == FailureCategory.NETWORK_INACTIVITY_TIMEOUT:
             return VerificationResult(False, "timeout", "Network verification timed out.")
         if exc.category_hint == FailureCategory.TOTAL_ATTEMPT_TIMEOUT:
             return VerificationResult(False, "timeout", "Network verification timed out.")
         if exc.category_hint == FailureCategory.DEDICATED_PROFILE_INVALID:
-            return VerificationResult(False, "invalid", "Dedicated Firefox profile is invalid.")
+            return VerificationResult(False, "invalid", "Dedicated browser profile is invalid.")
         analysis = classify_youtube_failure(
             exc.diagnostic_text(),
-            auth_kind="dedicated_firefox",
+            auth_kind="dedicated_browser",
             javascript_runtime_available=engine.js_runtime_status.found,
         )
         if analysis.category == FailureCategory.YOUTUBE_SESSION_EXPIRED:
@@ -68,19 +82,32 @@ def verify_dedicated_youtube_profile(profile_path: Path, target_url: str) -> Ver
             FailureCategory.TOTAL_ATTEMPT_TIMEOUT,
         }:
             return VerificationResult(False, "timeout", "Network verification timed out.")
-        if analysis.category in {
-            FailureCategory.BROWSER_COOKIE_DATABASE_LOCKED,
-            FailureCategory.BROWSER_COOKIE_EXTRACTION_FAILED,
-        }:
-            return VerificationResult(False, "locked", "Profile is still locked.")
+        if analysis.category == FailureCategory.BROWSER_COOKIE_DATABASE_LOCKED:
+            return VerificationResult(False, "locked", "Managed browser profile data is locked.")
+        if analysis.category == FailureCategory.BROWSER_COOKIE_DECRYPTION_FAILED:
+            return VerificationResult(
+                False,
+                "cookie_decryption_failed",
+                "Chrome session could not be read securely. Try the managed Firefox connection."
+                if selected_browser is ManagedBrowser.CHROME
+                else analysis.user_message,
+            )
+        if analysis.category == FailureCategory.BROWSER_COOKIE_EXTRACTION_FAILED:
+            return VerificationResult(
+                False,
+                "cookie_extraction_unsupported",
+                "Chrome session could not be read securely. Try the managed Firefox connection."
+                if selected_browser is ManagedBrowser.CHROME
+                else analysis.user_message,
+            )
         return VerificationResult(False, "session_rejected", "YouTube rejected the session.")
     except (OSError, RuntimeError, ValueError):
-        return VerificationResult(False, "invalid", "Dedicated Firefox profile is invalid.")
+        return VerificationResult(False, "invalid", "Dedicated browser profile is invalid.")
 
     diagnostic = result.diagnostic.casefold()
     analysis = classify_youtube_failure(
         result.diagnostic,
-        auth_kind="dedicated_firefox",
+        auth_kind="dedicated_browser",
         javascript_runtime_available=engine.js_runtime_status.found,
     )
     if analysis.category == FailureCategory.YOUTUBE_SESSION_EXPIRED:
