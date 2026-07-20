@@ -11,6 +11,7 @@ from neural_extractor_v3.core.youtube_connection import (
     FirefoxDiscovery,
     VerificationResult,
     YouTubeConnectionManager,
+    dedicated_firefox_profile_path,
     validate_dedicated_profile_path,
 )
 
@@ -42,87 +43,105 @@ class _FakeProcess:
         return self.returncode
 
 
+def _managed_profile_path_is_safe(profile: Path, application_data: Path) -> bool:
+    """Confirm the manager returned the validator's canonical fixed profile."""
+    try:
+        validated = validate_dedicated_profile_path(
+            profile,
+            application_data=application_data,
+        )
+        expected = dedicated_firefox_profile_path(application_data).resolve()
+    except (OSError, RuntimeError, ValueError):
+        return False
+    return profile == validated == expected
+
+
+def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]:
+    """Run the offline contract below a caller-owned isolated test root."""
+    application_data = root / "LocalAppData" / "NeuralExtractorV3"
+    firefox = root / "Mozilla Firefox" / "firefox.exe"
+    firefox.parent.mkdir(parents=True)
+    firefox.write_bytes(b"MZ\x00\x00")
+    process = _FakeProcess()
+    captured: dict[str, Any] = {}
+
+    def popen(command, **kwargs):
+        captured["command"] = command
+        captured["kwargs"] = kwargs
+        return process
+
+    settings = _MemorySettings()
+    manager = YouTubeConnectionManager(
+        settings,
+        application_data=application_data,
+        discovery=FirefoxDiscovery(
+            registry_reader=lambda: [firefox],
+            environ={},
+            binary_validator=lambda _path: True,
+        ),
+        popen_factory=popen,
+        identity_provider=lambda _pid: "packaged-smoke-identity",
+    )
+    profile = manager.create_profile()
+    profile_path_safe = _managed_profile_path_is_safe(profile, application_data)
+    traversal_rejected = False
+    try:
+        validate_dedicated_profile_path(
+            profile / ".." / "escape",
+            application_data=application_data,
+            require_exists=False,
+        )
+    except ValueError:
+        traversal_rejected = True
+
+    manager.launch("https://www.youtube.com/watch?v=offline&token=must-not-appear")
+    command = list(captured["command"])
+    launch_safe = (
+        captured["kwargs"].get("shell") is False
+        and command[1:4] == ["-no-remote", "-profile", str(profile)]
+        and "must-not-appear" not in " ".join(command)
+    )
+    process.returncode = 0
+    manager.refresh_browser_state()
+
+    cookie_database = sqlite3.connect(profile / "cookies.sqlite")
+    try:
+        connection = cookie_database
+        connection.execute("CREATE TABLE moz_cookies (host TEXT, name TEXT, value TEXT)")
+        connection.execute(
+            "INSERT INTO moz_cookies VALUES (?, ?, ?)",
+            (".youtube.com", "SAPISID", "never-log-this-cookie"),
+        )
+        connection.commit()
+    finally:
+        cookie_database.close()
+    verified = manager.verify(
+        lambda checked_profile, _url: VerificationResult(
+            checked_profile == profile,
+            "connected",
+            "YouTube session verified.",
+        ),
+        "https://www.youtube.com/watch?v=offline",
+    )
+    manager.mark_expired("cookies are no longer valid")
+    renewal_reused_profile = manager.create_profile() == profile
+    disconnected = manager.disconnect()
+    settings_private = "never-log-this-cookie" not in repr(settings.values)
+    return {
+        "profile_path_safe": profile_path_safe,
+        "path_traversal_rejected": traversal_rejected,
+        "launch_arguments_safe": launch_safe,
+        "authentication_state_machine": verified.success,
+        "renewal_reused_profile": renewal_reused_profile,
+        "disconnect_safe": disconnected.success and not profile.exists(),
+        "settings_private": settings_private,
+    }
+
+
 def run_offline_youtube_connection_smoke() -> dict[str, bool]:
     """Exercise safety, argv, state, renewal, and disconnect without network/browser use."""
     with tempfile.TemporaryDirectory(prefix="neural-extractor-youtube-smoke-") as temporary:
-        root = Path(temporary)
-        application_data = root / "LocalAppData" / "NeuralExtractorV3"
-        firefox = root / "Mozilla Firefox" / "firefox.exe"
-        firefox.parent.mkdir(parents=True)
-        firefox.write_bytes(b"MZ\x00\x00")
-        process = _FakeProcess()
-        captured: dict[str, Any] = {}
-
-        def popen(command, **kwargs):
-            captured["command"] = command
-            captured["kwargs"] = kwargs
-            return process
-
-        settings = _MemorySettings()
-        manager = YouTubeConnectionManager(
-            settings,
-            application_data=application_data,
-            discovery=FirefoxDiscovery(
-                registry_reader=lambda: [firefox],
-                environ={},
-                binary_validator=lambda _path: True,
-            ),
-            popen_factory=popen,
-            identity_provider=lambda _pid: "packaged-smoke-identity",
-        )
-        profile = manager.create_profile()
-        traversal_rejected = False
-        try:
-            validate_dedicated_profile_path(
-                profile / ".." / "escape",
-                application_data=application_data,
-                require_exists=False,
-            )
-        except ValueError:
-            traversal_rejected = True
-
-        manager.launch("https://www.youtube.com/watch?v=offline&token=must-not-appear")
-        command = list(captured["command"])
-        launch_safe = (
-            captured["kwargs"].get("shell") is False
-            and command[1:4] == ["-no-remote", "-profile", str(profile)]
-            and "must-not-appear" not in " ".join(command)
-        )
-        process.returncode = 0
-        manager.refresh_browser_state()
-
-        cookie_database = sqlite3.connect(profile / "cookies.sqlite")
-        try:
-            connection = cookie_database
-            connection.execute("CREATE TABLE moz_cookies (host TEXT, name TEXT, value TEXT)")
-            connection.execute(
-                "INSERT INTO moz_cookies VALUES (?, ?, ?)",
-                (".youtube.com", "SAPISID", "never-log-this-cookie"),
-            )
-            connection.commit()
-        finally:
-            cookie_database.close()
-        verified = manager.verify(
-            lambda checked_profile, _url: VerificationResult(
-                checked_profile == profile,
-                "connected",
-                "YouTube session verified.",
-            ),
-            "https://www.youtube.com/watch?v=offline",
-        )
-        manager.mark_expired("cookies are no longer valid")
-        renewal_reused_profile = manager.create_profile() == profile
-        disconnected = manager.disconnect()
-        settings_private = "never-log-this-cookie" not in repr(settings.values)
-        return {
-            "profile_path_safe": profile.parent == application_data / "youtube",
-            "path_traversal_rejected": traversal_rejected,
-            "launch_arguments_safe": launch_safe,
-            "authentication_state_machine": verified.success,
-            "renewal_reused_profile": renewal_reused_profile,
-            "disconnect_safe": disconnected.success and not profile.exists(),
-            "settings_private": settings_private,
-        }
+        return _run_offline_youtube_connection_smoke_at_root(Path(temporary))
 
 
 __all__ = ["run_offline_youtube_connection_smoke"]

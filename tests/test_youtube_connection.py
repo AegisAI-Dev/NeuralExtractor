@@ -1,11 +1,15 @@
 from __future__ import annotations
 
+import ctypes
+import os
 import sqlite3
 from pathlib import Path
 
 import pytest
 
+from neural_extractor_v3.config import app_data_dir
 from neural_extractor_v3.core import youtube_connection as connection_module
+from neural_extractor_v3.core import youtube_connection_smoke as smoke_module
 from neural_extractor_v3.core.youtube_connection import (
     ConnectionState,
     FirefoxDiscovery,
@@ -52,7 +56,14 @@ def firefox_executable(path: Path, *, valid=True) -> Path:
     return path
 
 
-def manager_for(tmp_path, *, settings=None, registry_paths=(), popen_factory=None):
+def manager_for(
+    tmp_path,
+    *,
+    settings=None,
+    registry_paths=(),
+    popen_factory=None,
+    application_data=None,
+):
     discovery = FirefoxDiscovery(
         registry_reader=lambda: list(registry_paths),
         environ={},
@@ -60,11 +71,23 @@ def manager_for(tmp_path, *, settings=None, registry_paths=(), popen_factory=Non
     )
     return YouTubeConnectionManager(
         settings or MemorySettings(),
-        application_data=tmp_path / "LocalAppData" / "NeuralExtractorV3",
+        application_data=(
+            application_data
+            if application_data is not None
+            else tmp_path / "LocalAppData" / "NeuralExtractorV3"
+        ),
         discovery=discovery,
         popen_factory=popen_factory or (lambda *_args, **_kwargs: FakeProcess()),
         identity_provider=lambda _pid: "creation-identity",
     )
+
+
+def windows_short_path(path: Path) -> Path:
+    buffer = ctypes.create_unicode_buffer(32_768)
+    length = ctypes.windll.kernel32.GetShortPathNameW(str(path), buffer, len(buffer))
+    if length <= 0 or length >= len(buffer):
+        raise OSError(ctypes.get_last_error(), "Windows short-path lookup failed")
+    return Path(buffer.value)
 
 
 def write_cookie_database(profile: Path, *, authenticated: bool) -> None:
@@ -154,6 +177,69 @@ def test_profile_creation_is_fixed_to_local_appdata_and_does_not_touch_normal_fi
     assert not (roaming / "Profiles" / "firefox-profile").exists()
 
 
+def test_mocked_windows_localappdata_root_is_used_consistently(tmp_path, monkeypatch):
+    local_app_data = tmp_path / "Users" / "runneradmin" / "AppData" / "Local"
+    monkeypatch.setenv("LOCALAPPDATA", str(local_app_data))
+    application_data = app_data_dir()
+    manager = manager_for(tmp_path, application_data=application_data)
+
+    profile = manager.create_profile()
+
+    expected = (
+        local_app_data
+        / "NeuralExtractorV3"
+        / "youtube"
+        / "firefox-profile"
+    ).resolve()
+    assert application_data.resolve() == (local_app_data / "NeuralExtractorV3").resolve()
+    assert profile == expected
+    assert validate_dedicated_profile_path(
+        profile,
+        application_data=application_data,
+    ) == expected
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows path casing semantics")
+def test_windows_path_case_differences_do_not_reject_managed_profile(tmp_path):
+    manager = manager_for(
+        tmp_path,
+        application_data=(
+            tmp_path
+            / "Users"
+            / "RunnerAdmin"
+            / "AppData"
+            / "Local"
+            / "NeuralExtractorV3"
+        ),
+    )
+    profile = manager.create_profile()
+    case_variant_profile = Path(str(profile).swapcase())
+    case_variant_application_data = Path(str(manager.application_data).swapcase())
+
+    assert validate_dedicated_profile_path(
+        case_variant_profile,
+        application_data=case_variant_application_data,
+    ) == profile
+
+
+@pytest.mark.skipif(os.name != "nt", reason="Windows 8.3 path alias reproduction")
+def test_offline_smoke_accepts_canonicalized_windows_runner_temp_alias(tmp_path):
+    canonical_root = tmp_path / "runneradmin"
+    canonical_root.mkdir()
+    runner_alias = windows_short_path(canonical_root)
+    raw_expected_parent = (
+        runner_alias / "LocalAppData" / "NeuralExtractorV3" / "youtube"
+    )
+    assert raw_expected_parent != raw_expected_parent.resolve()
+
+    results = smoke_module._run_offline_youtube_connection_smoke_at_root(
+        runner_alias
+    )
+
+    assert results["profile_path_safe"] is True
+    assert all(results.values())
+
+
 def test_profile_path_traversal_root_and_reparse_are_rejected(tmp_path, monkeypatch):
     manager = manager_for(tmp_path)
     profile = manager.create_profile()
@@ -168,6 +254,19 @@ def test_profile_path_traversal_root_and_reparse_are_rejected(tmp_path, monkeypa
             manager.application_data / "youtube",
             application_data=manager.application_data,
             require_exists=False,
+        )
+    with pytest.raises(ValueError):
+        validate_dedicated_profile_path(
+            manager.application_data,
+            application_data=manager.application_data,
+            require_exists=False,
+        )
+    outside = tmp_path / "outside" / "firefox-profile"
+    outside.mkdir(parents=True)
+    with pytest.raises(ValueError):
+        validate_dedicated_profile_path(
+            outside,
+            application_data=manager.application_data,
         )
 
     monkeypatch.setattr(connection_module, "_is_reparse_point", lambda path: path == profile)
