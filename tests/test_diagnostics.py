@@ -75,7 +75,11 @@ def test_format_probe_is_safe_and_uses_js_runtime(tmp_path, monkeypatch):
         "ensure_youtube_js_runtime",
         lambda: JavaScriptRuntimeStatus(True, "node", node_path, "v22.17.0"),
     )
-    monkeypatch.setattr(diagnostics, "resolve_auth_strategies", lambda _cookie_file: auth_resolution)
+    monkeypatch.setattr(
+        diagnostics,
+        "resolve_auth_strategies",
+        lambda _cookie_file, **_kwargs: auth_resolution,
+    )
     monkeypatch.setattr(diagnostics, "DownloadEngine", FakeDownloadEngine)
     monkeypatch.setattr(diagnostics, "_run_command", fake_run_command)
 

@@ -104,7 +104,7 @@ def _mock_resolution(monkeypatch, resolution):
     monkeypatch.setattr(
         downloader_module,
         "resolve_auth_strategies",
-        lambda _cookie_file: resolution,
+        lambda _cookie_file, **_kwargs: resolution,
     )
 
 
@@ -577,6 +577,145 @@ def test_command_and_logs_redact_cookie_path_and_secret_values(tmp_path, monkeyp
 
 def test_public_video_test_url_is_normal_video_url():
     assert PUBLIC_VIDEO_TEST_URL == "https://www.youtube.com/watch?v=jNQXAC9IVRw"
+
+
+def test_guided_auth_stops_for_connection_assistant_before_cookie_or_browser_fallback(
+    tmp_path, monkeypatch
+):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path)
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+
+    def auth_required(self, url, options, *, discover_only=False):
+        calls.append(_auth_id(options))
+        raise _error("ERROR: Sign in to confirm you're not a bot. Use --cookies", options)
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", auth_required)
+    result = _engine(
+        tmp_path,
+        cookie_file=resolution.cookie_file_status.path,
+        guided_youtube_auth=True,
+    ).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.AUTHENTICATION_REQUIRED.value
+    assert calls == ["none"]
+
+
+def test_connected_profile_is_structured_first_fallback_and_suppresses_browser_cycle(
+    tmp_path, monkeypatch
+):
+    _mock_runtime(monkeypatch, tmp_path)
+    application_data = tmp_path / "NeuralExtractorV3"
+    profile = application_data / "youtube" / "firefox-profile"
+    profile.mkdir(parents=True)
+    monkeypatch.setattr(downloader_module, "app_data_dir", lambda: application_data)
+    cookie_file = tmp_path / "cookies.txt"
+    cookie_file.write_text(
+        ".youtube.com\tTRUE\t/\tFALSE\t0\tSID\tredacted\n",
+        encoding="utf-8",
+    )
+    resolution = AuthResolution(
+        strategies=[
+            AuthStrategy("none", "none", {}, attempted_auth=False),
+            AuthStrategy(
+                "dedicated_firefox",
+                "Dedicated Neural Extractor Firefox profile",
+                {"cookiesfrombrowser": ("firefox", str(profile.resolve()))},
+                attempted_auth=True,
+            ),
+            AuthStrategy(
+                "cookies_file",
+                "cookies.txt",
+                {"cookiefile": str(cookie_file)},
+                attempted_auth=True,
+            ),
+            AuthStrategy(
+                "browser",
+                "Chrome",
+                {"cookiesfrombrowser": ("chrome",)},
+                attempted_auth=True,
+            ),
+        ],
+        messages=[],
+        cookie_file_status=CookieFileStatus(cookie_file, True, "valid"),
+        browser_source=None,
+        browser_sources=[],
+    )
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+    dedicated_options = {}
+
+    def run(self, url, options, *, discover_only=False):
+        calls.append(_auth_id(options))
+        if len(calls) == 1:
+            raise _error("ERROR: Sign in to confirm you're not a bot. Use --cookies", options)
+        dedicated_options.update(options)
+        return YtdlpRunResult()
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", run)
+    result = _engine(
+        tmp_path,
+        cookie_file=cookie_file,
+        dedicated_firefox_profile=profile,
+        guided_youtube_auth=True,
+    ).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert result.success
+    assert calls == ["none", "firefox"]
+    assert dedicated_options["cookiesfrombrowser"] == ("firefox", str(profile.resolve()))
+
+
+def test_rotated_dedicated_cookies_mark_session_expired_without_blind_fallback(
+    tmp_path, monkeypatch
+):
+    _mock_runtime(monkeypatch, tmp_path)
+    application_data = tmp_path / "NeuralExtractorV3"
+    profile = application_data / "youtube" / "firefox-profile"
+    profile.mkdir(parents=True)
+    monkeypatch.setattr(downloader_module, "app_data_dir", lambda: application_data)
+    resolution = AuthResolution(
+        strategies=[
+            AuthStrategy("none", "none", {}, attempted_auth=False),
+            AuthStrategy(
+                "dedicated_firefox",
+                "Dedicated Neural Extractor Firefox profile",
+                {"cookiesfrombrowser": ("firefox", str(profile.resolve()))},
+                attempted_auth=True,
+            ),
+            AuthStrategy(
+                "browser",
+                "Chrome",
+                {"cookiesfrombrowser": ("chrome",)},
+                attempted_auth=True,
+            ),
+        ],
+        messages=[],
+        cookie_file_status=CookieFileStatus(None, False, "missing"),
+        browser_source=None,
+        browser_sources=[],
+    )
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+
+    def fail(self, url, options, *, discover_only=False):
+        auth = _auth_id(options)
+        calls.append(auth)
+        if auth == "none":
+            raise _error("ERROR: Sign in to confirm you're not a bot. Use --cookies", options)
+        raise _error("WARNING: cookies are no longer valid. Login required.", options)
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", fail)
+    result = _engine(
+        tmp_path,
+        dedicated_firefox_profile=profile,
+        guided_youtube_auth=True,
+    ).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.YOUTUBE_SESSION_EXPIRED.value
+    assert calls == ["none", "firefox"]
 
 
 def test_attempt_temp_is_isolated_and_stale_owner_state_is_cleaned(tmp_path, monkeypatch):

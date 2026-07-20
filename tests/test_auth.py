@@ -69,6 +69,47 @@ def test_no_auth_strategy_when_no_cookie_or_browser():
     assert any("browser cookies unavailable" in message for message in resolution.messages)
 
 
+def test_dedicated_firefox_precedes_cookie_file_and_legacy_browsers(tmp_path):
+    application_data = tmp_path / "NeuralExtractorV3"
+    profile = application_data / "youtube" / "firefox-profile"
+    profile.mkdir(parents=True)
+    cookie_file = _write_cookie_file(
+        tmp_path / "cookies.txt",
+        ".youtube.com\tTRUE\t/\tFALSE\t0\tSID\tredacted\n",
+    )
+    browser = BrowserCookieSource("chrome", "Chrome", tmp_path / "Chrome")
+
+    resolution = resolve_auth_strategies(
+        cookie_file,
+        browser_detector=lambda: [browser],
+        dedicated_firefox_profile=profile,
+        dedicated_application_data=application_data,
+        allow_legacy_browser_fallback=True,
+    )
+
+    assert [strategy.kind for strategy in resolution.strategies] == [
+        "none",
+        "dedicated_firefox",
+        "cookies_file",
+        "browser",
+    ]
+    assert resolution.strategies[1].ydl_options["cookiesfrombrowser"] == (
+        "firefox",
+        str(profile.resolve()),
+    )
+
+
+def test_legacy_browser_profiles_are_omitted_when_advanced_fallback_is_disabled(tmp_path):
+    browser = BrowserCookieSource("chrome", "Chrome", tmp_path / "Chrome")
+    resolution = resolve_auth_strategies(
+        None,
+        browser_detector=lambda: [browser],
+        allow_legacy_browser_fallback=False,
+    )
+    assert [strategy.kind for strategy in resolution.strategies] == ["none"]
+    assert any("legacy browser cookie fallback disabled" in item for item in resolution.messages)
+
+
 def test_cookie_file_inspection_never_requires_secret_values(tmp_path):
     cookie_file = _write_cookie_file(
         tmp_path / "cookies.txt",

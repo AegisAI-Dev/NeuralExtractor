@@ -40,6 +40,7 @@ from neural_extractor_v3.core.downloader import (
     YtdlpRunError,
 )
 from neural_extractor_v3.core.js_runtime import ensure_youtube_js_runtime
+from neural_extractor_v3.core.pot_provider import get_po_token_provider
 from neural_extractor_v3.core.youtube_errors import FailureCategory, classify_youtube_failure
 from neural_extractor_v3.models import DownloadOptions
 
@@ -93,7 +94,11 @@ def run_support_diagnostics(
     probe_url = probe_url or DEFAULT_DIAGNOSTIC_PROBE_URL
 
     js_runtime = ensure_youtube_js_runtime()
-    auth_resolution = resolve_auth_strategies(options.cookie_file)
+    auth_resolution = resolve_auth_strategies(
+        options.cookie_file,
+        dedicated_firefox_profile=options.dedicated_firefox_profile,
+        allow_legacy_browser_fallback=options.legacy_browser_fallback,
+    )
 
     _add_app_version(items)
     _add_windows_version(items)
@@ -106,6 +111,8 @@ def run_support_diagnostics(
     _add_output_status(items, options.output_dir)
     _add_cookie_status(items, options.cookie_file)
     _add_browser_availability(items, auth_resolution)
+    _add_youtube_connection(items, options)
+    _add_po_token_provider(items)
     _add_browser_processes(items)
     _add_ejs_remote_status(items)
     if check_github:
@@ -244,6 +251,23 @@ def _add_browser_availability(items: list[DiagnosticItem], auth_resolution: Auth
         parts.append(f"{SUPPORTED_BROWSER_NAMES[browser]}={_yes_no(browser in available)}")
     status = DiagnosticStatus.PASS if available else DiagnosticStatus.WARNING
     items.append(DiagnosticItem("Browser fallback availability", status, ", ".join(parts)))
+
+
+def _add_youtube_connection(items: list[DiagnosticItem], options: DownloadOptions) -> None:
+    configured = bool(options.dedicated_firefox_profile)
+    status = DiagnosticStatus.PASS if configured else DiagnosticStatus.WARNING
+    detail = (
+        "Dedicated Neural Extractor Firefox profile configured (path redacted)"
+        if configured
+        else "Dedicated YouTube connection not configured"
+    )
+    items.append(DiagnosticItem("YouTube connection", status, detail))
+
+
+def _add_po_token_provider(items: list[DiagnosticItem]) -> None:
+    provider = get_po_token_provider().status
+    status = DiagnosticStatus.PASS if provider.available and provider.bundled else DiagnosticStatus.WARNING
+    items.append(DiagnosticItem("PO Token provider", status, provider.diagnostic))
 
 
 def _add_browser_processes(items: list[DiagnosticItem]) -> None:

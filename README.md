@@ -10,7 +10,8 @@ Neural Extractor V3 is a clean rebuild of the app as a separate professional edi
 - Batch queue: paste one URL per line and process them in order.
 - Subtitles saved as `.srt`, including auto-generated subtitles when needed.
 - Thumbnail download as JPG, with optional embedding for audio files.
-- Optional `cookies.txt` support for age-restricted or session-sensitive videos.
+- Guided `YouTube verbinden` flow using an isolated Neural Extractor Firefox profile.
+- Optional `cookies.txt` support retained as an advanced compatibility fallback.
 - Optional metadata JSON output.
 - CLI mode for scripted downloads.
 - PyQt6 desktop interface with progress, queue status, and logs.
@@ -93,7 +94,8 @@ for the GitHub Desktop and GitHub web release procedure.
 ## App Updates
 
 On startup, the desktop app silently checks the latest stable GitHub Release. The
-`Check Updates` button runs the same check manually. V3.0.4 can download a future
+`Check Updates` button runs the same check manually. V3.0.4 can detect V3.0.5 as
+newer and can download a future
 compatible versioned EXE, validate its strict manifest, size, and SHA-256, install
 through a detached helper, restart, confirm startup, and roll back to the verified
 backup when startup fails. Installation always requires a clear user action.
@@ -114,5 +116,11 @@ runtime. The EXE is SHA-256 verified but is not Authenticode publisher-signed.
 ## Notes
 
 - FFmpeg is required for merging video/audio, MP3 conversion, thumbnail embedding, and SRT conversion. If a local `bin` folder exists, V3 will use it automatically.
-- Use a Netscape-format `cookies.txt` file when YouTube blocks a download that works in your browser.
+- When YouTube requests sign-in or human verification, use `YouTube verbinden`.
+  Neural Extractor opens a separate Firefox profile and never receives the password.
+- `cookies.txt` is an optional advanced fallback, not the normal authentication workflow.
 - Respect YouTube terms, creator rights, and local law.
+
+See [docs/V3.0.5-YOUTUBE-CONNECTION.md](docs/V3.0.5-YOUTUBE-CONNECTION.md)
+for the profile architecture, privacy model, PO Token provider decision, known
+limitations, renewal/disconnect behavior, and owner field-test plan.

@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import argparse
+import json
+import os
 import sys
+import tempfile
 from pathlib import Path
 
 from neural_extractor_v3.config import APP_NAME, VERSION
@@ -59,6 +62,8 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
     parser.add_argument("--post-update-transaction", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--update-rollback-status", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--internal-ytdlp-worker", action="store_true", help=argparse.SUPPRESS)
+    parser.add_argument("--internal-youtube-connection-smoke", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--internal-gui-startup-smoke", default=None, help=argparse.SUPPRESS)
     return parser.parse_args(argv)
 
 
@@ -161,12 +166,65 @@ def run_gui(argv: list[str], args: argparse.Namespace) -> int:
     return app.exec()
 
 
+def _write_internal_smoke_result(result_path: str, payload: dict[str, object]) -> None:
+    path = Path(result_path).resolve()
+    temp_root = Path(tempfile.gettempdir()).resolve()
+    if temp_root != path.parent and temp_root not in path.parents:
+        raise ValueError("Internal smoke result must be written below the temporary directory.")
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, sort_keys=True), encoding="utf-8")
+
+
+def run_youtube_connection_smoke(result_path: str) -> int:
+    from neural_extractor_v3.core.youtube_connection_smoke import (
+        run_offline_youtube_connection_smoke,
+    )
+
+    results = run_offline_youtube_connection_smoke()
+    passed = all(results.values())
+    _write_internal_smoke_result(result_path, {"passed": passed, "checks": results})
+    return 0 if passed else 1
+
+
+def run_gui_startup_smoke(argv: list[str], result_path: str) -> int:
+    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
+    from PyQt6.QtCore import QSettings, QTimer
+    from PyQt6.QtWidgets import QApplication
+
+    from neural_extractor_v3.gui.main_window import MainWindow
+
+    settings_root = str(Path(tempfile.gettempdir()) / "neural-extractor-gui-smoke-settings")
+    QSettings.setDefaultFormat(QSettings.Format.IniFormat)
+    QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, settings_root)
+    app = QApplication(argv)
+    window = MainWindow()
+    window.show()
+
+    def complete() -> None:
+        _write_internal_smoke_result(
+            result_path,
+            {"passed": window.isVisible(), "window_title": window.windowTitle()},
+        )
+        window.close()
+        app.quit()
+
+    QTimer.singleShot(500, complete)
+    return app.exec()
+
+
 def main(argv: list[str] | None = None) -> int:
     args = _parse_args(list(sys.argv[1:] if argv is None else argv))
     if args.internal_ytdlp_worker:
         from neural_extractor_v3.core.ytdlp_worker import main as run_ytdlp_worker
 
         return run_ytdlp_worker()
+    if args.internal_youtube_connection_smoke:
+        return run_youtube_connection_smoke(args.internal_youtube_connection_smoke)
+    if args.internal_gui_startup_smoke:
+        return run_gui_startup_smoke(
+            ["NeuralExtractorV3", "--internal-gui-startup-smoke"],
+            args.internal_gui_startup_smoke,
+        )
     if args.apply_update:
         return run_update_helper(Path(args.apply_update))
     if args.post_update_transaction and (args.post_update_token or args.post_update_marker):

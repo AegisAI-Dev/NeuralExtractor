@@ -10,6 +10,9 @@ class FailureCategory(str, Enum):
     """Stable failure buckets used by the engine, GUI, and offline tests."""
 
     AUTHENTICATION_REQUIRED = "authentication_required"
+    YOUTUBE_SESSION_EXPIRED = "youtube_session_expired"
+    YOUTUBE_ACCESS_RESTRICTED = "youtube_access_restricted"
+    DEDICATED_PROFILE_INVALID = "dedicated_profile_invalid"
     COOKIE_FILE_REJECTED = "cookie_file_rejected"
     BROWSER_COOKIE_DATABASE_LOCKED = "browser_cookie_database_locked"
     BROWSER_COOKIE_DECRYPTION_FAILED = "browser_cookie_decryption_failed"
@@ -49,6 +52,32 @@ _AUTH_PATTERNS = (
     "authentication is required",
     "account authentication",
     "use --cookies",
+)
+
+_EXPIRED_COOKIE_PATTERNS = (
+    "cookies are no longer valid",
+    "cookies are no longer fresh",
+    "cookies have been rotated",
+    "cookie has expired",
+    "cookies have expired",
+    "session has expired",
+)
+
+_DEDICATED_SESSION_REJECTION_PATTERNS = (
+    "sign in to confirm",
+    "login required",
+    "authentication is required",
+    "account authentication",
+    "use --cookies",
+)
+
+_ACCOUNT_ACCESS_PATTERNS = (
+    "private video",
+    "members-only",
+    "members only",
+    "confirm your age",
+    "age-restricted",
+    "age restricted",
 )
 
 _TRANSIENT_NETWORK_PATTERNS = (
@@ -112,6 +141,25 @@ def classify_youtube_failure(
     """
 
     lowered = (error_text or "").lower()
+
+    if auth_kind == "dedicated_firefox" and any(
+        pattern in lowered for pattern in _ACCOUNT_ACCESS_PATTERNS
+    ):
+        return FailureAnalysis(
+            FailureCategory.YOUTUBE_ACCESS_RESTRICTED,
+            "The connected account does not have access to this restricted video.",
+            authentication_specific=True,
+        )
+
+    if auth_kind == "dedicated_firefox" and (
+        any(pattern in lowered for pattern in _EXPIRED_COOKIE_PATTERNS)
+        or any(pattern in lowered for pattern in _DEDICATED_SESSION_REJECTION_PATTERNS)
+    ):
+        return FailureAnalysis(
+            FailureCategory.YOUTUBE_SESSION_EXPIRED,
+            "The dedicated YouTube session expired or was rejected. Renew the YouTube connection.",
+            authentication_specific=True,
+        )
 
     if "this live event has ended" in lowered:
         return FailureAnalysis(
