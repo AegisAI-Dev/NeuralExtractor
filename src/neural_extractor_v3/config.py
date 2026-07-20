@@ -15,8 +15,8 @@ def _env_seconds(name: str, default: int, minimum: int) -> int:
     return max(minimum, value)
 
 APP_NAME = "Neural Extractor V3"
-VERSION = "3.0.4"
-BUILD_LABEL = "updater-transaction-handoff-hotfix"
+VERSION = "3.0.5"
+BUILD_LABEL = "guided-youtube-connect-pot-provider"
 WINDOW_TITLE = f"{APP_NAME} {VERSION}"
 
 GITHUB_REPO = "AegisAI-Dev/NeuralExtractor"

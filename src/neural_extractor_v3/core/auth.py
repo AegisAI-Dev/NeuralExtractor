@@ -10,6 +10,8 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
+from neural_extractor_v3.core.youtube_connection import validate_dedicated_profile_path
+
 BROWSER_FALLBACK_ORDER = ("chrome", "edge", "brave", "firefox")
 
 SUPPORTED_BROWSER_NAMES = {
@@ -61,7 +63,11 @@ class AuthStrategy:
 
     @property
     def is_browser(self) -> bool:
-        return self.kind == "browser"
+        return self.kind in {"browser", "dedicated_firefox"}
+
+    @property
+    def is_dedicated_firefox(self) -> bool:
+        return self.kind == "dedicated_firefox"
 
     @property
     def browser(self) -> str | None:
@@ -76,6 +82,8 @@ class AuthStrategy:
 
     @property
     def provider_id(self) -> str:
+        if self.is_dedicated_firefox:
+            return "dedicated_firefox"
         if self.is_browser:
             return f"browser:{self.browser or self.display_name.lower()}"
         return self.kind
@@ -238,6 +246,10 @@ def detect_browser_cookie_sources() -> list[BrowserCookieSource]:
 def resolve_auth_strategies(
     cookie_file: Path | None,
     browser_detector: BrowserDetector = detect_browser_cookie_sources,
+    *,
+    dedicated_firefox_profile: Path | None = None,
+    dedicated_application_data: Path | None = None,
+    allow_legacy_browser_fallback: bool = True,
 ) -> AuthResolution:
     """Build ordered auth strategies for yt-dlp.
 
@@ -253,6 +265,27 @@ def resolve_auth_strategies(
             ydl_options={},
         )
     ]
+
+    if dedicated_firefox_profile:
+        try:
+            profile = validate_dedicated_profile_path(
+                dedicated_firefox_profile,
+                application_data=dedicated_application_data,
+            )
+        except ValueError:
+            messages.append("dedicated Neural Extractor Firefox profile is invalid")
+        else:
+            messages.append("dedicated Neural Extractor Firefox profile available")
+            strategies.append(
+                AuthStrategy(
+                    kind="dedicated_firefox",
+                    display_name="Dedicated Neural Extractor Firefox profile",
+                    attempted_auth=True,
+                    ydl_options={
+                        "cookiesfrombrowser": ("firefox", str(profile)),
+                    },
+                )
+            )
 
     cookie_status = inspect_cookie_file(cookie_file)
     if cookie_status.valid and cookie_status.path:
@@ -275,7 +308,7 @@ def resolve_auth_strategies(
     else:
         messages.append("cookies.txt not loaded")
 
-    browser_sources = browser_detector()
+    browser_sources = browser_detector() if allow_legacy_browser_fallback else []
     if browser_sources:
         browser_names = ", ".join(source.display_name for source in browser_sources)
         messages.append(f"browser cookie fallback available: {browser_names}")
@@ -290,10 +323,12 @@ def resolve_auth_strategies(
                     },
                 )
             )
-    else:
+    elif allow_legacy_browser_fallback:
         messages.append(
             "browser cookies unavailable: no Chrome, Edge, Brave, or Firefox profile found"
         )
+    else:
+        messages.append("legacy browser cookie fallback disabled")
 
     return AuthResolution(
         strategies=strategies,

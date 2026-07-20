@@ -16,6 +16,7 @@ from PyQt6.QtWidgets import (
     QButtonGroup,
     QCheckBox,
     QComboBox,
+    QDialog,
     QFileDialog,
     QFrame,
     QGridLayout,
@@ -66,6 +67,8 @@ from neural_extractor_v3.core.updater import (
     UpdateError,
     UpdateInfo,
 )
+from neural_extractor_v3.core.youtube_connection import ConnectionState, YouTubeConnectionManager
+from neural_extractor_v3.gui.youtube_connection_dialog import YouTubeConnectionDialog
 from neural_extractor_v3.models import (
     DownloadJob,
     DownloadOptions,
@@ -396,6 +399,7 @@ class MainWindow(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         self.settings = QSettings("Neuralshield", "NeuralExtractorV3")
+        self.youtube_connection = YouTubeConnectionManager(self.settings)
         self.jobs: list[DownloadJob] = []
         self.row_by_job_id: dict[str, int] = {}
         self.progress_by_job_id: dict[str, QProgressBar] = {}
@@ -407,6 +411,10 @@ class MainWindow(QMainWindow):
         self.update_progress_dialog: QProgressDialog | None = None
         self.update_install_outcome = ""
         self.diagnostics_worker: DiagnosticsWorker | None = None
+        self._auth_waiting_job_ids: set[str] = set()
+        self._auth_resume_job_ids: set[str] = set()
+        self._auth_retry_counts: dict[str, int] = {}
+        self._auth_dialog_active = False
         self.update_check_silent = False
         self.js_runtime_status = ensure_youtube_js_runtime()
 
@@ -1079,14 +1087,41 @@ class MainWindow(QMainWindow):
         output_row.addWidget(self.browse_output_button)
         layout.addWidget(self._labeled("OUTPUT FOLDER", self._row_widget(output_row)))
 
+        layout.addWidget(self._separator())
+        self.youtube_connection_status = QLabel()
+        self.youtube_connection_status.setWordWrap(True)
+        self.youtube_connection_status.setObjectName("hintLabel")
+        self.youtube_profile_label = QLabel("Firefox profile: Dedicated Neural Extractor profile")
+        self.youtube_profile_label.setObjectName("hintLabel")
+        connection_row = QHBoxLayout()
+        connection_row.setSpacing(6)
+        self.youtube_connect_button = QPushButton("YouTube verbinden")
+        self.youtube_connect_button.clicked.connect(self.connect_youtube)
+        self.youtube_renew_button = QPushButton("Verbinding vernieuwen")
+        self.youtube_renew_button.clicked.connect(
+            lambda _checked=False: self.connect_youtube(renewal=True)
+        )
+        self.youtube_test_button = QPushButton("Verbinding testen")
+        self.youtube_test_button.clicked.connect(self.test_youtube_connection)
+        self.youtube_disconnect_button = QPushButton("YouTube loskoppelen")
+        self.youtube_disconnect_button.clicked.connect(self.disconnect_youtube)
+        connection_row.addWidget(self.youtube_connect_button)
+        connection_row.addWidget(self.youtube_renew_button)
+        connection_row.addWidget(self.youtube_test_button)
+        connection_row.addWidget(self.youtube_disconnect_button)
+        connection_widget = self._row_widget(connection_row)
+        layout.addWidget(self._labeled("YOUTUBE CONNECTION", self.youtube_connection_status))
+        layout.addWidget(self.youtube_profile_label)
+        layout.addWidget(connection_widget)
+
         self.cookie_edit = QLineEdit(str(self.cookie_file) if self.cookie_file else "")
         self.cookie_edit.setPlaceholderText("No cookies file loaded")
         self.cookie_edit.setReadOnly(True)
         self.cookie_edit.setToolTip(
-            "Browser-exported cookies.txt. Needed for age-restricted, members-only, or private videos."
+            "Advanced compatibility fallback. The guided YouTube connection is the normal workflow."
         )
         self.browse_cookie_button = QPushButton("Browse…")
-        self.browse_cookie_button.setToolTip("Select a cookies.txt exported from your browser")
+        self.browse_cookie_button.setToolTip("Select an advanced compatibility cookies.txt file")
         self.browse_cookie_button.clicked.connect(self.browse_cookie_file)
         self.clear_cookie_button = QPushButton("Clear")
         self.clear_cookie_button.setToolTip("Stop using the cookies file")
@@ -1098,9 +1133,27 @@ class MainWindow(QMainWindow):
         cookie_row.addWidget(self.clear_cookie_button)
         layout.addWidget(self._labeled("COOKIES FILE (OPTIONAL)", self._row_widget(cookie_row)))
 
-        hint = QLabel("Cookies unlock age-restricted and members-only videos.")
+        hint = QLabel("cookies.txt is retained only as an optional advanced fallback.")
         hint.setObjectName("hintLabel")
         layout.addWidget(hint)
+        self.legacy_browser_check = QCheckBox(
+            "Enable detected browser-profile fallback (advanced)"
+        )
+        self.legacy_browser_check.setChecked(
+            bool(
+                self.settings.value(
+                    "youtube_connection/legacy_browser_fallback",
+                    False,
+                    type=bool,
+                )
+            )
+        )
+        self.legacy_browser_check.setToolTip(
+            "When enabled, Chrome, Edge, Brave, or normal Firefox profiles may be tried after "
+            "the dedicated profile and cookies.txt."
+        )
+        self.legacy_browser_check.stateChanged.connect(self._save_legacy_browser_fallback)
+        layout.addWidget(self.legacy_browser_check)
         return group
 
     def _action_buttons(self) -> QHBoxLayout:
@@ -1263,6 +1316,11 @@ class MainWindow(QMainWindow):
             self.metadata_check,
             self.add_button,
             self.browse_output_button,
+            self.youtube_connect_button,
+            self.youtube_renew_button,
+            self.youtube_test_button,
+            self.youtube_disconnect_button,
+            self.legacy_browser_check,
             self.browse_cookie_button,
             self.clear_cookie_button,
         ]
@@ -1363,7 +1421,19 @@ class MainWindow(QMainWindow):
                 return
             runnable_jobs = self._runnable_jobs()
 
+        self._start_download_worker(runnable_jobs, reset_auth_attempts=True)
+
+    def _start_download_worker(
+        self,
+        runnable_jobs: list[DownloadJob],
+        *,
+        reset_auth_attempts: bool,
+    ) -> None:
+        if not runnable_jobs or (self.worker and self.worker.isRunning()):
+            return
         for job in runnable_jobs:
+            if reset_auth_attempts:
+                self._auth_retry_counts.pop(job.job_id, None)
             row = self.row_by_job_id.get(job.job_id)
             if row is None:
                 continue
@@ -1375,7 +1445,7 @@ class MainWindow(QMainWindow):
 
         options = self._collect_options()
         self._set_running_state(True)
-        self.log("Starting queue")
+        self.log("Starting queue" if reset_auth_attempts else "Resuming authenticated job(s)")
 
         worker = DownloadWorker(runnable_jobs, options)
         self.worker = worker
@@ -1385,6 +1455,16 @@ class MainWindow(QMainWindow):
         worker.log.connect(self.log)
         worker.finished.connect(self.on_batch_finished)
         worker.start()
+
+    def _resume_authenticated_jobs(self) -> None:
+        if self.worker and self.worker.isRunning():
+            return
+        job_ids = set(self._auth_resume_job_ids)
+        if not job_ids:
+            return
+        self._auth_resume_job_ids.clear()
+        jobs = [job for job in self.jobs if job.job_id in job_ids]
+        self._start_download_worker(jobs, reset_auth_attempts=False)
 
     def stop_queue(self) -> None:
         if self.worker and self.worker.isRunning():
@@ -1452,6 +1532,103 @@ class MainWindow(QMainWindow):
         return None
         self.statusBar().showMessage("Queue cleared")
 
+    def _refresh_youtube_connection_ui(self) -> None:
+        if not hasattr(self, "youtube_connection_status"):
+            return
+        snapshot = self.youtube_connection.snapshot()
+        if snapshot.state == ConnectionState.CONNECTED:
+            verified = snapshot.last_verified.replace("T", " ").replace("+00:00", " UTC")
+            text = f"Status: Connected · Last verified: {verified or 'unknown'}"
+        elif snapshot.state == ConnectionState.EXPIRED:
+            text = "Status: Expired · Renew the connection in the same dedicated profile"
+        elif snapshot.state in {
+            ConnectionState.ERROR,
+            ConnectionState.INVALID,
+            ConnectionState.LOCKED,
+            ConnectionState.FIREFOX_MISSING,
+        }:
+            text = "Status: Needs attention"
+        else:
+            text = "Status: Not connected"
+        self.youtube_connection_status.setText(text)
+        connected = snapshot.state == ConnectionState.CONNECTED
+        renew = snapshot.state in {
+            ConnectionState.CONNECTED,
+            ConnectionState.EXPIRED,
+            ConnectionState.INVALID,
+            ConnectionState.LOCKED,
+            ConnectionState.ERROR,
+        }
+        queue_running = bool(self.worker and self.worker.isRunning())
+        self.youtube_connect_button.setVisible(not connected and not renew)
+        self.youtube_connect_button.setEnabled(not queue_running)
+        self.youtube_renew_button.setVisible(renew)
+        self.youtube_renew_button.setEnabled(not queue_running)
+        self.youtube_test_button.setEnabled((connected or renew) and not queue_running)
+        self.youtube_disconnect_button.setEnabled(
+            self.youtube_connection.profile_path.exists() and not queue_running
+        )
+
+    def _connection_target_url(self) -> str:
+        if self._auth_waiting_job_ids:
+            for job in self.jobs:
+                if job.job_id in self._auth_waiting_job_ids:
+                    return job.url
+        probe = self._diagnostic_probe_url()
+        return probe or "https://www.youtube.com/"
+
+    def connect_youtube(
+        self,
+        _checked: bool = False,
+        *,
+        renewal: bool = False,
+        target_url: str | None = None,
+    ) -> bool:
+        del _checked
+        dialog = YouTubeConnectionDialog(
+            self.youtube_connection,
+            target_url or self._connection_target_url(),
+            renewal=renewal,
+            parent=self,
+        )
+        accepted = dialog.exec() == QDialog.DialogCode.Accepted
+        self._refresh_youtube_connection_ui()
+        if accepted:
+            self.log(
+                "YouTube connection verified using the dedicated Neural Extractor Firefox profile."
+            )
+            self.statusBar().showMessage("YouTube session verified")
+        return accepted
+
+    def test_youtube_connection(self) -> None:
+        self.connect_youtube(
+            renewal=self.youtube_connection.snapshot().state == ConnectionState.EXPIRED,
+            target_url=self._connection_target_url(),
+        )
+
+    def disconnect_youtube(self) -> None:
+        reply = QMessageBox.question(
+            self,
+            "YouTube loskoppelen",
+            "Remove the dedicated YouTube session? Your normal Firefox profile and cookies.txt "
+            "will not be changed.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No,
+        )
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+        result = self.youtube_connection.disconnect()
+        self._refresh_youtube_connection_ui()
+        if result.success:
+            self.log("YouTube disconnected; the dedicated Firefox profile was removed.")
+            QMessageBox.information(self, APP_NAME, result.message)
+            return
+        message = result.message
+        if result.manual_cleanup_path:
+            message += f"\n\nManual cleanup path:\n{result.manual_cleanup_path}"
+        self.log(f"YouTube disconnect failed ({result.code}): {result.message}")
+        QMessageBox.warning(self, APP_NAME, message)
+
     def browse_output(self) -> None:
         folder = QFileDialog.getExistingDirectory(self, "Choose output folder", str(self.output_dir))
         if not folder:
@@ -1479,7 +1656,16 @@ class MainWindow(QMainWindow):
         self.cookie_file = None
         self.cookie_edit.clear()
         self.settings.remove("cookie_file")
-        self.log("cookies.txt cleared; browser cookie fallback will be used if available")
+        self.log("cookies.txt cleared; the guided YouTube connection remains the normal workflow")
+
+    def _save_legacy_browser_fallback(self) -> None:
+        enabled = self.legacy_browser_check.isChecked()
+        self.settings.setValue("youtube_connection/legacy_browser_fallback", enabled)
+        self.log(
+            "Legacy browser-profile fallback enabled"
+            if enabled
+            else "Legacy browser-profile fallback disabled"
+        )
 
     def open_output_folder(self) -> None:
         self.output_dir.mkdir(parents=True, exist_ok=True)
@@ -1729,6 +1915,9 @@ class MainWindow(QMainWindow):
             embed_thumbnail=self.embed_thumb_check.isChecked(),
             metadata_json=self.metadata_check.isChecked(),
             cookie_file=self.cookie_file,
+            dedicated_firefox_profile=self.youtube_connection.connected_profile(),
+            guided_youtube_auth=True,
+            legacy_browser_fallback=self.legacy_browser_check.isChecked(),
         )
 
     # ------------------------------------------------------------------ worker slots
@@ -1771,6 +1960,28 @@ class MainWindow(QMainWindow):
         if row is None:
             return
         normalized_category = failure_category.strip().lower().replace("-", "_").replace(" ", "_")
+        guided_auth_failures = {
+            "authentication_required",
+            "youtube_session_expired",
+            "dedicated_profile_invalid",
+            "browser_cookie_database_locked",
+            "browser_cookie_extraction_failed",
+        }
+        if (
+            not success
+            and normalized_category in guided_auth_failures
+            and self._auth_retry_counts.get(job_id, 0) < 1
+        ):
+            self._queue_youtube_connection_assistant(
+                job_id,
+                row,
+                normalized_category,
+                message,
+            )
+            return
+        if not success and normalized_category == "youtube_session_expired":
+            self.youtube_connection.mark_expired(message)
+            self._refresh_youtube_connection_ui()
         cancelled = normalized_category in {
             "cancelled",
             "download_cancelled",
@@ -1796,6 +2007,58 @@ class MainWindow(QMainWindow):
             self.active_job_id = None
         self._refresh_queue_summary()
 
+    def _queue_youtube_connection_assistant(
+        self,
+        job_id: str,
+        row: int,
+        failure_category: str,
+        message: str,
+    ) -> None:
+        self._auth_waiting_job_ids.add(job_id)
+        self._set_status(row, "Waiting for YouTube")
+        self._set_detail(row, "Authentication required · YouTube verbinden")
+        self.log(f"Authentication required ({failure_category}): {message}")
+        if self.active_job_id == job_id:
+            self.active_job_id = None
+        if self.youtube_connection.profile_path.exists():
+            self.youtube_connection.mark_expired(message)
+        self._refresh_youtube_connection_ui()
+        self._refresh_queue_summary()
+        if not self._auth_dialog_active:
+            self._auth_dialog_active = True
+            QTimer.singleShot(0, self._show_pending_connection_assistant)
+
+    def _show_pending_connection_assistant(self) -> None:
+        if not self._auth_waiting_job_ids:
+            self._auth_dialog_active = False
+            return
+        target_url = self._connection_target_url()
+        snapshot = self.youtube_connection.snapshot()
+        renewal = bool(snapshot.last_verified or self.youtube_connection.profile_path.exists())
+        accepted = self.connect_youtube(renewal=renewal, target_url=target_url)
+        pending = set(self._auth_waiting_job_ids)
+        self._auth_waiting_job_ids.clear()
+        self._auth_dialog_active = False
+        if accepted:
+            for job_id in pending:
+                self._auth_retry_counts[job_id] = self._auth_retry_counts.get(job_id, 0) + 1
+                self._auth_resume_job_ids.add(job_id)
+                row = self.row_by_job_id.get(job_id)
+                if row is not None:
+                    self._set_status(row, "Queued")
+                    self._set_detail(row, "YouTube connection verified; waiting to resume")
+            if not (self.worker and self.worker.isRunning()):
+                QTimer.singleShot(0, self._resume_authenticated_jobs)
+        else:
+            for job_id in pending:
+                row = self.row_by_job_id.get(job_id)
+                if row is not None:
+                    self._set_status(row, "Failed")
+                    self._set_detail(row, "Authentication required · verification cancelled")
+            self.log("YouTube connection verification cancelled; original job was not resumed.")
+        self._refresh_queue_summary()
+        self._refresh_youtube_connection_ui()
+
     def on_batch_finished(self, worker: DownloadWorker | None = None) -> None:
         if worker is None:
             sender = self.sender()
@@ -1809,10 +2072,13 @@ class MainWindow(QMainWindow):
         self.statusBar().showMessage(message)
         self.log(message)
         self.worker = None
+        self._refresh_youtube_connection_ui()
         self._refresh_queue_summary()
         if self._close_after_worker_stops:
             self._close_after_worker_stops = False
             QTimer.singleShot(0, self.close)
+        elif self._auth_resume_job_ids and not self._auth_dialog_active:
+            QTimer.singleShot(0, self._resume_authenticated_jobs)
 
     # ------------------------------------------------------------------ state
 

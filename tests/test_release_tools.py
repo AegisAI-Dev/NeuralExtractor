@@ -28,8 +28,8 @@ def test_release_version_validation_requires_tag_and_both_sources_to_match(tmp_p
         validate_release_versions(tmp_path, "v3.0.3")
 
 
-def test_current_304_source_versions_and_release_ref_are_consistent():
-    assert validate_release_versions(PROJECT_ROOT, "v3.0.4") == "3.0.4"
+def test_current_305_source_versions_and_release_ref_are_consistent():
+    assert validate_release_versions(PROJECT_ROOT, "v3.0.5") == "3.0.5"
 
 
 def test_304_is_newer_than_both_affected_updater_versions():
