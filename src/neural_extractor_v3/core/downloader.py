@@ -61,7 +61,10 @@ from neural_extractor_v3.core.process_control import (
     recover_owned_process,
 )
 from neural_extractor_v3.core.subtitles import subtitle_postprocessor, subtitle_ydl_options
-from neural_extractor_v3.core.youtube_connection import validate_dedicated_profile_path
+from neural_extractor_v3.core.youtube_connection import (
+    ManagedBrowser,
+    validate_managed_profile_path,
+)
 from neural_extractor_v3.core.youtube_errors import (
     FailureAnalysis,
     FailureCategory,
@@ -357,6 +360,8 @@ class DownloadEngine:
         self.options.output_dir.mkdir(parents=True, exist_ok=True)
         auth_resolution = resolve_auth_strategies(
             self.options.cookie_file,
+            dedicated_browser=self.options.dedicated_browser,
+            dedicated_browser_profile=self.options.dedicated_browser_profile,
             dedicated_firefox_profile=self.options.dedicated_firefox_profile,
             dedicated_application_data=app_data_dir(),
             allow_legacy_browser_fallback=self.options.legacy_browser_fallback,
@@ -649,17 +654,25 @@ class DownloadEngine:
         self,
         url: str,
         profile_path: Path,
+        browser: ManagedBrowser | str = ManagedBrowser.FIREFOX,
     ) -> YtdlpRunResult:
-        """Run one bounded metadata-only request with the managed Firefox profile."""
-        profile = validate_dedicated_profile_path(
+        """Run one bounded metadata-only request with an exact managed profile."""
+        selected_browser = ManagedBrowser(browser)
+        profile = validate_managed_profile_path(
             profile_path,
+            browser=selected_browser,
             application_data=app_data_dir(),
         )
+        extraction_profile = (
+            profile / "Default" if selected_browser is ManagedBrowser.CHROME else profile
+        )
         strategy = AuthStrategy(
-            kind="dedicated_firefox",
-            display_name="Dedicated Neural Extractor Firefox profile",
+            kind="dedicated_browser",
+            display_name=f"Dedicated Neural Extractor {selected_browser.display_name} profile",
             attempted_auth=True,
-            ydl_options={"cookiesfrombrowser": ("firefox", str(profile))},
+            ydl_options={
+                "cookiesfrombrowser": (selected_browser.value, str(extraction_profile))
+            },
         )
         prepared_url = self.prepare_url(url)
         attempt = self._profile(strategy, reason="youtube_connection_verification")
@@ -700,17 +713,25 @@ class DownloadEngine:
         prepared_url: str,
         profile: DownloadAttemptProfile,
     ) -> dict[str, Any]:
-        if profile.auth_strategy.is_dedicated_firefox:
+        if profile.auth_strategy.is_dedicated_browser:
             configured = profile.auth_strategy.ydl_options.get("cookiesfrombrowser") or ()
+            configured_browser = configured[0] if configured else ""
             configured_profile = configured[1] if len(configured) > 1 else ""
             try:
-                validate_dedicated_profile_path(
-                    configured_profile,
+                selected_browser = ManagedBrowser(str(configured_browser))
+                managed_root = Path(str(configured_profile))
+                if selected_browser is ManagedBrowser.CHROME:
+                    if managed_root.name.casefold() != "default":
+                        raise ValueError("Chrome extraction must use the managed Default profile.")
+                    managed_root = managed_root.parent
+                validate_managed_profile_path(
+                    managed_root,
+                    browser=selected_browser,
                     application_data=app_data_dir(),
                 )
-            except (IndexError, TypeError, ValueError):
+            except (IndexError, TypeError, ValueError, OSError):
                 output = YtdlpCapturedOutput(
-                    stderr=["Dedicated Firefox profile failed safety validation."]
+                    stderr=["Dedicated browser profile failed safety validation."]
                 )
                 raise YtdlpRunError(
                     "yt-dlp <dedicated-profile-validation>",
@@ -981,7 +1002,9 @@ class DownloadEngine:
         auth_state: AuthenticationState,
     ) -> AuthStrategy | None:
         auth_state.justify_authenticated_fallback()
-        if self.options.guided_youtube_auth and not self.options.dedicated_firefox_profile:
+        if self.options.guided_youtube_auth and not (
+            self.options.dedicated_browser_profile or self.options.dedicated_firefox_profile
+        ):
             return None
         return auth_state.next_authenticated_strategy()
 
@@ -1005,7 +1028,7 @@ class DownloadEngine:
         if error.category_hint == FailureCategory.DEDICATED_PROFILE_INVALID:
             return FailureAnalysis(
                 FailureCategory.DEDICATED_PROFILE_INVALID,
-                "The dedicated Firefox profile is invalid or unavailable.",
+                "The dedicated browser profile is invalid or unavailable.",
                 authentication_specific=True,
             )
         return classify_youtube_failure(
@@ -1095,9 +1118,9 @@ class DownloadEngine:
         elif profile.auth_strategy.is_cookie_file:
             self._log("Authenticating with cookies.txt.")
             self._emit_activity_status("Authenticating with cookies.txt")
-        elif profile.auth_strategy.is_dedicated_firefox:
+        elif profile.auth_strategy.is_dedicated_browser:
             self._log(
-                "Using the dedicated Neural Extractor Firefox profile for YouTube authentication."
+                f"Using the {profile.auth_strategy.display_name} for YouTube authentication."
             )
             self._emit_activity_status("Authenticating with the YouTube connection")
         elif profile.auth_strategy.is_browser:
@@ -1112,8 +1135,8 @@ class DownloadEngine:
     def _attempt_profile_summary(self, profile: DownloadAttemptProfile) -> str:
         if profile.auth_strategy.is_cookie_file:
             auth_source = "cookies.txt"
-        elif profile.auth_strategy.is_dedicated_firefox:
-            auth_source = "dedicated-firefox"
+        elif profile.auth_strategy.is_dedicated_browser:
+            auth_source = f"dedicated-{profile.auth_strategy.browser or 'browser'}"
         elif profile.auth_strategy.is_browser:
             auth_source = f"browser:{profile.auth_strategy.display_name}"
         else:
@@ -1340,6 +1363,11 @@ class DownloadEngine:
             text = text.replace(
                 str(self.options.dedicated_firefox_profile),
                 "<dedicated-firefox-profile>",
+            )
+        if self.options.dedicated_browser_profile:
+            text = text.replace(
+                str(self.options.dedicated_browser_profile),
+                "<dedicated-browser-profile>",
             )
         home = str(Path.home())
         if home:

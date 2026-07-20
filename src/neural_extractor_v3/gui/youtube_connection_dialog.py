@@ -25,6 +25,12 @@ from neural_extractor_v3.core.youtube_connection import (
     YouTubeConnectionManager,
 )
 from neural_extractor_v3.core.youtube_verifier import verify_dedicated_youtube_profile
+from neural_extractor_v3.gui.managed_browser_dialog import (
+    ConnectionVerificationWorker as ManagedConnectionVerificationWorker,
+)
+from neural_extractor_v3.gui.managed_browser_dialog import (
+    YouTubeConnectionDialog as ManagedYouTubeConnectionDialog,
+)
 
 Verifier = Callable[[Path, str], VerificationResult]
 
@@ -239,5 +245,8 @@ class YouTubeConnectionDialog(QDialog):
         self._set_verifying(False)
         self._refresh_state()
 
+
+ConnectionVerificationWorker = ManagedConnectionVerificationWorker  # noqa: F811
+YouTubeConnectionDialog = ManagedYouTubeConnectionDialog  # noqa: F811
 
 __all__ = ["ConnectionVerificationWorker", "YouTubeConnectionDialog"]

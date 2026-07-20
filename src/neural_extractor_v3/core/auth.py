@@ -10,7 +10,11 @@ from enum import Enum
 from pathlib import Path
 from typing import Any
 
-from neural_extractor_v3.core.youtube_connection import validate_dedicated_profile_path
+from neural_extractor_v3.core.youtube_connection import (
+    ManagedBrowser,
+    validate_dedicated_profile_path,
+    validate_managed_profile_path,
+)
 
 BROWSER_FALLBACK_ORDER = ("chrome", "edge", "brave", "firefox")
 
@@ -63,7 +67,11 @@ class AuthStrategy:
 
     @property
     def is_browser(self) -> bool:
-        return self.kind in {"browser", "dedicated_firefox"}
+        return self.kind in {"browser", "dedicated_browser", "dedicated_firefox"}
+
+    @property
+    def is_dedicated_browser(self) -> bool:
+        return self.kind in {"dedicated_browser", "dedicated_firefox"}
 
     @property
     def is_dedicated_firefox(self) -> bool:
@@ -82,8 +90,8 @@ class AuthStrategy:
 
     @property
     def provider_id(self) -> str:
-        if self.is_dedicated_firefox:
-            return "dedicated_firefox"
+        if self.is_dedicated_browser:
+            return f"dedicated_{self.browser or 'browser'}"
         if self.is_browser:
             return f"browser:{self.browser or self.display_name.lower()}"
         return self.kind
@@ -162,6 +170,7 @@ class AuthenticationState:
 class BrowserCookieFailureKind(str, Enum):
     LOCKED = "locked"
     DECRYPTION_FAILED = "decryption_failed"
+    UNSUPPORTED = "unsupported"
     EXTRACTION_FAILED = "extraction_failed"
 
 
@@ -247,6 +256,8 @@ def resolve_auth_strategies(
     cookie_file: Path | None,
     browser_detector: BrowserDetector = detect_browser_cookie_sources,
     *,
+    dedicated_browser: str | None = None,
+    dedicated_browser_profile: Path | None = None,
     dedicated_firefox_profile: Path | None = None,
     dedicated_application_data: Path | None = None,
     allow_legacy_browser_fallback: bool = True,
@@ -266,7 +277,36 @@ def resolve_auth_strategies(
         )
     ]
 
-    if dedicated_firefox_profile:
+    if dedicated_browser and dedicated_browser_profile:
+        try:
+            selected_browser = ManagedBrowser(dedicated_browser)
+            profile = validate_managed_profile_path(
+                dedicated_browser_profile,
+                browser=selected_browser,
+                application_data=dedicated_application_data,
+            )
+        except (ValueError, TypeError):
+            messages.append("dedicated Neural Extractor browser profile is invalid")
+        else:
+            display_name = selected_browser.display_name
+            extraction_profile = (
+                profile / "Default" if selected_browser is ManagedBrowser.CHROME else profile
+            )
+            messages.append(f"dedicated Neural Extractor {display_name} profile available")
+            strategies.append(
+                AuthStrategy(
+                    kind="dedicated_browser",
+                    display_name=f"Dedicated Neural Extractor {display_name} profile",
+                    attempted_auth=True,
+                    ydl_options={
+                        "cookiesfrombrowser": (
+                            selected_browser.value,
+                            str(extraction_profile),
+                        ),
+                    },
+                )
+            )
+    elif dedicated_firefox_profile:
         try:
             profile = validate_dedicated_profile_path(
                 dedicated_firefox_profile,
@@ -366,6 +406,17 @@ def classify_browser_cookie_extraction_error(
     if any(pattern in lowered for pattern in locked_patterns):
         return BrowserCookieFailureKind.LOCKED
 
+    unsupported_patterns = (
+        "app-bound",
+        "app bound encryption",
+        "application-bound",
+        "app_bound_encrypted_key",
+        'cookie version: "v20"',
+        "chrome cookie encryption is not supported",
+    )
+    if any(pattern in lowered for pattern in unsupported_patterns):
+        return BrowserCookieFailureKind.UNSUPPORTED
+
     decryption_patterns = (
         "dpapi",
         "failed to decrypt",
@@ -420,6 +471,11 @@ def clean_browser_cookie_failure(
         return (
             f"Browser cookie decryption failed{suffix}. "
             "Try cookies.txt or another signed-in browser."
+        )
+    if kind == BrowserCookieFailureKind.UNSUPPORTED:
+        return (
+            "Chrome session could not be read securely. "
+            "Try the managed Firefox connection."
         )
     suffix = f" for {browser}" if browser else ""
     return (

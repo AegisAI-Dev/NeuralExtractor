@@ -8,11 +8,13 @@ from pathlib import Path
 from typing import Any
 
 from neural_extractor_v3.core.youtube_connection import (
+    ChromeDiscovery,
     FirefoxDiscovery,
+    ManagedBrowser,
     VerificationResult,
     YouTubeConnectionManager,
-    dedicated_firefox_profile_path,
-    validate_dedicated_profile_path,
+    dedicated_browser_profile_path,
+    validate_managed_profile_path,
 )
 
 
@@ -43,14 +45,19 @@ class _FakeProcess:
         return self.returncode
 
 
-def _managed_profile_path_is_safe(profile: Path, application_data: Path) -> bool:
+def _managed_profile_path_is_safe(
+    profile: Path,
+    application_data: Path,
+    browser: ManagedBrowser,
+) -> bool:
     """Confirm the manager returned the validator's canonical fixed profile."""
     try:
-        validated = validate_dedicated_profile_path(
+        validated = validate_managed_profile_path(
             profile,
+            browser=browser,
             application_data=application_data,
         )
-        expected = dedicated_firefox_profile_path(application_data).resolve()
+        expected = dedicated_browser_profile_path(browser, application_data).resolve()
     except (OSError, RuntimeError, ValueError):
         return False
     return profile == validated == expected
@@ -59,7 +66,10 @@ def _managed_profile_path_is_safe(profile: Path, application_data: Path) -> bool
 def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]:
     """Run the offline contract below a caller-owned isolated test root."""
     application_data = root / "LocalAppData" / "NeuralExtractorV3"
+    chrome = root / "Google" / "Chrome" / "Application" / "chrome.exe"
     firefox = root / "Mozilla Firefox" / "firefox.exe"
+    chrome.parent.mkdir(parents=True)
+    chrome.write_bytes(b"MZ\x00\x00")
     firefox.parent.mkdir(parents=True)
     firefox.write_bytes(b"MZ\x00\x00")
     process = _FakeProcess()
@@ -73,9 +83,10 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
     settings = _MemorySettings()
     manager = YouTubeConnectionManager(
         settings,
+        browser=ManagedBrowser.CHROME,
         application_data=application_data,
-        discovery=FirefoxDiscovery(
-            registry_reader=lambda: [firefox],
+        discovery=ChromeDiscovery(
+            registry_reader=lambda: [chrome],
             environ={},
             binary_validator=lambda _path: True,
         ),
@@ -83,11 +94,16 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
         identity_provider=lambda _pid: "packaged-smoke-identity",
     )
     profile = manager.create_profile()
-    profile_path_safe = _managed_profile_path_is_safe(profile, application_data)
+    profile_path_safe = _managed_profile_path_is_safe(
+        profile,
+        application_data,
+        ManagedBrowser.CHROME,
+    )
     traversal_rejected = False
     try:
-        validate_dedicated_profile_path(
+        validate_managed_profile_path(
             profile / ".." / "escape",
+            browser=ManagedBrowser.CHROME,
             application_data=application_data,
             require_exists=False,
         )
@@ -98,19 +114,37 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
     command = list(captured["command"])
     launch_safe = (
         captured["kwargs"].get("shell") is False
-        and command[1:4] == ["-no-remote", "-profile", str(profile)]
+        and command[1] == f"--user-data-dir={profile}"
+        and command[2:5] == [
+            "--new-window",
+            "--no-first-run",
+            "--no-default-browser-check",
+        ]
+        and not any("remote-debugging" in item for item in command)
         and "must-not-appear" not in " ".join(command)
     )
     process.returncode = 0
     manager.refresh_browser_state()
 
-    cookie_database = sqlite3.connect(profile / "cookies.sqlite")
+    stale_marker = profile / "SingletonLock"
+    stale_marker.write_text("stale", encoding="utf-8")
+    manager.refresh_browser_state()
+    stale_recovered = (
+        manager.recover_stale_state() or not stale_marker.exists()
+    ) and not stale_marker.exists()
+    stale_recovery_logged = "Recovered stale managed-browser profile state." in manager.events
+
+    cookie_path = profile / "Default" / "Network" / "Cookies"
+    cookie_path.parent.mkdir(parents=True)
+    cookie_database = sqlite3.connect(cookie_path)
     try:
         connection = cookie_database
-        connection.execute("CREATE TABLE moz_cookies (host TEXT, name TEXT, value TEXT)")
         connection.execute(
-            "INSERT INTO moz_cookies VALUES (?, ?, ?)",
-            (".youtube.com", "SAPISID", "never-log-this-cookie"),
+            "CREATE TABLE cookies (host_key TEXT, name TEXT, value TEXT, encrypted_value BLOB)"
+        )
+        connection.execute(
+            "INSERT INTO cookies VALUES (?, ?, ?, ?)",
+            (".youtube.com", "SAPISID", "never-log-this-cookie", b"v20-not-read"),
         )
         connection.commit()
     finally:
@@ -126,12 +160,33 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
     manager.mark_expired("cookies are no longer valid")
     renewal_reused_profile = manager.create_profile() == profile
     disconnected = manager.disconnect()
+    firefox_manager = YouTubeConnectionManager(
+        settings,
+        browser=ManagedBrowser.FIREFOX,
+        application_data=application_data,
+        discovery=FirefoxDiscovery(
+            registry_reader=lambda: [firefox],
+            environ={},
+            binary_validator=lambda _path: True,
+        ),
+        popen_factory=lambda _command, **_kwargs: _FakeProcess(),
+        identity_provider=lambda _pid: None,
+    )
+    firefox_profile = firefox_manager.create_profile()
+    firefox_preserved_separately = (
+        firefox_profile.name == "firefox-profile"
+        and firefox_profile != profile
+        and firefox_manager.disconnect().success
+    )
     settings_private = "never-log-this-cookie" not in repr(settings.values)
     return {
         "profile_path_safe": profile_path_safe,
         "path_traversal_rejected": traversal_rejected,
         "launch_arguments_safe": launch_safe,
+        "stale_profile_state_recovered": stale_recovered,
+        "stale_recovery_logged": stale_recovery_logged,
         "authentication_state_machine": verified.success,
+        "firefox_fallback_separate": firefox_preserved_separately,
         "renewal_reused_profile": renewal_reused_profile,
         "disconnect_safe": disconnected.success and not profile.exists(),
         "settings_private": settings_private,

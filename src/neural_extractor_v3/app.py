@@ -201,9 +201,14 @@ def run_gui_startup_smoke(argv: list[str], result_path: str) -> int:
     window.show()
 
     def complete() -> None:
+        checks = window.responsive_layout_smoke_checks()
         _write_internal_smoke_result(
             result_path,
-            {"passed": window.isVisible(), "window_title": window.windowTitle()},
+            {
+                "passed": window.isVisible() and all(checks.values()),
+                "window_title": window.windowTitle(),
+                "checks": checks,
+            },
         )
         window.close()
         app.quit()
