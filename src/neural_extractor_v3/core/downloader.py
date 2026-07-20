@@ -46,6 +46,7 @@ from neural_extractor_v3.core.js_runtime import (
     clean_youtube_challenge_runtime_error,
     ensure_youtube_js_runtime,
 )
+from neural_extractor_v3.core.pot_provider import get_po_token_provider
 from neural_extractor_v3.core.process_control import (
     OwnedProcessSupervisor,
     ProcessCancelledError,
@@ -60,6 +61,7 @@ from neural_extractor_v3.core.process_control import (
     recover_owned_process,
 )
 from neural_extractor_v3.core.subtitles import subtitle_postprocessor, subtitle_ydl_options
+from neural_extractor_v3.core.youtube_connection import validate_dedicated_profile_path
 from neural_extractor_v3.core.youtube_errors import (
     FailureAnalysis,
     FailureCategory,
@@ -143,6 +145,8 @@ class DownloadAttemptProfile:
 @dataclass(frozen=True, slots=True)
 class YtdlpRunResult:
     formats: list[dict[str, Any]] = field(default_factory=list)
+    metadata: dict[str, Any] = field(default_factory=dict)
+    diagnostic: str = ""
 
 
 class YtdlpCaptureLogger:
@@ -226,7 +230,7 @@ def recover_stale_download_processes(log_callback: LogCallback | None = None) ->
 
     messages: list[str] = []
     state_dir = app_data_dir() / "process-state"
-    records = state_dir.glob("active-download-*.json") if state_dir.exists() else ()
+    records = state_dir.glob("active-*.json") if state_dir.exists() else ()
     for record in records:
         result = recover_owned_process(
             record,
@@ -284,6 +288,7 @@ class DownloadEngine:
         log_callback: LogCallback | None = None,
         *,
         process_limits: ProcessLimits | None = None,
+        process_record_label: str = "download",
     ) -> None:
         self.options = options
         self.progress_callback = progress_callback
@@ -295,6 +300,7 @@ class DownloadEngine:
         self._last_activity_status = ""
         self._last_discovery_failure: FailureAnalysis | None = None
         self.js_runtime_status = ensure_youtube_js_runtime()
+        self.po_token_provider_status = get_po_token_provider().status
         limits = process_limits or ProcessLimits(
             inactivity_timeout=YTDLP_INACTIVITY_TIMEOUT_SECONDS,
             total_timeout=YTDLP_ATTEMPT_TOTAL_TIMEOUT_SECONDS,
@@ -302,7 +308,13 @@ class DownloadEngine:
             termination_grace=YTDLP_TERMINATION_GRACE_SECONDS,
             force_kill_wait=YTDLP_TERMINATION_GRACE_SECONDS,
         )
-        record = app_data_dir() / "process-state" / f"active-download-{os.getpid()}.json"
+        safe_label = re.sub(r"[^a-z0-9_-]", "-", process_record_label.casefold()).strip("-")
+        safe_label = safe_label or "download"
+        record = (
+            app_data_dir()
+            / "process-state"
+            / f"active-{safe_label}-{os.getpid()}-{uuid4().hex[:8]}.json"
+        )
         self._supervisor = OwnedProcessSupervisor(
             limits,
             cancellation_event=self._cancel_event,
@@ -343,10 +355,16 @@ class DownloadEngine:
 
         url = self.prepare_url(job.url)
         self.options.output_dir.mkdir(parents=True, exist_ok=True)
-        auth_resolution = resolve_auth_strategies(self.options.cookie_file)
+        auth_resolution = resolve_auth_strategies(
+            self.options.cookie_file,
+            dedicated_firefox_profile=self.options.dedicated_firefox_profile,
+            dedicated_application_data=app_data_dir(),
+            allow_legacy_browser_fallback=self.options.legacy_browser_fallback,
+        )
         auth_state = AuthenticationState(auth_resolution)
 
         self._log(self.js_runtime_status.diagnostic)
+        self._log(self.po_token_provider_status.diagnostic)
         for message in auth_resolution.messages:
             self._log(message)
 
@@ -425,8 +443,7 @@ class DownloadEngine:
                     break
 
                 if analysis.category == FailureCategory.AUTHENTICATION_REQUIRED:
-                    auth_state.justify_authenticated_fallback()
-                    next_strategy = auth_state.next_authenticated_strategy()
+                    next_strategy = self._next_authenticated_strategy(auth_state)
                     if next_strategy:
                         queue.append(self._profile(next_strategy, reason="authenticated_fallback"))
                         continue
@@ -435,7 +452,7 @@ class DownloadEngine:
                 if analysis.category == FailureCategory.COOKIE_FILE_REJECTED:
                     auth_state.reject_cookie_file(analysis.user_message)
                     self._log("cookies.txt may be stale or rejected; it will not be repeated in this job.")
-                    next_strategy = auth_state.next_authenticated_strategy()
+                    next_strategy = self._next_authenticated_strategy(auth_state)
                     if next_strategy:
                         queue.append(self._profile(next_strategy, reason="authenticated_fallback"))
                         continue
@@ -455,7 +472,7 @@ class DownloadEngine:
                             profile.auth_strategy.display_name,
                         )
                     )
-                    next_strategy = auth_state.next_authenticated_strategy()
+                    next_strategy = self._next_authenticated_strategy(auth_state)
                     if next_strategy:
                         queue.append(self._profile(next_strategy, reason="authenticated_fallback"))
                         continue
@@ -463,7 +480,7 @@ class DownloadEngine:
 
                 if analysis.category == FailureCategory.HTTP_403_MEDIA_REJECTED:
                     if profile.auth_strategy.attempted_auth and auth_state.authenticated_fallback_justified:
-                        next_strategy = auth_state.next_authenticated_strategy()
+                        next_strategy = self._next_authenticated_strategy(auth_state)
                         if next_strategy:
                             queue.append(self._profile(next_strategy, reason="authenticated_fallback"))
                             continue
@@ -628,6 +645,27 @@ class DownloadEngine:
             opts["postprocessors"] = postprocessors
         return opts
 
+    def run_authentication_preflight(
+        self,
+        url: str,
+        profile_path: Path,
+    ) -> YtdlpRunResult:
+        """Run one bounded metadata-only request with the managed Firefox profile."""
+        profile = validate_dedicated_profile_path(
+            profile_path,
+            application_data=app_data_dir(),
+        )
+        strategy = AuthStrategy(
+            kind="dedicated_firefox",
+            display_name="Dedicated Neural Extractor Firefox profile",
+            attempted_auth=True,
+            ydl_options={"cookiesfrombrowser": ("firefox", str(profile))},
+        )
+        prepared_url = self.prepare_url(url)
+        attempt = self._profile(strategy, reason="youtube_connection_verification")
+        options = self._options_for_attempt_profile(prepared_url, attempt)
+        return self._run_yt_dlp(prepared_url, options, discover_only=True)
+
     def _public_strategy(self, resolution: AuthResolution) -> AuthStrategy:
         strategy = next((item for item in resolution.strategies if not item.attempted_auth), None)
         if strategy is None:
@@ -662,6 +700,25 @@ class DownloadEngine:
         prepared_url: str,
         profile: DownloadAttemptProfile,
     ) -> dict[str, Any]:
+        if profile.auth_strategy.is_dedicated_firefox:
+            configured = profile.auth_strategy.ydl_options.get("cookiesfrombrowser") or ()
+            configured_profile = configured[1] if len(configured) > 1 else ""
+            try:
+                validate_dedicated_profile_path(
+                    configured_profile,
+                    application_data=app_data_dir(),
+                )
+            except (IndexError, TypeError, ValueError):
+                output = YtdlpCapturedOutput(
+                    stderr=["Dedicated Firefox profile failed safety validation."]
+                )
+                raise YtdlpRunError(
+                    "yt-dlp <dedicated-profile-validation>",
+                    output,
+                    exit_code=1,
+                    phase="startup",
+                    category_hint=FailureCategory.DEDICATED_PROFILE_INVALID,
+                )
         ydl_opts = self.build_ydl_options(prepared_url, profile.auth_strategy)
         ydl_opts["format"] = profile.format_selector
         extractor_args = dict(ydl_opts.get("extractor_args") or {})
@@ -752,13 +809,14 @@ class DownloadEngine:
         }
         output = YtdlpCapturedOutput()
         formats: list[dict[str, Any]] = []
+        metadata: dict[str, Any] = {}
         phase = "discovery" if discover_only else "preflight"
         worker_error = ""
         buffers = {"stdout": "", "stderr": ""}
         parser_lock = threading.Lock()
 
         def handle_event_line(line: str, fallback_stream: str) -> None:
-            nonlocal phase, worker_error, formats
+            nonlocal phase, worker_error, formats, metadata
             if not line:
                 return
             if not line.startswith(PROTOCOL_PREFIX):
@@ -794,6 +852,11 @@ class DownloadEngine:
                 payload = event.get("formats")
                 if isinstance(payload, list):
                     formats = [item for item in payload if isinstance(item, dict)]
+                metadata = {
+                    key: event.get(key)
+                    for key in ("id", "title", "availability", "live_status")
+                    if event.get(key) is not None
+                }
             elif kind == "error":
                 phase = str(event.get("phase") or phase)
                 worker_error = self._redact_diagnostic_text(str(event.get("message") or ""))
@@ -893,7 +956,11 @@ class DownloadEngine:
                 format_selector=str(ydl_opts.get("format") or ""),
                 player_clients=self._player_clients_from_options(ydl_opts),
             )
-        return YtdlpRunResult(formats=formats)
+        return YtdlpRunResult(
+            formats=formats,
+            metadata=metadata,
+            diagnostic=output.diagnostic_text(),
+        )
 
     def _queue_authentication_from_discovery(
         self,
@@ -903,12 +970,20 @@ class DownloadEngine:
         failure = self._last_discovery_failure
         if not failure or failure.category != FailureCategory.AUTHENTICATION_REQUIRED:
             return False
-        auth_state.justify_authenticated_fallback()
-        next_strategy = auth_state.next_authenticated_strategy()
+        next_strategy = self._next_authenticated_strategy(auth_state)
         if not next_strategy:
             return False
         queue.append(self._profile(next_strategy, reason="authenticated_fallback"))
         return True
+
+    def _next_authenticated_strategy(
+        self,
+        auth_state: AuthenticationState,
+    ) -> AuthStrategy | None:
+        auth_state.justify_authenticated_fallback()
+        if self.options.guided_youtube_auth and not self.options.dedicated_firefox_profile:
+            return None
+        return auth_state.next_authenticated_strategy()
 
     def _analyse_error(
         self,
@@ -926,6 +1001,12 @@ class DownloadEngine:
                 FailureCategory.TOTAL_ATTEMPT_TIMEOUT,
                 "The yt-dlp attempt reached the maximum total duration and was stopped safely.",
                 transient=True,
+            )
+        if error.category_hint == FailureCategory.DEDICATED_PROFILE_INVALID:
+            return FailureAnalysis(
+                FailureCategory.DEDICATED_PROFILE_INVALID,
+                "The dedicated Firefox profile is invalid or unavailable.",
+                authentication_specific=True,
             )
         return classify_youtube_failure(
             error.diagnostic_text(),
@@ -1014,6 +1095,11 @@ class DownloadEngine:
         elif profile.auth_strategy.is_cookie_file:
             self._log("Authenticating with cookies.txt.")
             self._emit_activity_status("Authenticating with cookies.txt")
+        elif profile.auth_strategy.is_dedicated_firefox:
+            self._log(
+                "Using the dedicated Neural Extractor Firefox profile for YouTube authentication."
+            )
+            self._emit_activity_status("Authenticating with the YouTube connection")
         elif profile.auth_strategy.is_browser:
             self._log(f"Trying browser cookies from {profile.auth_strategy.display_name}.")
             self._emit_activity_status(
@@ -1026,6 +1112,8 @@ class DownloadEngine:
     def _attempt_profile_summary(self, profile: DownloadAttemptProfile) -> str:
         if profile.auth_strategy.is_cookie_file:
             auth_source = "cookies.txt"
+        elif profile.auth_strategy.is_dedicated_firefox:
+            auth_source = "dedicated-firefox"
         elif profile.auth_strategy.is_browser:
             auth_source = f"browser:{profile.auth_strategy.display_name}"
         else:
@@ -1091,7 +1179,11 @@ class DownloadEngine:
         if ydl_opts.get("cookiefile"):
             add_option("--cookies", "<cookies.txt>")
         if ydl_opts.get("cookiesfrombrowser"):
-            add_option("--cookies-from-browser", ydl_opts["cookiesfrombrowser"][0])
+            browser_spec = ydl_opts["cookiesfrombrowser"]
+            value = str(browser_spec[0])
+            if len(browser_spec) > 1 and browser_spec[1]:
+                value += ":<dedicated-profile>"
+            add_option("--cookies-from-browser", value)
         if ydl_opts.get("js_runtimes"):
             runtime_args = []
             for name, config in ydl_opts["js_runtimes"].items():
@@ -1244,6 +1336,11 @@ class DownloadEngine:
         text = str(value or "")
         if self.options.cookie_file:
             text = text.replace(str(self.options.cookie_file), "<cookies.txt>")
+        if self.options.dedicated_firefox_profile:
+            text = text.replace(
+                str(self.options.dedicated_firefox_profile),
+                "<dedicated-firefox-profile>",
+            )
         home = str(Path.home())
         if home:
             text = text.replace(home, "<user-profile>")

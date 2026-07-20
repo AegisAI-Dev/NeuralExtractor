@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Exact numeric release version, for example 3.0.4"
+        description: "Exact numeric release version, for example 3.0.5"
         required: true
         type: string
 

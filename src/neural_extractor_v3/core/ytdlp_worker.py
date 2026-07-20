@@ -125,6 +125,18 @@ def _summarize_formats(info: Any) -> list[dict[str, Any]]:
     return summarized
 
 
+def _metadata_event(info: Any) -> dict[str, Any]:
+    if not isinstance(info, Mapping):
+        return {"formats": []}
+    return {
+        "formats": _summarize_formats(info),
+        "id": str(info.get("id") or ""),
+        "title": str(info.get("title") or ""),
+        "availability": str(info.get("availability") or ""),
+        "live_status": str(info.get("live_status") or ""),
+    }
+
+
 def run_worker(request: Mapping[str, Any]) -> int:
     url = str(request.get("url") or "")
     raw_options = request.get("options")
@@ -157,12 +169,12 @@ def run_worker(request: Mapping[str, Any]) -> int:
                 if mode == "discover":
                     _emit("phase", phase="discovery", message="Inspecting available YouTube formats")
                     info = ydl.extract_info(url, download=False)
-                    _emit("metadata", formats=_summarize_formats(info))
+                    _emit("metadata", **_metadata_event(info))
                 else:
                     if not playlist:
                         _emit("phase", phase="preflight", message="Preparing YouTube metadata")
                         info = ydl.extract_info(url, download=False)
-                        _emit("metadata", formats=_summarize_formats(info))
+                        _emit("metadata", **_metadata_event(info))
                     phase = "download"
                     _emit(
                         "phase",
