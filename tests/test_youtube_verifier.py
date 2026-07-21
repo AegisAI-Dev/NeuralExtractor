@@ -7,6 +7,7 @@ from neural_extractor_v3.core.downloader import (
     YtdlpRunResult,
 )
 from neural_extractor_v3.core.youtube_connection import ManagedBrowser
+from neural_extractor_v3.core.youtube_errors import FailureCategory
 from neural_extractor_v3.core.youtube_verifier import verify_dedicated_youtube_profile
 
 
@@ -124,4 +125,28 @@ def test_chrome_extraction_failure_never_reports_connected(tmp_path, monkeypatch
     )
     assert not result.success
     assert result.code == "cookie_extraction_unsupported"
+
+
+def test_malformed_worker_protocol_is_not_reported_as_session_rejection(tmp_path, monkeypatch):
+    class FakeEngine:
+        def __init__(self, *_args, **_kwargs):
+            self.js_runtime_status = SimpleNamespace(found=True)
+
+        def run_authentication_preflight(self, *_args):
+            raise YtdlpRunError(
+                "yt-dlp <redacted>",
+                YtdlpCapturedOutput(stderr=["Malformed worker protocol frame"]),
+                exit_code=1,
+                category_hint=FailureCategory.WORKER_PROTOCOL_ERROR,
+            )
+
+    monkeypatch.setattr(verifier_module, "DownloadEngine", FakeEngine)
+    result = verify_dedicated_youtube_profile(
+        tmp_path / "profile",
+        "https://www.youtube.com/watch?v=abc123",
+    )
+
+    assert not result.success
+    assert result.code == "worker_protocol_error"
+    assert "protocol" in result.message.lower()
 

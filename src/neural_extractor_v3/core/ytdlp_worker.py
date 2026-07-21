@@ -4,38 +4,75 @@ from __future__ import annotations
 
 import contextlib
 import json
-import sys
+import threading
 import traceback
 from collections.abc import Mapping
-from typing import Any, TextIO
+from typing import Any, BinaryIO, TextIO
 
 import yt_dlp
 
 PROTOCOL_PREFIX = "NEURAL_EXTRACTOR_EVENT "
+PROTOCOL_ENCODING = "utf-8"
+PROTOCOL_SMOKE_TITLE = "Artist ｜ Greatest Hits ❤️ Nederlandse Muziek — 夜の名曲"
 
 
 def _stdio_stream(fd: int, fallback: TextIO | None, mode: str) -> TextIO:
     """Use redirected OS pipes even in a PyInstaller windowed executable."""
     if fallback is not None:
         return fallback
-    return open(fd, mode, encoding="utf-8", errors="replace", buffering=1, closefd=False)
+    return open(
+        fd,
+        mode,
+        encoding=PROTOCOL_ENCODING,
+        errors="replace",
+        buffering=1,
+        closefd=False,
+    )
 
 
-_PROTOCOL_STREAM: TextIO | None = sys.stdout
+_PROTOCOL_STREAM: BinaryIO | None = None
+_PROTOCOL_LOCK = threading.Lock()
 
 
-def _protocol_stream() -> TextIO:
+def _protocol_stream() -> BinaryIO:
     global _PROTOCOL_STREAM
     if _PROTOCOL_STREAM is None:
-        _PROTOCOL_STREAM = _stdio_stream(1, None, "w")
+        # The worker is always launched with fd 1 connected to a parent-owned
+        # binary pipe. Bypass sys.stdout so a Windows CP1252 TextIOWrapper can
+        # never encode or reject machine-protocol characters.
+        _PROTOCOL_STREAM = open(1, "wb", buffering=0, closefd=False)
     return _PROTOCOL_STREAM
 
 
 def _emit(kind: str, **payload: Any) -> None:
     document = json.dumps({"kind": kind, **payload}, ensure_ascii=False, default=str)
-    stream = _protocol_stream()
-    stream.write(f"{PROTOCOL_PREFIX}{document}\n")
-    stream.flush()
+    frame = f"{PROTOCOL_PREFIX}{document}\n".encode(PROTOCOL_ENCODING)
+    with _PROTOCOL_LOCK:
+        stream = _protocol_stream()
+        remaining = memoryview(frame)
+        while remaining:
+            written = stream.write(remaining)
+            if written is None or written <= 0:
+                raise OSError("Could not write the complete worker protocol frame")
+            remaining = remaining[written:]
+        stream.flush()
+
+
+def run_protocol_smoke() -> int:
+    """Emit fixed offline Unicode frames for source and packaged validation."""
+    payload = {
+        "title": PROTOCOL_SMOKE_TITLE,
+        "subtitle_destination": r"C:\Muziek\Nederlandse ondertitels｜夜の名曲.srt",
+        "emoji": "❤️ 🚀",
+        "cjk": "日本語 中文 한국어",
+        "cyrillic": "Русская музыка",
+        "arabic": "الموسيقى العربية",
+        "combining": "Cafe\u0301",
+        "long_windows_path": "C:\\Unicode\\" + ("非常に長いフォルダー\\" * 28) + "video.mp4",
+    }
+    for sequence in range(2):
+        _emit("protocol_smoke", sequence=sequence, **payload)
+    return 0
 
 
 class ProtocolLogger:
@@ -215,6 +252,8 @@ def main() -> int:
     if not isinstance(request, Mapping):
         _emit("error", phase="startup", message="Internal request must be a JSON object")
         return 2
+    if request.get("mode") == "protocol_smoke":
+        return run_protocol_smoke()
     return run_worker(request)
 
 

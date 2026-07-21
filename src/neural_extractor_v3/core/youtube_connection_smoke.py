@@ -65,6 +65,8 @@ def _managed_profile_path_is_safe(
 
 def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]:
     """Run the offline contract below a caller-owned isolated test root."""
+    from neural_extractor_v3.core.auth import resolve_auth_strategies
+
     application_data = root / "LocalAppData" / "NeuralExtractorV3"
     chrome = root / "Google" / "Chrome" / "Application" / "chrome.exe"
     firefox = root / "Mozilla Firefox" / "firefox.exe"
@@ -159,6 +161,21 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
     )
     manager.mark_expired("cookies are no longer valid")
     renewal_reused_profile = manager.create_profile() == profile
+    chrome_resolution = resolve_auth_strategies(
+        None,
+        browser_detector=lambda: [],
+        dedicated_browser="chrome",
+        dedicated_browser_profile=profile,
+        dedicated_application_data=application_data,
+        allow_legacy_browser_fallback=False,
+    )
+    chrome_strategy = next(
+        (item for item in chrome_resolution.strategies if item.is_dedicated_browser),
+        None,
+    )
+    chrome_authenticated_options = chrome_strategy is not None and chrome_strategy.ydl_options.get(
+        "cookiesfrombrowser"
+    ) == ("chrome", str(profile / "Default"))
     disconnected = manager.disconnect()
     firefox_manager = YouTubeConnectionManager(
         settings,
@@ -173,6 +190,23 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
         identity_provider=lambda _pid: None,
     )
     firefox_profile = firefox_manager.create_profile()
+    firefox_resolution = resolve_auth_strategies(
+        None,
+        browser_detector=lambda: [],
+        dedicated_browser="firefox",
+        dedicated_browser_profile=firefox_profile,
+        dedicated_application_data=application_data,
+        allow_legacy_browser_fallback=False,
+    )
+    firefox_strategy = next(
+        (item for item in firefox_resolution.strategies if item.is_dedicated_browser),
+        None,
+    )
+    firefox_authenticated_options = (
+        firefox_strategy is not None
+        and firefox_strategy.ydl_options.get("cookiesfrombrowser")
+        == ("firefox", str(firefox_profile))
+    )
     firefox_preserved_separately = (
         firefox_profile.name == "firefox-profile"
         and firefox_profile != profile
@@ -186,6 +220,8 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
         "stale_profile_state_recovered": stale_recovered,
         "stale_recovery_logged": stale_recovery_logged,
         "authentication_state_machine": verified.success,
+        "chrome_authenticated_options": chrome_authenticated_options,
+        "firefox_authenticated_options": firefox_authenticated_options,
         "firefox_fallback_separate": firefox_preserved_separately,
         "renewal_reused_profile": renewal_reused_profile,
         "disconnect_safe": disconnected.success and not profile.exists(),

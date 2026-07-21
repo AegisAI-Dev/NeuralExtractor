@@ -538,7 +538,7 @@ def _build_nonconfirming_stage(scenario: Scenario) -> None:
 
 
 def _timeout_rollback_smoke(base: Path, old_package: Path) -> dict[str, object]:
-    scenario = _scenario(base, "timeout-rollback", old_package, old_package)
+    scenario = _scenario(base, "timeout", old_package, old_package)
     _build_nonconfirming_stage(scenario)
     old_hash = sha256_file(scenario.target)
     staged_hash = sha256_file(scenario.staged)
@@ -727,7 +727,7 @@ def main() -> int:
     args = _parse_args()
     old_package = args.old_package.resolve()
     new_package = args.new_package.resolve()
-    workspace = args.workspace.resolve() / f"run-{uuid.uuid4().hex}"
+    workspace = args.workspace.resolve() / f"run-{uuid.uuid4().hex[:8]}"
     _require(old_package.is_file(), f"Old package is missing: {old_package}")
     _require(new_package.is_file(), f"New package is missing: {new_package}")
     _require(
