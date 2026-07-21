@@ -25,6 +25,7 @@ class FailureCategory(str, Enum):
     NETWORK_INACTIVITY_TIMEOUT = "network_inactivity_timeout"
     TOTAL_ATTEMPT_TIMEOUT = "total_attempt_timeout"
     DOWNLOAD_CANCELLED = "download_cancelled"
+    WORKER_PROTOCOL_ERROR = "worker_protocol_error"
     JAVASCRIPT_RUNTIME_UNAVAILABLE = "javascript_runtime_unavailable"
     CHALLENGE_SOLVER_COMPONENT_UNAVAILABLE = "challenge_solver_component_unavailable"
     LIVE_EVENT_ENDED = "live_event_ended"
@@ -141,6 +142,12 @@ def classify_youtube_failure(
     """
 
     lowered = (error_text or "").lower()
+
+    if _is_worker_unicode_transport_failure(lowered):
+        return FailureAnalysis(
+            FailureCategory.WORKER_PROTOCOL_ERROR,
+            "The internal yt-dlp worker could not transport Unicode output safely.",
+        )
 
     if auth_kind in {"dedicated_browser", "dedicated_firefox"} and any(
         pattern in lowered for pattern in _ACCOUNT_ACCESS_PATTERNS
@@ -312,5 +319,26 @@ def _is_format_unavailable(lowered: str) -> bool:
             "format is not available",
             "no suitable formats",
             "no video formats found",
+        )
+    )
+
+
+def _is_worker_unicode_transport_failure(lowered: str) -> bool:
+    return any(
+        marker in lowered
+        for marker in (
+            "unicodeencodeerror",
+            "unicodedecodeerror",
+            "codec can't encode character",
+            "codec can't decode byte",
+        )
+    ) and any(
+        marker in lowered
+        for marker in (
+            "charmap",
+            "cp1252",
+            "utf-8",
+            "unicodeencodeerror",
+            "unicodedecodeerror",
         )
     )

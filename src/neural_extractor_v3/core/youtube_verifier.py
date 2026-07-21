@@ -61,6 +61,12 @@ def verify_dedicated_youtube_profile(
             return VerificationResult(False, "timeout", "Network verification timed out.")
         if exc.category_hint == FailureCategory.DEDICATED_PROFILE_INVALID:
             return VerificationResult(False, "invalid", "Dedicated browser profile is invalid.")
+        if exc.category_hint == FailureCategory.WORKER_PROTOCOL_ERROR:
+            return VerificationResult(
+                False,
+                "worker_protocol_error",
+                "The internal yt-dlp worker returned malformed protocol data.",
+            )
         analysis = classify_youtube_failure(
             exc.diagnostic_text(),
             auth_kind="dedicated_browser",
@@ -75,6 +81,12 @@ def verify_dedicated_youtube_profile(
                 False,
                 "po_token_required",
                 "PO Token provider unavailable for this verification context.",
+            )
+        if analysis.category == FailureCategory.WORKER_PROTOCOL_ERROR:
+            return VerificationResult(
+                False,
+                "worker_protocol_error",
+                analysis.user_message,
             )
         if analysis.category in {
             FailureCategory.NETWORK_TRANSIENT,

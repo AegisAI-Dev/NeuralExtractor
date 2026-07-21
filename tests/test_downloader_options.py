@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import pytest
 
 from neural_extractor_v3.core import downloader as downloader_module
@@ -135,6 +137,52 @@ def _error(message, options, *, category_hint=None, phase="download"):
         player_clients=_clients(options),
         category_hint=category_hint,
     )
+
+
+def test_worker_environment_forces_utf8_mode(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+
+    environment = _engine(tmp_path)._worker_environment()
+
+    assert environment["PYTHONUTF8"] == "1"
+    assert environment["PYTHONIOENCODING"] == "utf-8"
+
+
+def test_malformed_worker_frame_fails_with_typed_redacted_protocol_error(
+    tmp_path, monkeypatch
+):
+    _mock_runtime(monkeypatch, tmp_path)
+    application_data = tmp_path / "app-data"
+    monkeypatch.setattr(downloader_module, "app_data_dir", lambda: application_data)
+    engine = _engine(tmp_path)
+    malformed_frame = (
+        f'{downloader_module.PROTOCOL_PREFIX}{{"kind":"log",'
+        '"message":"authorization=worker-secret"\n'
+    )
+
+    class MalformedProtocolSupervisor:
+        def run(self, _command, **kwargs):
+            kwargs["stdout_callback"](malformed_frame)
+            return SimpleNamespace(returncode=0, stdout=malformed_frame, stderr="")
+
+    engine._supervisor = MalformedProtocolSupervisor()
+
+    with pytest.raises(YtdlpRunError) as raised:
+        engine._run_yt_dlp(
+            PUBLIC_VIDEO_TEST_URL,
+            engine.build_ydl_options(PUBLIC_VIDEO_TEST_URL),
+        )
+
+    error = raised.value
+    assert error.category_hint == FailureCategory.WORKER_PROTOCOL_ERROR
+    assert "worker-secret" not in error.diagnostic_text()
+    profile = engine._profile(
+        AuthStrategy("none", "none", {}, attempted_auth=False),
+        reason="public_primary",
+    )
+    analysis = engine._analyse_error(error, profile)
+    assert analysis.category == FailureCategory.WORKER_PROTOCOL_ERROR
+    assert "protocol" in analysis.user_message.lower()
 
 
 def test_public_video_first_attempt_uses_no_cookies_even_when_cookie_file_exists(
