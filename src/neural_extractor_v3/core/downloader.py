@@ -1050,6 +1050,7 @@ class DownloadEngine:
         if existing:
             paths.append(existing)
         environment["PYTHONPATH"] = os.pathsep.join(paths)
+        environment["PYTHONUTF8"] = "1"
         environment["PYTHONIOENCODING"] = "utf-8"
         if attempt_temp is not None:
             environment["TEMP"] = str(attempt_temp)

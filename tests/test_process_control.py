@@ -187,6 +187,47 @@ def test_stdin_output_and_heartbeats_keep_an_active_attempt_alive(tmp_path):
     assert not record.exists()
 
 
+def test_utf8_stdin_stdout_and_stderr_round_trip(tmp_path):
+    payload = {
+        "title": "Beyoncé — déjà vu",
+        "emoji": "🛡️🚀",
+        "non_latin": "日本語 العربية",
+        "output_path": r"C:\Téléchargements\日本語\🚀.mp4",
+    }
+    script = textwrap.dedent(
+        """
+        import json
+        import sys
+        import time
+
+        request = json.loads(sys.stdin.buffer.read().decode("utf-8"))
+        response = json.dumps(request, ensure_ascii=False).encode("utf-8")
+        marker = "🚀".encode("utf-8")
+        split_at = response.index(marker) + 1
+        sys.stdout.buffer.write(response[:split_at])
+        sys.stdout.buffer.flush()
+        time.sleep(0.05)
+        sys.stdout.buffer.write(response[split_at:] + b"\\n")
+        sys.stdout.buffer.flush()
+        sys.stderr.buffer.write("خطأ مؤقت\\n".encode("utf-8"))
+        sys.stderr.buffer.flush()
+        """
+    )
+    supervisor = OwnedProcessSupervisor(
+        limits(),
+        ownership_record=tmp_path / "unicode-worker.json",
+    )
+
+    result = supervisor.run(
+        [sys.executable, "-c", script],
+        stdin_data=json.dumps(payload, ensure_ascii=False),
+    )
+
+    assert result.returncode == 0
+    assert json.loads(result.stdout) == payload
+    assert result.stderr == "خطأ مؤقت\n"
+
+
 def test_no_output_triggers_inactivity_timeout_and_cleans_process(tmp_path):
     record = tmp_path / "inactivity.json"
     supervisor = OwnedProcessSupervisor(

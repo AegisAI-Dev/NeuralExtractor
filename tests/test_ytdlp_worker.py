@@ -1,3 +1,6 @@
+import io
+import json
+
 from neural_extractor_v3.core import ytdlp_worker
 
 
@@ -146,3 +149,45 @@ def test_worker_failure_reports_phase_and_traceback_without_crashing_protocol(mo
     assert error["phase"] == "preflight"
     assert error["message"] == "controlled offline failure"
     assert "RuntimeError" in error["traceback"]
+
+
+def test_protocol_stdout_is_unicode_json_without_unframed_logging(monkeypatch):
+    stream = io.StringIO()
+    monkeypatch.setattr(ytdlp_worker, "_PROTOCOL_STREAM", stream)
+
+    ytdlp_worker._emit(
+        "metadata",
+        title="Beyoncé 🛡️ 日本語 العربية",
+        filepath=r"C:\Téléchargements\日本語\🚀.mp4",
+    )
+
+    line = stream.getvalue()
+    assert line.count("\n") == 1
+    assert line.startswith(ytdlp_worker.PROTOCOL_PREFIX)
+    assert "日本語" in line
+    event = json.loads(line.removeprefix(ytdlp_worker.PROTOCOL_PREFIX))
+    assert event == {
+        "kind": "metadata",
+        "title": "Beyoncé 🛡️ 日本語 العربية",
+        "filepath": r"C:\Téléchargements\日本語\🚀.mp4",
+    }
+
+
+def test_malformed_worker_json_emits_one_deterministic_error_event(monkeypatch):
+    protocol_stream = io.StringIO()
+    monkeypatch.setattr(ytdlp_worker, "_PROTOCOL_STREAM", protocol_stream)
+    monkeypatch.setattr(
+        ytdlp_worker,
+        "_stdio_stream",
+        lambda fd, fallback, mode: io.StringIO("{not-json") if fd == 0 else fallback,
+    )
+
+    assert ytdlp_worker.main() == 2
+
+    lines = protocol_stream.getvalue().splitlines()
+    assert len(lines) == 1
+    assert lines[0].startswith(ytdlp_worker.PROTOCOL_PREFIX)
+    event = json.loads(lines[0].removeprefix(ytdlp_worker.PROTOCOL_PREFIX))
+    assert event["kind"] == "error"
+    assert event["phase"] == "startup"
+    assert event["message"].startswith("Invalid internal request:")
