@@ -137,6 +137,15 @@ def _error(message, options, *, category_hint=None, phase="download"):
     )
 
 
+def test_worker_environment_forces_utf8_mode(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+
+    environment = _engine(tmp_path)._worker_environment()
+
+    assert environment["PYTHONUTF8"] == "1"
+    assert environment["PYTHONIOENCODING"] == "utf-8"
+
+
 def test_public_video_first_attempt_uses_no_cookies_even_when_cookie_file_exists(
     tmp_path, monkeypatch
 ):
