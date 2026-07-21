@@ -28,8 +28,27 @@ def test_release_version_validation_requires_tag_and_both_sources_to_match(tmp_p
         validate_release_versions(tmp_path, "v3.0.3")
 
 
-def test_current_306_source_versions_and_release_ref_are_consistent():
-    assert validate_release_versions(PROJECT_ROOT, "v3.0.6") == "3.0.6"
+def test_current_307_source_versions_and_release_ref_are_consistent():
+    assert validate_release_versions(PROJECT_ROOT, "v3.0.7") == "3.0.7"
+
+
+def test_v307_release_notes_describe_unicode_hotfix_and_preserved_guarantees():
+    notes = (PROJECT_ROOT / "docs" / "release-notes" / "V3.0.7.md").read_text(
+        encoding="utf-8"
+    )
+    normalized = " ".join(notes.split())
+
+    for statement in (
+        "Windows Unicode hotfix",
+        "U+FF5C FULLWIDTH VERTICAL LINE",
+        "Google Chrome and Firefox authentication were already valid",
+        "responsive GUI",
+        "startup confirmation",
+        "rollback",
+        "EXE remains unsigned",
+        "not every video is guaranteed to work",
+    ):
+        assert statement in normalized
 
 
 def test_304_is_newer_than_both_affected_updater_versions():

@@ -833,11 +833,12 @@ class DownloadEngine:
         metadata: dict[str, Any] = {}
         phase = "discovery" if discover_only else "preflight"
         worker_error = ""
+        protocol_error = ""
         buffers = {"stdout": "", "stderr": ""}
         parser_lock = threading.Lock()
 
         def handle_event_line(line: str, fallback_stream: str) -> None:
-            nonlocal phase, worker_error, formats, metadata
+            nonlocal phase, worker_error, protocol_error, formats, metadata
             if not line:
                 return
             if not line.startswith(PROTOCOL_PREFIX):
@@ -848,7 +849,13 @@ class DownloadEngine:
             try:
                 event = json.loads(line[len(PROTOCOL_PREFIX) :])
             except json.JSONDecodeError:
+                protocol_error = "The internal yt-dlp worker emitted a malformed JSON frame."
+                output.stderr.append(protocol_error)
                 output.stderr.append(self._redact_diagnostic_text(line))
+                return
+            if not isinstance(event, dict):
+                protocol_error = "The internal yt-dlp worker emitted a non-object JSON frame."
+                output.stderr.append(protocol_error)
                 return
             kind = event.get("kind")
             if kind == "log":
@@ -968,7 +975,7 @@ class DownloadEngine:
             ) from exc
 
         flush_buffers()
-        if result.returncode or worker_error:
+        if result.returncode or worker_error or protocol_error:
             raise YtdlpRunError(
                 command,
                 output,
@@ -976,6 +983,9 @@ class DownloadEngine:
                 phase=phase,
                 format_selector=str(ydl_opts.get("format") or ""),
                 player_clients=self._player_clients_from_options(ydl_opts),
+                category_hint=(
+                    FailureCategory.WORKER_PROTOCOL_ERROR if protocol_error else None
+                ),
             )
         return YtdlpRunResult(
             formats=formats,
@@ -1030,6 +1040,12 @@ class DownloadEngine:
                 FailureCategory.DEDICATED_PROFILE_INVALID,
                 "The dedicated browser profile is invalid or unavailable.",
                 authentication_specific=True,
+            )
+        if error.category_hint == FailureCategory.WORKER_PROTOCOL_ERROR:
+            return FailureAnalysis(
+                FailureCategory.WORKER_PROTOCOL_ERROR,
+                "The internal yt-dlp worker returned malformed protocol data. Retry the download; "
+                "if it repeats, include the Activity Log in a support report.",
             )
         return classify_youtube_failure(
             error.diagnostic_text(),

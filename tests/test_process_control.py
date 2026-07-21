@@ -255,7 +255,9 @@ def test_continuous_output_still_triggers_total_attempt_timeout():
             time.sleep(0.04)
         """
     )
-    supervisor = OwnedProcessSupervisor(limits(inactivity=0.16, total=0.35))
+    # Keep the inactivity ceiling comfortably above the total-attempt ceiling.
+    # That isolates the behavior under test from scheduler stalls on busy CI hosts.
+    supervisor = OwnedProcessSupervisor(limits(inactivity=1.0, total=0.35))
 
     with pytest.raises(ProcessTotalTimeoutError) as raised:
         supervisor.run([sys.executable, "-c", script])

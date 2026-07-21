@@ -97,3 +97,13 @@ def test_generic_http_403_does_not_claim_authentication_is_required():
 
     assert analysis.category == FailureCategory.HTTP_403_MEDIA_REJECTED
     assert not analysis.authentication_specific
+
+
+def test_cp1252_unicode_transport_failure_has_specific_worker_category():
+    analysis = classify_youtube_failure(
+        "UnicodeEncodeError: 'charmap' codec can't encode character '\\uff5c' "
+        "using encodings/cp1252.py",
+    )
+
+    assert analysis.category == FailureCategory.WORKER_PROTOCOL_ERROR
+    assert analysis.category != FailureCategory.UNKNOWN
