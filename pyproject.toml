@@ -1,6 +1,6 @@
 [project]
 name = "neural-extractor-v3"
-version = "3.0.7"
+version = "3.0.8"
 description = "Professional YouTube video, audio, playlist, subtitle, and thumbnail extractor"
 readme = "README.md"
 requires-python = ">=3.10"
@@ -20,11 +20,11 @@ classifiers = [
     "Topic :: Multimedia :: Video",
 ]
 dependencies = [
-    "yt-dlp>=2026.7.4",
-    "PyQt6>=6.11.0",
-    "pillow>=12.3.0",
-    "requests>=2.34.2",
-    "youtube-transcript-api>=1.2.4",
+    "yt-dlp==2026.7.4",
+    "PySide6==6.11.1",
+    "pillow==12.3.0",
+    "requests==2.34.2",
+    "youtube-transcript-api==1.2.4",
 ]
 
 [project.optional-dependencies]
@@ -32,13 +32,13 @@ build = [
     "pyinstaller==6.21.0",
 ]
 dev = [
-    "pytest>=9.1.1",
-    "ruff>=0.15.20",
-    "mypy>=2.1.0",
+    "pytest==9.1.1",
+    "ruff==0.15.21",
+    "mypy==2.3.0",
 ]
 
 [build-system]
-requires = ["setuptools>=83.0", "wheel>=0.47.0"]
+requires = ["setuptools==83.0.0", "wheel==0.47.0"]
 build-backend = "setuptools.build_meta"
 
 [tool.setuptools.packages.find]
@@ -47,6 +47,7 @@ where = ["src"]
 [tool.ruff]
 line-length = 100
 target-version = "py311"
+exclude = ["vendor"]
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "N", "W", "UP"]

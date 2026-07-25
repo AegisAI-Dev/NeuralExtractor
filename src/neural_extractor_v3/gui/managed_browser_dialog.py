@@ -5,8 +5,8 @@ from __future__ import annotations
 from collections.abc import Callable
 from pathlib import Path
 
-from PyQt6.QtCore import QThread, QTimer, pyqtSignal
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QThread, QTimer, Signal, Slot
+from PySide6.QtWidgets import (
     QDialog,
     QFileDialog,
     QFrame,
@@ -32,7 +32,7 @@ Verifier = Callable[[Path, str], VerificationResult]
 
 
 class ConnectionVerificationWorker(QThread):
-    completed = pyqtSignal(object)
+    completed = Signal(object)
 
     def __init__(
         self,
@@ -280,6 +280,7 @@ class YouTubeConnectionDialog(QDialog):
         if verifying:
             self.status_label.setText("Verifying the YouTube session...")
 
+    @Slot(object)
     def _verification_finished(self, result: VerificationResult) -> None:
         self._set_verifying(False)
         if result.success:
@@ -297,6 +298,7 @@ class YouTubeConnectionDialog(QDialog):
             self.fallback_button.setVisible(True)
         QMessageBox.warning(self, APP_NAME, result.message)
 
+    @Slot()
     def _verification_thread_finished(self) -> None:
         self.verification_worker = None
         self._set_verifying(False)

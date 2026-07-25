@@ -1,0 +1,969 @@
+# This file defines metadata for Python extension modules.
+#
+# Keys are the name of an extension module in a CPython distribution.
+# Values are maps with various attributes. See cpython.py for the JSON
+# schema definition.
+
+_abc:
+  setup-enabled: true
+
+_ast:
+  config-c-only: true
+
+_asyncio:
+  sources:
+    - _asynciomodule.c
+
+_bisect:
+  sources:
+    - _bisectmodule.c
+
+_blake2:
+  # In 3.14+, Blake2 is provided by Hacl*
+  sources-conditional:
+    - sources:
+      - _blake2/blake2module.c
+      - _blake2/blake2b_impl.c
+      - _blake2/blake2s_impl.c
+      maximum-python-version: "3.13"
+    - sources:
+      - blake2module.c
+      - _hacl/Hacl_Hash_Blake2s.c
+      - _hacl/Hacl_Hash_Blake2b.c
+      - _hacl/Lib_Memzero0.c
+      minimum-python-version: "3.14"
+  includes-conditional:
+    - includes:
+      - Modules/_hacl
+      - Modules/_hacl/include
+      - Modules/_hacl/internal
+      minimum-python-version: "3.14"
+  links-conditional:
+    - name: :libHacl_Hash_Blake2.a
+      minimum-python-version: "3.14"
+  defines-conditional:
+    - define: _BSD_SOURCE
+      minimum-python-version: "3.14"
+    - define: _DEFAULT_SOURCE
+      minimum-python-version: "3.14"
+    # Disable `explicit_bzero`, it requires glib 2.25+
+    - define: LINUX_NO_EXPLICIT_BZERO
+      minimum-python-version: "3.14"
+
+_bz2:
+  sources:
+    - _bz2module.c
+  links:
+    - bz2
+
+_codecs:
+  setup-enabled: true
+  required-targets:
+    - .*
+
+_codecs_cn:
+  sources:
+    - cjkcodecs/_codecs_cn.c
+
+_codecs_hk:
+  sources:
+    - cjkcodecs/_codecs_hk.c
+
+_codecs_iso2022:
+  sources:
+    - cjkcodecs/_codecs_iso2022.c
+
+_codecs_jp:
+  sources:
+    - cjkcodecs/_codecs_jp.c
+
+_codecs_kr:
+  sources:
+    - cjkcodecs/_codecs_kr.c
+
+_codecs_tw:
+  sources:
+    - cjkcodecs/_codecs_tw.c
+
+_collections:
+  setup-enabled: true
+
+_contextvars:
+  sources:
+    - _contextvarsmodule.c
+
+_crypt:
+  maximum-python-version: "3.12"
+  build-mode: shared
+  sources:
+    - _cryptmodule.c
+  links-conditional:
+    # Linux links against libcrypt. Apple has symbols through a universal framework.
+    - name: crypt
+      targets:
+        - .*-unknown-linux-.*
+
+_csv:
+  sources:
+    - _csv.c
+
+_ctypes:
+  sources:
+    - _ctypes/_ctypes.c
+    - _ctypes/callbacks.c
+    - _ctypes/callproc.c
+    - _ctypes/stgdict.c
+    - _ctypes/cfield.c
+  sources-conditional:
+    - source: _ctypes/darwin/dlfcn_simple.c
+      targets:
+        - .*-apple-.*
+      # Functionality removed in 3.12.
+      maximum-python-version: "3.11"
+    - source: _ctypes/malloc_closure.c
+      targets:
+        - .*-apple-.*
+  defines:
+    - HAVE_FFI_PREP_CIF_VAR=1
+    - HAVE_FFI_PREP_CLOSURE_LOC=1
+    - HAVE_FFI_CLOSURE_ALLOC=1
+  defines-conditional:
+    - define: MACOSX
+      targets:
+        - .*-apple-.*
+    - define: USING_MALLOC_CLOSURE_DOT_C=1
+      targets:
+        - .*-apple-.*
+  includes-deps:
+    - include
+  includes-conditional:
+    - path: _ctypes/darwin
+      targets:
+        - .*-apple-.*
+  links:
+    - ffi
+    - dl
+
+_ctypes_test:
+  sources:
+    - _ctypes/_ctypes_test.c
+  links:
+    - m
+
+_curses:
+  # ncurses not available on iOS.
+  disabled-targets:
+    - .*-apple-ios
+    - .*-apple-tvos
+    - .*-apple-watchos
+  sources:
+    - _cursesmodule.c
+  defines:
+    - HAVE_NCURSESW=1
+  defines-conditional:
+    - define: _XOPEN_SOURCE_EXTENDED=1
+      targets:
+        - .*-apple-darwin
+  includes-deps:
+    - include/ncursesw
+  links-conditional:
+    # link against ncursesw on Linux and ncurses on macOS. The macOS library is
+    # Unicode aware, despite the name implying it isn't.
+    - name: ncursesw
+      targets:
+        - .*-unknown-linux-.*
+    - name: ncurses
+      targets:
+        - .*-apple-darwin
+
+_curses_panel:
+  # ncurses not available on iOS.
+  disabled-targets:
+    - .*-apple-ios
+    - .*-apple-tvos
+    - .*-apple-watchos
+  sources:
+    - _curses_panel.c
+  defines:
+    - HAVE_NCURSESW=1
+  includes-deps:
+    - include/ncursesw
+  links-conditional:
+    - name: panelw
+      targets:
+        - .*-unknown-linux-.*
+    - name: panel
+      targets:
+        - .*-apple-darwin
+
+    - name: ncursesw
+      targets:
+        - .*-unknown-linux-.*
+    - name: ncurses
+      targets:
+        - .*-apple-darwin
+
+_datetime:
+  sources:
+    - _datetimemodule.c
+
+_dbm:
+  sources:
+    - _dbmmodule.c
+  defines-conditional:
+    - define: HAVE_BERKDB_H
+      maximum-python-version: "3.10"
+      targets:
+        - .*-unknown-linux-.*
+    - define: DB_DBM_HSEARCH
+      maximum-python-version: "3.10"
+      targets:
+        - .*-unknown-linux-.*
+    - define: HAVE_NDBM_H
+      maximum-python-version: "3.10"
+      targets:
+        - .*-apple-.*
+
+    # It looks like CPython commit 0a9f69539be27acf1cddf1b58d02a88d02e5008d didn't
+    # fully implement BDB support in configure. So we add a missing define.
+    - define: USE_BERKDB
+      minimum-python-version: "3.11"
+      targets:
+        - .*-unknown-linux-.*
+    - define: USE_NDBM
+      minimum-python-version: "3.11"
+      targets:
+        - .*-apple-.*
+  includes-deps:
+    - include
+  links-conditional:
+    # macOS ships with an ndbm implementation in libSystem. CPython's setup.py will
+    # use it unless an ndbm or gdbm_compat library is present.
+    - name: db
+      targets:
+        - .*-unknown-linux-.*
+
+_decimal:
+  sources:
+    - _decimal/_decimal.c
+  includes-deps:
+    - include
+  defines-conditional:
+    - define: CONFIG_32=1
+      targets:
+        - armv7-.*
+        - i686-.*
+        - mips-.*
+        - mipsel-.*
+    - define: CONFIG_64=1
+      targets:
+        - aarch64-.*
+        - ppc64le-unknown-linux.*
+        - riscv64-unknown-linux.*
+        - s390x-unknown-linux-.*
+        - x86_64.*
+  links:
+    - mpdec
+
+_elementtree:
+  sources:
+    - _elementtree.c
+  links:
+    - expat
+
+_functools:
+  setup-enabled: true
+
+_gdbm:
+  # Disable GDBM everywhere because it is GPL v3.
+  disabled-targets:
+    - .*
+  # Configs never tested in YAML world since extension disabled globally. See
+  # VCS history from old static-modules* files for possible config changes if
+  # we ever need to revive this.
+  sources:
+    - _gdbmmodule.c
+  defines:
+    - HAVE_NDBM_H
+  includes-deps:
+    - include
+  links:
+    - gdbm
+
+_hashlib:
+  sources:
+    - _hashopenssl.c
+  includes-deps:
+    - include
+  links:
+    - crypto
+  links-conditional:
+    # Clang built OpenSSL 3.x depends on libatomic. We force linking against
+    # a static library so there isn't a runtime dependency.
+    - name: ':libatomic.a'
+      targets:
+        - i686-unknown-linux-gnu
+        - mips-unknown-linux-gnu
+        - mipsel-unknown-linux-gnu
+        - x86_64.*-unknown-linux-gnu
+
+_heapq:
+  sources:
+    - _heapqmodule.c
+
+_imp:
+  config-c-only: true
+
+_interpchannels:
+  minimum-python-version: "3.13"
+  sources:
+    - _interpchannelsmodule.c
+
+_interpqueues:
+  minimum-python-version: "3.13"
+  sources:
+    - _interpqueuesmodule.c
+
+_interpreters:
+  minimum-python-version: "3.13"
+  sources:
+    - _interpretersmodule.c
+
+_io:
+  setup-enabled: true
+  required-targets:
+    - .*
+
+_json:
+  sources:
+    - _json.c
+
+_locale:
+  setup-enabled: true
+
+_lsprof:
+  sources:
+    - _lsprof.c
+    - rotatingtree.c
+
+_lzma:
+  sources:
+    - _lzmamodule.c
+  includes-deps:
+    - include
+  links:
+    - lzma
+
+_md5:
+  sources:
+    - md5module.c
+  includes:
+    - Modules/_hacl/include
+  sources-conditional:
+    - source: _hacl/Hacl_Hash_MD5.c
+      minimum-python-version: "3.12"
+  defines-conditional:
+    - define: _BSD_SOURCE
+      minimum-python-version: "3.12"
+    - define: _DEFAULT_SOURCE
+      minimum-python-version: "3.12"
+
+_multibytecodec:
+  sources:
+    - cjkcodecs/multibytecodec.c
+
+_multiprocessing:
+  # TODO check setup.py logic for semaphore.c and possibly fix missing
+  # dependency.
+  sources:
+    - _multiprocessing/multiprocessing.c
+    - _multiprocessing/semaphore.c
+
+_opcode:
+  sources:
+    - _opcode.c
+  setup-enabled-conditional:
+    - enabled: true
+      minimum-python-version: "3.14"
+
+_operator:
+  setup-enabled: true
+
+_peg_parser:
+  minimum-python-version: "3.9"
+  maximum-python-version: "3.9"
+  setup-enabled: true
+
+_pickle:
+  sources:
+    - _pickle.c
+
+_posixshmem:
+  sources:
+    - _multiprocessing/posixshmem.c
+  includes:
+    - Modules/_multiprocessing
+  links-conditional:
+    - name: rt
+      targets:
+        - .*-unknown-linux-.*
+
+_posixsubprocess:
+  sources:
+    - _posixsubprocess.c
+
+_queue:
+  sources:
+    - _queuemodule.c
+
+_random:
+  sources:
+    - _randommodule.c
+
+_scproxy:
+  # _scproxy is Apple OS only.
+  # APIs required by _scproxy not available on iOS.
+  disabled-targets:
+    - .*-apple-ios
+    - .*-unknown-linux-.*
+  sources:
+    - _scproxy.c
+  frameworks:
+    - CoreFoundation
+    - SystemConfiguration
+
+_sha1:
+  sources:
+    - sha1module.c
+  sources-conditional:
+    - source: _hacl/Hacl_Hash_SHA1.c
+      minimum-python-version: "3.12"
+  includes:
+    - Modules/_hacl/include
+  defines-conditional:
+    - define: _BSD_SOURCE
+      minimum-python-version: "3.12"
+    - define: _DEFAULT_SOURCE
+      minimum-python-version: "3.12"
+
+# _sha256 refactored and renamed to _sha2 in 3.12
+
+_sha256:
+  maximum-python-version: "3.11"
+  sources:
+    - sha256module.c
+
+_sha2:
+  minimum-python-version: "3.12"
+  sources:
+    - sha2module.c
+    - _hacl/Hacl_Hash_SHA2.c
+  includes:
+    - Modules/_hacl/include
+  defines:
+    - _BSD_SOURCE
+    - _DEFAULT_SOURCE
+
+_sha3:
+  sources-conditional:
+    # _sha3/sha3module.c -> sha3module.c in 3.12.
+    - source: _sha3/sha3module.c
+      maximum-python-version: "3.11"
+    - source: sha3module.c
+      minimum-python-version: "3.12"
+
+    - source: _hacl/Hacl_Hash_SHA3.c
+      minimum-python-version: "3.12"
+  includes:
+    - Modules/_hacl/include
+  defines-conditional:
+    - define: _BSD_SOURCE
+      minimum-python-version: "3.12"
+    - define: _DEFAULT_SOURCE
+      minimum-python-version: "3.12"
+
+_sha512:
+  sources:
+    - sha512module.c
+  # Refactored into other modules in 3.12.
+  maximum-python-version: "3.11"
+
+_signal:
+  setup-enabled: true
+  required-targets:
+    - .*
+
+_sqlite3:
+  sources:
+    - _sqlite/connection.c
+    - _sqlite/cursor.c
+    - _sqlite/microprotocols.c
+    - _sqlite/module.c
+    - _sqlite/prepare_protocol.c
+    - _sqlite/row.c
+    - _sqlite/statement.c
+    - _sqlite/util.c
+  sources-conditional:
+    - source: _sqlite/blob.c
+      minimum-python-version: "3.11"
+    - source: _sqlite/cache.c
+      maximum-python-version: "3.10"
+  includes-deps:
+    - include
+  includes:
+    - Modules/_sqlite
+  defines:
+    - "MODULE_NAME=\\\"sqlite3\\\""
+  defines-conditional:
+    # Require dynamic binaries to load extensions. Cannot load on iOS.
+    # 3.11+ uses opt in. <3.11 uses opt out.
+    - define: PY_SQLITE_ENABLE_LOAD_EXTENSION=1
+      targets:
+        - .*-apple-darwin
+        # TODO this should likely be restricted to gnu since musl is statically
+        # linked. But this would break verification code. So enabled for
+        # backwards compatibility.
+        - .*-unknown-linux-.*
+    - define: SQLITE_OMIT_LOAD_EXTENSION=1
+      targets:
+        - .*-ios
+  links:
+    - sqlite3
+
+_socket:
+  sources:
+    - socketmodule.c
+
+_sre:
+  setup-enabled: true
+
+_ssl:
+  sources:
+    - _ssl.c
+  includes-deps:
+    - include
+  links:
+    - ssl
+    - crypto
+  links-conditional:
+    # Clang built OpenSSL 3.x depends on libatomic. We force linking against
+    # a static library so there isn't a runtime dependency.
+    - name: ':libatomic.a'
+      targets:
+        - i686-unknown-linux-gnu
+        - mips-unknown-linux-gnu
+        - mipsel-unknown-linux-gnu
+        - x86_64.*-unknown-linux-gnu
+
+_statistics:
+  sources:
+    - _statisticsmodule.c
+
+_stat:
+  setup-enabled: true
+
+_string:
+  config-c-only: true
+
+_struct:
+  sources:
+    - _struct.c
+
+_suggestions:
+  setup-enabled: true
+  minimum-python-version: '3.13'
+  sources:
+    - _suggestions.c
+
+_symtable:
+  setup-enabled: true
+
+_sysconfig:
+  setup-enabled: true
+  minimum-python-version: '3.13'
+  sources:
+    - _sysconfig.c
+
+_testbuffer:
+  minimum-python-version: '3.9'
+  sources:
+    - _testbuffer.c
+
+# _testcapi exists to test the public C APIs. It makes assumptions that it is
+# built as a shared library. Our static extension module builds invalidate this
+# assumption. So just disable globally.
+_testcapi:
+  disabled-targets:
+    - .*
+  sources:
+    - _testcapimodule.c
+
+_testexternalinspection:
+  minimum-python-version: '3.13'
+  sources:
+    - _testexternalinspection.c
+
+_testimportmultiple:
+  minimum-python-version: '3.9'
+  sources:
+    - _testimportmultiple.c
+
+# Ideally we disable all test extensions. However, this one is used by a bunch
+# of tests, including tests that run during PGO profiling. We keep it enabled
+# so it doesn't break tests and undermine PGO.
+_testinternalcapi:
+  includes:
+    - Include/internal
+  sources:
+    - _testinternalcapi.c
+  includes-conditional:
+    - path: _testinternalcapi/parts.h
+      minimum-python-version: "3.13"
+  sources-conditional:
+    - source: _testinternalcapi/pytime.c
+      minimum-python-version: "3.13"
+    - source: _testinternalcapi/set.c
+      minimum-python-version: "3.13"
+    - source: _testinternalcapi/test_critical_sections.c
+      minimum-python-version: "3.13"
+    - source: _testinternalcapi/test_lock.c
+      minimum-python-version: "3.13"
+
+_testmultiphase:
+  minimum-python-version: '3.9'
+  sources:
+    - _testmultiphase.c
+
+_testsinglephase:
+  minimum-python-version: '3.12'
+  sources:
+    - _testsinglephase.c
+
+_thread:
+  setup-enabled: true
+  required-targets:
+    - .*
+
+_tkinter:
+  # tk not available on iOS.
+  disabled-targets:
+    - .*-apple-ios
+  sources:
+    - _tkinter.c
+    - tkappinit.c
+  # TODO consider adding WITH_TIX, as Modules/Setup seems to recommend it. This also
+  # initializes tix at init time, which seems desirable.
+  defines:
+    - WITH_APPINIT
+  includes-deps:
+    - include/X11
+  links:
+    - tcl8.6
+    - tk8.6
+
+  # Without -ObjC, we get a crash: -[TKApplication tkProcessEvent:]: unrecognized selector sent to instance.
+  # See also https://core.tcl-lang.org/tk/tktview/85f316beb15108ac43b03fa6c8608e31f3ae5f92.
+  # This is apparently an issue with static linking Objective-C binaries.
+  linker-args:
+    - args: ["-ObjC"]
+      targets:
+        - .*-apple-darwin
+  links-conditional:
+    - name: X11
+      targets:
+        - .*-unknown-linux-.*
+    - name: xcb
+      targets:
+        - .*-unknown-linux-.*
+    - name: Xau
+      targets:
+        - .*-unknown-linux-.*
+  # Many of these are dependencies of libtcl and libtk.
+  frameworks:
+    - AppKit
+    - ApplicationServices
+    - Carbon
+    - Cocoa
+    - CoreFoundation
+    - CoreServices
+    - CoreGraphics
+    - IOKit
+    - QuartzCore
+    - UniformTypeIdentifiers
+
+_tokenize:
+  minimum-python-version: "3.11"
+  config-c-only: true
+
+_tracemalloc:
+  setup-enabled: true
+  required-targets:
+    - .*
+
+_typing:
+  minimum-python-version: "3.11"
+  setup-enabled-conditional:
+    - enabled: true
+      minimum-python-version: "3.12"
+  sources:
+    - _typingmodule.c
+
+_uuid:
+  sources:
+    - _uuidmodule.c
+  includes-deps:
+    - include/uuid
+  links-conditional:
+    - name: uuid
+      # iOS doesn't need to link.
+      targets:
+        - .*-unknown-linux-.*
+        - .*-apple-darwin
+
+_warnings:
+  config-c-only: true
+
+_weakref:
+  setup-enabled: true
+  required-targets:
+    - .*
+
+_xxinterpchannels:
+  minimum-python-version: '3.12'
+  maximum-python-version: '3.12'
+  sources:
+    - _xxinterpchannelsmodule.c
+
+_xxsubinterpreters:
+  minimum-python-version: '3.9'
+  maximum-python-version: '3.12'
+  sources:
+    - _xxsubinterpretersmodule.c
+
+_xxtestfuzz:
+  minimum-python-version: '3.9'
+  sources:
+    - _xxtestfuzz/_xxtestfuzz.c
+    - _xxtestfuzz/fuzzer.c
+
+_zoneinfo:
+  minimum-python-version: "3.9"
+  sources:
+    - _zoneinfo.c
+
+array:
+  sources:
+    - arraymodule.c
+
+atexit:
+  setup-enabled: true
+
+# Modules/Setup comment is ambiguous as to whether this module actually works.
+audioop:
+  maximum-python-version: '3.12'
+  sources:
+    - audioop.c
+
+binascii:
+  sources:
+    - binascii.c
+
+builtins:
+  config-c-only: true
+
+cmath:
+  sources:
+    - cmathmodule.c
+  sources-conditional:
+    - source: _math.c
+      maximum-python-version: "3.10"
+  links:
+    - m
+
+errno:
+  setup-enabled: true
+
+faulthandler:
+  setup-enabled: true
+  required-targets:
+    - .*
+
+fcntl:
+  sources:
+    - fcntlmodule.c
+
+gc:
+  config-c-only: true
+
+grp:
+  sources:
+    - grpmodule.c
+
+itertools:
+  setup-enabled: true
+
+marshal:
+  config-c-only: true
+
+math:
+  sources:
+    - mathmodule.c
+  sources-conditional:
+    - source: _math.c
+      maximum-python-version: "3.10"
+  links:
+    - m
+
+mmap:
+  sources:
+    - mmapmodule.c
+
+nis:
+  maximum-python-version: "3.12"
+  disabled-targets:
+    # NIS is not available on Apple OS.
+    - aarch64-apple-.*
+    - x86_64-apple-.*
+
+    # Missing header dependencies on musl.
+    - .*-unknown-linux-musl
+
+    # On other UNIX platforms, it is globally disabled because it has a dependency
+    # on libnsl, which isn't part of the Linux Standard Base specification. libnsl
+    # has a wonky history where it was once part of glibc and core system installs
+    # but is slowly being phased away from base installations. There are potential
+    # workarounds to adding nis support. See discussion in
+    # https://github.com/astral-sh/python-build-standalone/issues/51.
+    - .*
+
+  sources:
+    - nismodule.c
+  links:
+    - nsl
+
+ossaudiodev:
+  maximum-python-version: "3.12"
+  disabled-targets:
+    # ossaudiodev not available on Apple OS.
+    - aarch64-apple-.*
+    - x86_64-apple-.*
+
+    # Missing header dependencies.
+    - .*-unknown-linux-musl
+  sources:
+    - ossaudiodev.c
+
+parser:
+  maximum-python-version: "3.9"
+  sources:
+    - parsermodule.c
+
+posix:
+  setup-enabled: true
+  required-targets:
+    - .*-unknown-linux-.*
+    - .*-apple-darwin
+
+pwd:
+  setup-enabled: true
+
+pyexpat:
+  sources:
+    - pyexpat.c
+  links:
+    - expat
+
+readline:
+  disabled-targets:
+    - .*-apple-ios
+    - .*-apple-tvos
+    - .*-apple-watchos
+  sources:
+    - readline.c
+  defines:
+    - USE_LIBEDIT=1
+  includes-deps:
+    - libedit/include
+    - libedit/include/ncursesw
+  links:
+    - edit
+  links-conditional:
+    - name: ncursesw
+      targets:
+        - .*-unknown-linux-.*
+    - name: ncurses
+      targets:
+        - .*-apple-.*
+
+resource:
+  sources:
+    - resource.c
+
+select:
+  sources:
+    - selectmodule.c
+
+spwd:
+  maximum-python-version: "3.12"
+  sources:
+    - spwdmodule.c
+
+  # spwd not available on Apple OS.
+  disabled-targets:
+    - aarch64-apple-.*
+    - x86_64-apple-.*
+
+syslog:
+  sources:
+    - syslogmodule.c
+
+sys:
+  config-c-only: true
+
+termios:
+  sources:
+    - termios.c
+
+time:
+  setup-enabled: true
+
+unicodedata:
+  sources:
+    - unicodedata.c
+
+xxlimited:
+  # Similar story as _testcapi. The extension exists to test the limited API,
+  # which we don't really care about. Statically building it runs into problems
+  # and cross-compiling emits wrong machine type when built via setup.py.
+  disabled-targets:
+    - .*
+
+xxlimited_35:
+  minimum-python-version: '3.10'
+
+  # Similar story as _testcapi. The extension exists to test the limited API,
+  # which we don't really care about. Statically building it runs into problems
+  # and cross-compiling emits wrong machine type when built via setup.py.
+  disabled-targets:
+    - .*
+
+xxsubtype:
+  setup-enabled-conditional:
+    - enabled: true
+      maximum-python-version: "3.11"
+  sources:
+    - xxsubtype.c
+
+# xx is a demo extension. So disable globally.
+xx:
+  minimum-python-version: "3.11"
+  disabled-targets:
+    - .*
+
+zlib:
+  sources:
+    - zlibmodule.c
+  includes-deps:
+    - include
+  links:
+    - z

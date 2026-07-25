@@ -166,6 +166,42 @@ message gives the exact backup and target paths. Sanitized helper events are in:
 %LOCALAPPDATA%\NeuralExtractorV3\updates\updater.log
 ```
 
+## One-Folder Directory Transaction
+
+The compliance-friendly one-folder distribution is updated by a separate
+directory-wide transaction in
+`src/neural_extractor_v3/core/update_directory_installer.py`. It follows the
+same ownership, state-machine, startup-confirmation, and rollback discipline as
+the one-file transaction, with these differences:
+
+1. The release is described by a strict per-file directory manifest
+   (`schema_version`, exact file map with SHA-256 and size, bounded totals,
+   Unicode-safe relative paths, and a declared replaceable Qt/PySide family).
+   Symlinks/reparse points, unexpected executables, PyQt/provider payloads, and
+   legacy one-file artifacts are rejected fail-closed.
+2. Before handoff the GUI copies the whole installation to a sibling
+   `.<name>.<transaction>.backup` directory with per-file verification and a
+   recorded inventory. The detached helper is the backed-up EXE itself, so the
+   helper always runs the last known-good version.
+3. Recipient-replaced Qt/PySide libraries (detected against the installed
+   `QT-PYSIDE-COMPONENTS.json` baseline) require an explicit
+   `QtReplacementPolicy`: `abort` (default), `preserve` (carry forward), or
+   `replace` (recorded consent). Nothing is overwritten silently.
+4. Replacement stages a verified `.new` tree beside the target and applies two
+   directory renames (`target -> .old`, `.new -> target`). Every intermediate
+   layout is recoverable: startup recovery restores the original from `.old`
+   or the verified backup, confirms an already-confirmed update from its
+   process-bound marker, and otherwise retains files conservatively.
+5. All install-side file operations use extended-length paths, so Unicode and
+   long Windows installation paths are supported.
+
+The helper mode is `--apply-directory-update`; startup confirmation and
+rollback status reuse `--post-update-transaction` and
+`--update-rollback-status` with the `directory-transaction.json` reference.
+The GUI does not yet offer this transaction automatically; it requires a
+reviewed replacement-consent dialog and a published one-folder release asset
+format.
+
 ## Permissions And Manual Fallback
 
 Automatic installation is unavailable when the app runs from source, from a

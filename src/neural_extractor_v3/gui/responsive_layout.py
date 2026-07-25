@@ -4,8 +4,8 @@ from __future__ import annotations
 
 from collections.abc import Iterable
 
-from PyQt6.QtCore import QRect, QSize
-from PyQt6.QtWidgets import QGridLayout, QPushButton, QSizePolicy, QWidget
+from PySide6.QtCore import QRect, QSize
+from PySide6.QtWidgets import QGridLayout, QPushButton, QSizePolicy, QWidget
 
 
 def clamp_window_rect(rect: QRect, available: QRect, minimum: QSize) -> QRect:

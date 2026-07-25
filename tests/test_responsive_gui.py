@@ -6,10 +6,11 @@ from types import SimpleNamespace
 os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 import pytest
-from PyQt6.QtCore import QRect, QSettings, QSize
-from PyQt6.QtWidgets import QApplication, QFileDialog
+from PySide6.QtCore import QRect, QSettings, QSize
+from PySide6.QtWidgets import QApplication, QFileDialog
 
 from neural_extractor_v3.core import youtube_connection as connection_module
+from neural_extractor_v3.core.pot_provider import PoTokenProviderStatus
 from neural_extractor_v3.core.youtube_connection import (
     ChromeDiscovery,
     ManagedBrowser,
@@ -109,6 +110,29 @@ def test_main_window_responsive_contract(main_window):
     assert window.side_panel.maximumWidth() > 10_000
     assert window.settings_scroll.widgetResizable()
     assert window.work_panel.minimumWidth() >= 440
+
+
+def test_optional_helper_state_is_clear_and_does_not_disable_normal_ui(main_window):
+    _application, window, _settings = main_window
+    absent = PoTokenProviderStatus(
+        available=False,
+        bundled=False,
+        installed=False,
+        integrity_verified=False,
+        provider_id="neural-extractor:external-helper",
+        version="1.3.1",
+        helper_version="",
+        protocol_version=1,
+        diagnostic="Optional helper is not installed.",
+    )
+
+    window._on_optional_po_helper_status(absent)
+
+    text = window.optional_po_helper_status.text()
+    assert "Not installed (optional)" in text
+    assert "Normal downloads remain available" in text
+    assert window.start_button.isEnabled()
+    assert window.optional_po_helper_instructions_button.isEnabled()
 
 
 def test_output_folder_browse_stays_visible_and_unicode_path_persists(

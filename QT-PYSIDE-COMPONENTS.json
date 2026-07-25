@@ -1,0 +1,136 @@
+{
+  "application_version": "3.0.8",
+  "distribution_layout": "pyinstaller-one-folder-external-shared-libraries",
+  "files": [
+    {
+      "path": "PySide6/MSVCP140.dll",
+      "sha256": "708dd7bbc7bd23bce9e93f7837a70c2dd7ad55cff43801e92c0f7fcd7dda47cd",
+      "size": 549176
+    },
+    {
+      "path": "PySide6/MSVCP140_1.dll",
+      "sha256": "b2113956aa3fcb9decfe65be1ee7829f8e3ae0899633ae89fe04888ada201594",
+      "size": 27448
+    },
+    {
+      "path": "PySide6/MSVCP140_2.dll",
+      "sha256": "1b806b427ffb573deff8478cf6fe336465fe2c67e0919bb95f452b6f31d25736",
+      "size": 271672
+    },
+    {
+      "path": "PySide6/opengl32sw.dll",
+      "sha256": "4a7d90f91fdecb5df7b426bc2d05974b8d7ffa450af2d1f93f3eca05800718da",
+      "size": 20639544
+    },
+    {
+      "path": "PySide6/plugins/imageformats/qico.dll",
+      "sha256": "f81378dd51392ff0d3ae094d5e59dfc4fa664a0ef4d756d6ed40584f90af2758",
+      "size": 45880
+    },
+    {
+      "path": "PySide6/plugins/platforms/qoffscreen.dll",
+      "sha256": "426266e8ba0ea07c416616ad9973702fe126d4559cb2ee11e1c9bdbae85ba755",
+      "size": 113976
+    },
+    {
+      "path": "PySide6/plugins/platforms/qwindows.dll",
+      "sha256": "54d736de022f707e9f7f555e4c9f9e993253cd5b0ee2364e6a9458c180828c42",
+      "size": 1006904
+    },
+    {
+      "path": "PySide6/plugins/styles/qmodernwindowsstyle.dll",
+      "sha256": "9af96b09ebaf7ff13e22c70bf69b9c3f226f069375d1a9f9efd63e944e43f5fb",
+      "size": 230712
+    },
+    {
+      "path": "PySide6/pyside6.abi3.dll",
+      "sha256": "d4072be872b31f3748de5e6c28cb2976dafbf063d3ccfa38e5dabda29babcdaf",
+      "size": 248632
+    },
+    {
+      "path": "PySide6/Qt6Core.dll",
+      "sha256": "65fe6224b6c47a15b058738031d31dce9928c4d7a58e1b8db6434f6f5cddd702",
+      "size": 10480440
+    },
+    {
+      "path": "PySide6/Qt6Gui.dll",
+      "sha256": "cd071161ad325ff2de92b0e33d71334ef20712544796949623ce92dfb3957e90",
+      "size": 9589560
+    },
+    {
+      "path": "PySide6/Qt6Widgets.dll",
+      "sha256": "5a9f37dedd3dc5bcc1a4bb8ea919c49fc62df751a1450accc34379eb6710eab6",
+      "size": 6594360
+    },
+    {
+      "path": "PySide6/QtCore.pyd",
+      "sha256": "be52341a5df1f76ecca2fb1e94eb429dfa46f0b659ed6536f25119b565b21ea8",
+      "size": 3330360
+    },
+    {
+      "path": "PySide6/QtGui.pyd",
+      "sha256": "f0549716b10a8b4fbd5c6c041f36af215223809f919f4c4722d44cc199d5c593",
+      "size": 3896632
+    },
+    {
+      "path": "PySide6/QtWidgets.pyd",
+      "sha256": "85cb6c2181b4b09887a7d8507dd950844d1b8f74a9c4002c7b71169f75bf6fda",
+      "size": 4856120
+    },
+    {
+      "path": "PySide6/VCRUNTIME140.dll",
+      "sha256": "c6e841078cd352299a58925991e2552f7251b046253ba895b3ad50cd5cd32ec6",
+      "size": 116024
+    },
+    {
+      "path": "PySide6/VCRUNTIME140_1.dll",
+      "sha256": "b322e382ea249b50009f14a9a71ad16729eb6e4b58a8d3b3be6ac66ea6342a22",
+      "size": 41272
+    },
+    {
+      "path": "shiboken6/MSVCP140.dll",
+      "sha256": "005f2324c7ff79bbe9a44992b0708abb4c871bd24bcc7a34aca5eab4439c1f4a",
+      "size": 549176
+    },
+    {
+      "path": "shiboken6/Shiboken.pyd",
+      "sha256": "0e2c5318c5ac60a016a12230bbb1f6a9d990c45cbf4a7c4af24aefb5ab7dc40a",
+      "size": 33080
+    },
+    {
+      "path": "shiboken6/shiboken6.abi3.dll",
+      "sha256": "47f4f9b44c95037565dd14f4be04f350f20c53c05483b750e0be867c39a7441e",
+      "size": 384824
+    },
+    {
+      "path": "shiboken6/VCRUNTIME140.dll",
+      "sha256": "8d9c679c825c5fff298d66c41af30f35c289fc101868dfc9635547bada0daba6",
+      "size": 116024
+    },
+    {
+      "path": "shiboken6/VCRUNTIME140_1.dll",
+      "sha256": "e4d7ea5f4f4ff6d0c208e693853617cdef0ad71cfe5dd5c3ae16c8a6b64c18ea",
+      "size": 41272
+    }
+  ],
+  "modifications_to_upstream_qt_pyside_binaries": "none",
+  "pyside6_essentials_version": "6.11.1",
+  "pyside6_version": "6.11.1",
+  "qt_version": "6.11.1",
+  "release_gate_status": "HOLD",
+  "runtime_integrity_policy": "application startup does not authenticate or restore external Qt/PySide files",
+  "schema_version": 1,
+  "shiboken6_version": "6.11.1",
+  "source_archives": [
+    {
+      "filename": "pyside-setup-everywhere-src-6.11.1.tar.xz",
+      "sha256": "6ffd9835bb0dd2c56f061d62f1616bb1707cfc0202b80e3165d6be087f3965e2",
+      "url": "https://download.qt.io/official_releases/QtForPython/pyside6/PySide6-6.11.1-src/pyside-setup-everywhere-src-6.11.1.tar.xz"
+    },
+    {
+      "filename": "qtbase-everywhere-src-6.11.1.tar.xz",
+      "sha256": "d9594a31228aa23ad6b531719a29b45f0f3989fe6c136d45767ea179f233c1ac",
+      "url": "https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/qtbase-everywhere-src-6.11.1.tar.xz"
+    }
+  ]
+}

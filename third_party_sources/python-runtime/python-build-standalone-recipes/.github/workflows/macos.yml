@@ -1,0 +1,159 @@
+name: macos
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  FORCE_COLOR: 1
+
+jobs:
+  pythonbuild:
+    if: ${{ needs.generate-matrix.outputs.pythonbuild_changed == 'true' || needs.generate-matrix.outputs.any_builds == 'true' || github.ref == 'refs/heads/main' }}
+    needs:
+      - generate-matrix
+    runs-on: depot-macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Emit rustc version
+        run: |
+          rustc --version > .rustc-version
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-pythonbuild-${{ hashFiles('Cargo.lock', '.rustc-version') }}
+
+      - name: Build
+        run: |
+          cargo build --release
+
+      - name: Upload pythonbuild Executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: pythonbuild
+          path: target/release/pythonbuild
+
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      any_builds: ${{ steps.set-matrix.outputs.any_builds }}
+      pythonbuild_changed: ${{ steps.check-pythonbuild.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch history for subsequent `git diff`
+
+      - name: Set up Python
+        uses: astral-sh/setup-uv@v4
+
+      - name: Get pull request labels
+        id: get-labels
+        run: |
+          # Convert GitHub labels array to comma-separated string
+          LABELS=$(echo '${{ toJson(github.event.pull_request.labels.*.name) }}' | jq -r 'join(",")')
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+      - name: Generate build matrix
+        id: set-matrix
+        run: |
+          uv run ci-matrix.py --platform darwin --labels '${{ steps.get-labels.outputs.labels }}' > matrix.json && echo "matrix=$(cat matrix.json)" >> $GITHUB_OUTPUT
+          # Display the matrix for debugging too
+          cat matrix.json | jq
+
+          if jq -e '.include | length > 0' matrix.json > /dev/null; then
+            # Build matrix has entries
+            echo "any_builds=true" >> $GITHUB_OUTPUT
+          else
+            # Build matrix is empty
+            echo "any_builds=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check if the `pythonbuild` crate changed
+        id: check-pythonbuild
+        run: |
+          if git diff --quiet ${{ github.event.pull_request.base.sha || 'origin/main' }}...HEAD -- ':src/*.rs'; then
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+  build:
+    needs:
+      - generate-matrix
+      - pythonbuild
+    # Permissions used for actions/attest-build-provenance
+    permissions:
+      id-token: write
+      attestations: write
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false
+    name: ${{ matrix.target_triple }} / ${{ matrix.python }} / ${{ matrix.build_options }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Download pythonbuild
+        uses: actions/download-artifact@v4
+        with:
+          name: pythonbuild
+          path: build
+
+      - name: Build
+        if: ${{ ! matrix.dry-run }}
+        run: |
+          if [ "${{ matrix.target_triple }}" = "aarch64-apple-darwin" ]; then
+            export APPLE_SDK_PATH=/Applications/Xcode_15.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk
+          elif [ "${{ matrix.target_triple }}" = "x86_64-apple-darwin" ]; then
+            export APPLE_SDK_PATH=/Applications/Xcode_15.2.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX14.2.sdk
+          else
+            echo "unhandled target triple: ${{ matrix.target_triple }}"
+            exit 1
+          fi
+
+          ./build-macos.py --target-triple ${{ matrix.target_triple }} --python cpython-${{ matrix.python }} --options ${{ matrix.build_options }}
+
+      - name: Generate attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          subject-path: dist/*
+
+      - name: Upload Distributions
+        if: ${{ ! matrix.dry-run }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpython-${{ matrix.python }}-${{ matrix.target_triple }}-${{ matrix.build_options }}
+          path: dist/*
+
+      - name: Checkout macOS SDKs for validation
+        if: ${{ ! matrix.dry-run }}
+        uses: actions/checkout@v4
+        with:
+          repository: 'phracker/MacOSX-SDKs'
+          ref: master
+          path: macosx-sdks
+
+      - name: Validate Distribution
+        if: ${{ ! matrix.dry-run }}
+        run: |
+          chmod +x build/pythonbuild
+
+          build/pythonbuild validate-distribution --macos-sdks-path macosx-sdks --run dist/*.tar.zst

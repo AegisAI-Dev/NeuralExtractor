@@ -22,12 +22,24 @@ from neural_extractor_v3.core.youtube_errors import (
             FailureCategory.PO_TOKEN_REQUIRED,
         ),
         (
+            "ERROR: No PO Token providers registered; a PO Token is required",
+            FailureCategory.PO_TOKEN_PROVIDER_UNAVAILABLE,
+        ),
+        (
+            "ERROR: _get_pot_via_script failed while fetching PO Token",
+            FailureCategory.PO_TOKEN_FETCH_FAILED,
+        ),
+        (
             "ERROR: Requested format is not available",
             FailureCategory.REQUESTED_FORMAT_UNAVAILABLE,
         ),
         (
             "WARNING: n challenge solving failed. Only images are available",
-            FailureCategory.ONLY_IMAGE_FORMATS_AVAILABLE,
+            FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS,
+        ),
+        (
+            "WARNING: The web client exposed only SABR formats",
+            FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS,
         ),
         (
             "ERROR: Sign in to confirm your age. Use --cookies",
@@ -107,3 +119,72 @@ def test_cp1252_unicode_transport_failure_has_specific_worker_category():
 
     assert analysis.category == FailureCategory.WORKER_PROTOCOL_ERROR
     assert analysis.category != FailureCategory.UNKNOWN
+
+
+def test_new_recovery_failure_categories_have_distinct_stable_values():
+    categories = {
+        FailureCategory.VERIFIED_PROVIDER_NOT_APPLIED,
+        FailureCategory.VERIFIED_SESSION_MEDIA_403,
+        FailureCategory.PO_TOKEN_PROVIDER_UNAVAILABLE,
+        FailureCategory.PO_TOKEN_FETCH_FAILED,
+        FailureCategory.PO_TOKEN_MEDIA_403,
+        FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS,
+        FailureCategory.MEDIA_ACCESS_REJECTED_AFTER_AUTHENTICATION,
+    }
+
+    assert {category.value for category in categories} == {
+        "verified_provider_not_applied",
+        "verified_session_media_403",
+        "po_token_provider_unavailable",
+        "po_token_fetch_failed",
+        "po_token_media_403",
+        "only_sabr_or_image_formats",
+        "media_access_rejected_after_authentication",
+    }
+
+
+@pytest.mark.parametrize(
+    ("attempt_kind", "category", "authentication_specific"),
+    [
+        ("public", FailureCategory.HTTP_403_MEDIA_REJECTED, False),
+        ("verified_session", FailureCategory.VERIFIED_SESSION_MEDIA_403, True),
+        ("authenticated", FailureCategory.MEDIA_ACCESS_REJECTED_AFTER_AUTHENTICATION, True),
+        ("po_token", FailureCategory.PO_TOKEN_MEDIA_403, False),
+    ],
+)
+def test_media_403_category_records_the_exact_attempt_that_failed(
+    attempt_kind,
+    category,
+    authentication_specific,
+):
+    analysis = classify_youtube_failure(
+        "ERROR: unable to download video data: HTTP Error 403: Forbidden",
+        attempt_kind=attempt_kind,
+    )
+
+    assert analysis.category == category
+    assert analysis.authentication_specific is authentication_specific
+
+
+def test_verified_session_media_403_uses_required_user_message_verbatim():
+    analysis = classify_youtube_failure(
+        "ERROR: HTTP Error 403: Forbidden",
+        attempt_kind="verified_session",
+    )
+
+    assert analysis.user_message == (
+        "The browser session is valid, but YouTube rejected the media request. "
+        "A PO Token may be required."
+    )
+
+
+def test_provider_failures_take_priority_over_generic_po_token_requirement():
+    unavailable = classify_youtube_failure(
+        "No PO Token providers registered; this client requires a PO Token",
+    )
+    fetch_failed = classify_youtube_failure(
+        "_get_pot_via_script failed: PO Token was required",
+    )
+
+    assert unavailable.category == FailureCategory.PO_TOKEN_PROVIDER_UNAVAILABLE
+    assert fetch_failed.category == FailureCategory.PO_TOKEN_FETCH_FAILED

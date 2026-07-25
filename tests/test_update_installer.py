@@ -364,6 +364,31 @@ def test_source_mode_and_temporary_locations_fall_back_to_manual_install(tmp_pat
     assert "temporary" in temporary.reason
 
 
+def test_onefolder_install_requires_manual_consent_and_never_uses_exe_replacement(
+    tmp_path, monkeypatch
+):
+    manifest = make_manifest()
+    installation = tmp_path / "install"
+    installation.mkdir()
+    target = installation / "NeuralExtractorV3.exe"
+    target.write_bytes(OLD_BYTES)
+    monkeypatch.setattr(installer_module.sys, "_MEIPASS", str(installation), raising=False)
+    monkeypatch.setattr(installer_module.sys, "platform", "win32")
+
+    capability = assess_installation_capability(
+        manifest,
+        target_executable=target,
+        frozen=True,
+        updates_root=tmp_path / "updates",
+        temporary_root=tmp_path / "different-temporary-root",
+    )
+
+    assert not capability.available
+    assert capability.code == "onefolder_manual_install_required"
+    assert capability.target_executable == target.resolve()
+    assert "explicit consent" in capability.reason
+
+
 def test_capability_reports_insufficient_disk_space(tmp_path, monkeypatch):
     manifest = make_manifest()
     target = tmp_path / "install" / "NeuralExtractorV3.exe"

@@ -1,0 +1,155 @@
+name: windows
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  FORCE_COLOR: 1
+
+jobs:
+  pythonbuild:
+    if: ${{ needs.generate-matrix.outputs.pythonbuild_changed == 'true' || needs.generate-matrix.outputs.any_builds == 'true' || github.ref == 'refs/heads/main' }}
+    needs:
+      - generate-matrix
+    runs-on: 'windows-2022'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Emit rustc version
+        run: |
+          rustc --version > .rustc-version
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            C:/Rust/.cargo/registry
+            C:/Rust/.cargo/git
+            target
+          key: ${{ runner.os }}-pythonbuild-${{ hashFiles('Cargo.lock', '.rustc-version') }}
+
+      - name: Build
+        run: |
+          cargo build --release
+
+      - name: Upload executable
+        uses: actions/upload-artifact@v4
+        with:
+          name: pythonbuild
+          path: target/release/pythonbuild.exe
+
+  generate-matrix:
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      any_builds: ${{ steps.set-matrix.outputs.any_builds }}
+      pythonbuild_changed: ${{ steps.check-pythonbuild.outputs.changed }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # fetch history for subsequent `git diff`
+
+      - name: Set up Python
+        uses: astral-sh/setup-uv@v4
+
+      - name: Get pull request labels
+        id: get-labels
+        run: |
+          # Convert GitHub labels array to comma-separated string
+          LABELS=$(echo '${{ toJson(github.event.pull_request.labels.*.name) }}' | jq -r 'join(",")')
+          echo "labels=$LABELS" >> $GITHUB_OUTPUT
+
+      - name: Generate build matrix
+        id: set-matrix
+        run: |
+          uv run ci-matrix.py --platform windows --labels '${{ steps.get-labels.outputs.labels }}' > matrix.json && echo "matrix=$(cat matrix.json)" >> $GITHUB_OUTPUT
+          # Display the matrix for debugging too
+          cat matrix.json | jq
+
+          if jq -e '.include | length > 0' matrix.json > /dev/null; then
+            # Build matrix has entries
+            echo "any_builds=true" >> $GITHUB_OUTPUT
+          else
+            # Build matrix is empty
+            echo "any_builds=false" >> $GITHUB_OUTPUT
+          fi
+
+
+      - name: Check if the `pythonbuild` crate changed
+        id: check-pythonbuild
+        shell: bash
+        run: |
+          if git diff --quiet ${{ github.event.pull_request.base.sha || 'origin/main' }}...HEAD -- ':src/*.rs'; then
+              echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+              echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
+
+  build:
+    needs:
+      - generate-matrix
+      - pythonbuild
+    # Permissions used for actions/attest-build-provenance
+    permissions:
+      id-token: write
+      attestations: write
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      matrix: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+      fail-fast: false
+    name: ${{ matrix.target_triple }} / ${{ matrix.python }} / ${{ matrix.build_options }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install Cygwin Environment
+        uses: cygwin/cygwin-install-action@49f298a7ebb00d4b3ddf58000c3e78eff5fbd6b9 # v2
+        with:
+          packages: autoconf automake libtool
+
+      - name: Install Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Download pythonbuild Executable
+        uses: actions/download-artifact@v4
+        with:
+          name: pythonbuild
+
+      # We need to do this before we activate the VC++ environment or else binary packages
+      # don't get compiled properly.
+      - name: Bootstrap Python environment
+        run: |
+          py.exe -3.12 build-windows.py --help
+
+      - name: Build
+        if: ${{ ! matrix.dry-run }}
+        shell: cmd
+        run: |
+          call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\${{ matrix.vcvars }}"
+          py.exe -3.12 build-windows.py --python cpython-${{ matrix.python }} --sh c:\cygwin\bin\sh.exe --options ${{ matrix.build_options }}
+
+      - name: Validate Distribution
+        if: ${{ ! matrix.dry-run }}
+        run: |
+          $Dists = Resolve-Path -Path "dist/*.tar.zst" -Relative
+          .\pythonbuild.exe validate-distribution --run $Dists
+
+      - name: Generate attestations
+        uses: actions/attest-build-provenance@v2
+        if: ${{ github.ref == 'refs/heads/main' }}
+        with:
+          subject-path: dist/*
+
+      - name: Upload Distributions
+        uses: actions/upload-artifact@v4
+        with:
+          name: cpython-${{ matrix.python }}-${{ matrix.vcvars }}-${{ matrix.build_options }}
+          path: dist/*

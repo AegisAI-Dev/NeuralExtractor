@@ -1,0 +1,1356 @@
+{
+  "schema_version": 1,
+  "status": "HOLD",
+  "ffmpeg_source_retained": true,
+  "btbn_scripts_retained": true,
+  "binary_release_asset_retained": true,
+  "linked_dependency_sources_complete": false,
+  "files": [
+    {
+      "path": "third_party_sources/ffmpeg/archives/btbn-ffmpeg-builds-7a83528ea3431e9eca982a712bc3a7cd0789d5d0.tar.gz",
+      "size": 101564,
+      "sha256": "0f0f15e02b4fd1b1bc37d2e3a6f57cd7a2078c31a51c8546110d3ccb40029d30"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/archives/ffmpeg-9a01c1cb6a4cf87529fe9898b66ec55c5b032639.tar.gz",
+      "size": 17327862,
+      "sha256": "b752d9b889d87ff96522438450268b1cfad449f4a8e66ff5058432636f491129"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/archives/ffmpeg-N-125365-g9a01c1cb6a-win64-gpl.zip",
+      "size": 167310447,
+      "sha256": "52c0383c460f0ec1039088f1591921fb82e3b870b32aab8faf2ff1e5ae14bf9d"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/.github/buildkit.toml",
+      "size": 35,
+      "sha256": "4d71436167008ab0a7f93aee4a3159df20176f65bba5ed956ea18cf939c38c93"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/.github/dependabot.yml",
+      "size": 118,
+      "sha256": "883b95e3be554fbadd92b315e4a8c6ea6ca688b64924e22dd61222b07f683507"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/.github/workflows/build.yml",
+      "size": 15558,
+      "sha256": "6f1aa84cf6b415d4331b16ef53f9af9aba7e27312a6a64dddbba992775debbe3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/.github/workflows/pr.yml",
+      "size": 2166,
+      "sha256": "e7e1730ed788005750e6872dfea05c05ac54a90ee42a8a2f68e9377886c80a63"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/.gitignore",
+      "size": 44,
+      "sha256": "021201c0488e25471321d8ab8592945c25901db227f45186939c434f5583b768"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/4.3.sh",
+      "size": 37,
+      "sha256": "d6d1604ec0cac1873d1273f502c5d8712a30c208531742c2a9e6af75c9a1e7ef"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/4.4.sh",
+      "size": 37,
+      "sha256": "33441a2eec23b2891ab759f8e6d19d25dd53741f3dd96c7ca05c27b4f4f3a89b"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/5.0.sh",
+      "size": 37,
+      "sha256": "4748d189621c961678028469ffe440723b7639f5a92427391ddda63e247b7d5b"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/5.1.sh",
+      "size": 37,
+      "sha256": "c7a66c6e3d48d2e3c0ecc7c5fd1a6c7151ae6cdeeda890b10b6338c58d5f7a96"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/6.0.sh",
+      "size": 37,
+      "sha256": "096e1cff35ee2caa31be679c67f5c633510a6be765de602d5e6fdc06cbe28b03"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/6.1.sh",
+      "size": 37,
+      "sha256": "3bd6905b0ca7c97dd20fe9e95987c319cd59005514495e7910f9143ba2cf3c10"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/7.0.sh",
+      "size": 37,
+      "sha256": "32d812bcafdf62e1eee8cfffaf064607563b8afecda3a438d2b6804960262d39"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/7.1.sh",
+      "size": 37,
+      "sha256": "56fed26b91d4bdf6b53d6cdc04ff44647de3093451fc877bd51defdcd01574d5"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/8.0.sh",
+      "size": 37,
+      "sha256": "d3263c52d08813edb082499904a10380966e0c2862d86459d2640b63dcd34318"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/8.1.sh",
+      "size": 37,
+      "sha256": "c1e4328aa08013802ce8a68797fb0b5d4d2bb720e4f71f0fce2cc5d5fe3cfeb5"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/9.0.sh",
+      "size": 37,
+      "sha256": "087b0d3fee50e6d0a6723559028bcbd198e097492009c118ae3054c0a265b8e6"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/debug.sh",
+      "size": 97,
+      "sha256": "ce7e54e72f1f58df9383ed14d31cdf63019a0897d0e5e083e4643babb73c0d90"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/addins/lto.sh",
+      "size": 355,
+      "sha256": "d93fe3e2c7c8afbeaa3c14e3f4bb7e57efca8bcbb72d5731df94fe16e5b93c87"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/build.sh",
+      "size": 2851,
+      "sha256": "c5fb0ec0fb04dc27a3de1994bab8600cb2be3106ad13a82d518fe3e71d2758bf"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/download.sh",
+      "size": 1601,
+      "sha256": "b18b57991bdbab53eb08182a4e86159d8ead3bc2ec29d6791d91dbb3232650e5"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/generate.sh",
+      "size": 6277,
+      "sha256": "a7474d8edaee77ab984def2fae1ab23504a46a02ec190f5fb65b2d015847dc8a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux32/cross.meson",
+      "size": 316,
+      "sha256": "6b32c927b1716a32a3daf3a59656dcbf3bd6a9bfc57306add3df5f1679c96ab3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux32/ct-ng-config",
+      "size": 30708,
+      "sha256": "6034ec71994d92e8794f0c0c5f84ea0ffc56fa88926ffe50713a3a5beed34f62"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux32/Dockerfile",
+      "size": 3130,
+      "sha256": "26804e9cdba58cd8f7d0d3a337b829ba627d1b7b31fb0cc297f4200bf25fca4c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux32/gen-implib.sh",
+      "size": 438,
+      "sha256": "948892042a990c8760602e40d31b0659cdf8fe6b4d3641c8adac2ed5fad65d08"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux32/toolchain.cmake",
+      "size": 539,
+      "sha256": "da8c76137453426b1d06044b62041eadd43f2d7d801aabba2a3c7a4a103079ac"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux64/cross.meson",
+      "size": 333,
+      "sha256": "da06398244282ae0b32f4a9b9b268100062f2004e56e2823770b4dbf529d9d85"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux64/ct-ng-config",
+      "size": 30694,
+      "sha256": "b7f53666f6702bb57fd3f9e5e8a8f9d171be89d25517c59858977dcf598a1445"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux64/Dockerfile",
+      "size": 3131,
+      "sha256": "b32970690b267cd191feefc7c51c093c7564c4f509d5826ea1490826d6ce3291"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux64/gen-implib.sh",
+      "size": 440,
+      "sha256": "eeda50e34e22d5dc7d163a6c93a4188ab20dcda94ac0593b6c52db73f2758586"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linux64/toolchain.cmake",
+      "size": 543,
+      "sha256": "fda7c2c072fbb9f402dfb6d8ae5749161ca1359b1cf3b862a5268202f412c054"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxarm64/cross.meson",
+      "size": 341,
+      "sha256": "3e6b060e5bafbc558fbb8c38f52e777ea67b94acb6f853dceb51609b9d95bddf"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxarm64/ct-ng-config",
+      "size": 30809,
+      "sha256": "f5371caf9733e60307d0a509104daf2948979f8c437663360ea36e05306094c5"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxarm64/Dockerfile",
+      "size": 3071,
+      "sha256": "d41b0433e69ea8991ec6b37a83e1da689137c2e7a481d8a251ec195ebdc8eb98"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxarm64/gen-implib.sh",
+      "size": 441,
+      "sha256": "be41ef1d15dd690dc8d31ed8b9ca91f9015831e6edf77124f90e422865f2451f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxarm64/toolchain.cmake",
+      "size": 545,
+      "sha256": "19fe455b291392df68ce8dba6d9c8eb11f417b2bb0f0758d14ea8d4edcaee852"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxmips64/cross.meson",
+      "size": 330,
+      "sha256": "9b80f997d822ea3c33a080f31b17479865d80529abe1e90e316fc8bc9a035100"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxmips64/ct-ng-config",
+      "size": 33375,
+      "sha256": "24d188e1575bc3d126b3d3bbec4ad3387ce9a20dd00a198e9ebe71963e147682"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxmips64/Dockerfile",
+      "size": 3141,
+      "sha256": "e7a2e5100173bac98491e0eebf49beec1dd3d39bf7057494b5dadd6d43f1cc3d"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxmips64/gen-implib.sh",
+      "size": 441,
+      "sha256": "be41ef1d15dd690dc8d31ed8b9ca91f9015831e6edf77124f90e422865f2451f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxmips64/toolchain.cmake",
+      "size": 543,
+      "sha256": "24953a21c58f5870418faa408f26519480871d8a608069787694758fec7809d8"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxppc64/cross.meson",
+      "size": 346,
+      "sha256": "40557d59eecb8007bfaadcb390f092baabc3743226c064acc082eac9a09122d3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxppc64/ct-ng-config",
+      "size": 33365,
+      "sha256": "206ba1386206c2c2a5310d700241dd5096b52db484ab94986ff9547a76ff4b07"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxppc64/Dockerfile",
+      "size": 2992,
+      "sha256": "22bbce414fd7889eb2506be61b6cfe48e457a910d004e3763f073c7ed69790fa"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxppc64/gen-implib.sh",
+      "size": 441,
+      "sha256": "be41ef1d15dd690dc8d31ed8b9ca91f9015831e6edf77124f90e422865f2451f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxppc64/toolchain.cmake",
+      "size": 545,
+      "sha256": "e1ce42b77659a054b34e649cbd579ad33276a847f71846a3bfa243d8fbc3c4e7"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxriscv64/cross.meson",
+      "size": 341,
+      "sha256": "ef5f94094fccfe59142fb0f444477cb0950e5b35aad59a0cd076bf3b0acf7869"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxriscv64/ct-ng-config",
+      "size": 32809,
+      "sha256": "4c819f1de6deaa75a60167e8a959f06b6b9e468fc6e4c6a2081bafcd2b228dfe"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxriscv64/Dockerfile",
+      "size": 2992,
+      "sha256": "b2ea2386ff1a884ac695124d820486f90e1c0cf250a45836dda0c47d936335e6"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxriscv64/gen-implib.sh",
+      "size": 441,
+      "sha256": "be41ef1d15dd690dc8d31ed8b9ca91f9015831e6edf77124f90e422865f2451f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-linuxriscv64/toolchain.cmake",
+      "size": 545,
+      "sha256": "5c197dd7c10f2dcefe9003041ca733091e9afb43fba21aa4b8a08cecae5fb2d8"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-win32/cross.meson",
+      "size": 391,
+      "sha256": "14245a741ce3e4a43dfc8dcdbf22e707f1d0c5d468434ae80636127f639adf1c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-win32/ct-ng-config",
+      "size": 22720,
+      "sha256": "dcff3fb063e4b6e988ed889368d9d899df6e0bc44d0dfd02144bd91b5a2c2f99"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-win32/Dockerfile",
+      "size": 2434,
+      "sha256": "faeb01d48edda39488434c5ff4062353ec274c4e6b386ef519c879690faaa3e7"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-win32/toolchain.cmake",
+      "size": 572,
+      "sha256": "22b3a880b9a2ff41c1130560368ea40b8f516f99954cad4cf80f328af2ba1735"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-win64/cross.meson",
+      "size": 410,
+      "sha256": "0eaf85a096830f5fd18ff514cd4a92f28b3d64050e8d03cb6f6ca0d7aa705bc4"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-win64/ct-ng-config",
+      "size": 22716,
+      "sha256": "e2ceb4ab68f9fc342bec041c4edf58525ba969ccc425c805b73501af2648fcaa"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-win64/Dockerfile",
+      "size": 2395,
+      "sha256": "97c62779d0d36b11616deb194bf9803e1fc0301c35f69641f2e6bb3b7f38292c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-win64/toolchain.cmake",
+      "size": 576,
+      "sha256": "e27d0208c8ac1febb7a9fa6f10cd4d33da3dc132b0ca837e700d3d551054631f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-winarm64/cross.meson",
+      "size": 427,
+      "sha256": "6661cb84d9b4df6c5ede860a58e9aef18b8e8f902274d1fdcf774585e513ad66"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-winarm64/Dockerfile",
+      "size": 2234,
+      "sha256": "bcaf997445fbfb2cc851e84911e5374b089a0023896c16d4d4d25a0e042d8d74"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base-winarm64/toolchain.cmake",
+      "size": 597,
+      "sha256": "ccb4b6a8add5a42da44d3841f2f4f9ef420317116b45ba97422a2f68329aa799"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base/check-wget.sh",
+      "size": 203,
+      "sha256": "9ce6b9b05d755dad1d7e6f4268b24ba05f7bb0071735273da030ba78abf6f3a1"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base/Dockerfile",
+      "size": 1783,
+      "sha256": "7067a2f67eafd6fa004cab15ccc721f70e5d0359c122a46204f787bd3d665cb5"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base/git-mini-clone.sh",
+      "size": 248,
+      "sha256": "5c7c91c6d6e3a8d85d39a1630b92c5057b9db9fcc39cf9bd16b30d4c9e72bbe4"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/images/base/retry-tool.sh",
+      "size": 416,
+      "sha256": "1cdfc554c8d82f591599f10af68ab9ab49b3c9ef2c3ae99d799f956933413652"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/LICENSE",
+      "size": 1064,
+      "sha256": "c1b3cc7eec42bd9c4f6247169bb887b4a9bc904abfd2a7f7f9231ed357844993"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/makeimage.sh",
+      "size": 2126,
+      "sha256": "5cc80670ea413df9e8766fdc74795846837e6216b168fd7986e68f945d133995"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/patches/aom/0001-Fall-back-to-built-in-vmaf-model-on-load-failure.patch",
+      "size": 714,
+      "sha256": "c3b757903be9b98b52b23ac40f7c49dd562cd999b5151890d19dfaf82f40ddb0"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/patches/aribb24/12.patch",
+      "size": 1511,
+      "sha256": "9059639e9577b123ac4ab3b53771e947b791c42d07b0444cf90e82f563d6d261"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/patches/aribb24/13.patch",
+      "size": 713,
+      "sha256": "4812661f1c77ec06a5a12548f166ac8646d4c7c1574848a005f0578f3d8cfc7c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/patches/aribb24/17.patch",
+      "size": 6204,
+      "sha256": "1a4fc77f677a6ff87d024e3a218186160b23620c84dbd791ec5c425de0a8e6c2"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/README.md",
+      "size": 2759,
+      "sha256": "1ed4437797363166cb9d04b8342987bab307874e2ce238b78bee585d963d92e0"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/10-mingw-std-threads.sh",
+      "size": 354,
+      "sha256": "44b29b0a71465615b40deeb9cd853039234868699cf4c6b85453560aba8dc212"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/10-mingw.sh",
+      "size": 3294,
+      "sha256": "d0a2482b41bc08cfa53fb49bdffa8791f758f8274c35a8919fe3dbbd4fd9b129"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/10-xorg-macros.sh",
+      "size": 614,
+      "sha256": "b8d13d5052e4bbc0f810f5207160e6c7ceb8e42552563e49daab93ee3b93412c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/15-base.sh",
+      "size": 387,
+      "sha256": "2e418d514d75752ef44ad4e44ddb469e21037f752cf207b8c60d613c6834de47"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/20-libiconv.sh",
+      "size": 1352,
+      "sha256": "2174880df371a3f786816968f9c70477c6e8857c9604b48685e675c68aa3a051"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/20-zlib.sh",
+      "size": 454,
+      "sha256": "9b6a3b09efa9efdeadfd2f69643a9d4f8ac4f8d24e36f1d0d8d0b4b732e9d698"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-fftw3.sh",
+      "size": 1058,
+      "sha256": "fa0d8de058f9624d561b397040bad7b51288c6a2508a14133f53a63ffdff80f6"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-fribidi.sh",
+      "size": 893,
+      "sha256": "014f93d3b628ee7f17e6b2990fd66f0e118e90cd2c1cde7b1f2f82043147e7b0"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-gmp.sh",
+      "size": 743,
+      "sha256": "6064988ce64f9be6aa3594124002daef5aa1eb50f6fb68fcfd2dfb9d6450abcd"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-libogg.sh",
+      "size": 610,
+      "sha256": "f72086b3d86824174bacb8ee4fd4f966c9e13fd8a8242821f429252c77b6e585"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-libxml2.sh",
+      "size": 798,
+      "sha256": "79edab8ea2ccc2aab055915a746e7ce2a5d872bcd0d1cc5a46cf4c1dbcc3d813"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-openssl.sh",
+      "size": 2071,
+      "sha256": "59f0b2d66f0d861cc5c8f65eb38a2c61ceb8471a31e6a147066ae9c1b7263959"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-xz.sh",
+      "size": 831,
+      "sha256": "acb6dea1efe2b778b95e301a46924cc464b5908dda5bb1de7caee0f23377346c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-fonts/25-freetype.sh",
+      "size": 639,
+      "sha256": "2d42e8356024e0d35430442aeb7ad2dee4c1902f7af596486e63918bba2cd1e0"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-fonts/35-fontconfig.sh",
+      "size": 1182,
+      "sha256": "5bb93fa3394ebc4a1f4516c04dbaf0b0ad0a333d269c18b0988728344e7eb407"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-fonts/45-harfbuzz.sh",
+      "size": 1127,
+      "sha256": "b37b18f67df2651fa1bf972d71e59180b25031e0e1ad8168516cf3a51283fe97"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-fonts/50-freetype.sh",
+      "size": 814,
+      "sha256": "5e10e2794dc29518322812f826c707f5d8d9c1e416f985b2635a37af52c09a06"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-libsamplerate.sh",
+      "size": 519,
+      "sha256": "f680bcebdfc5daee48cf71a010423cc2eed0d5dbdbb7cc16e189a03e29b96a6f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-libudfread.sh",
+      "size": 879,
+      "sha256": "dc9d4aba892f310c5362f36aa090ff2a9b718352294ace1b20ea0109d51d332a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-libunibreak.sh",
+      "size": 626,
+      "sha256": "96f1088e584b8f87b022b0d1033bbebf7849a0aedd2c77fc5da17f0c6d9444f2"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-libvorbis.sh",
+      "size": 782,
+      "sha256": "751ee2589b4415996ef0d686d8a24ba1030774b5cc7e90b6be2b0acabcf39a25"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-opencl.sh",
+      "size": 1979,
+      "sha256": "a7c5ce0c8586123b74191b7ad41e0b741d1d66c63d28ce22f5d11a6fe676e030"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-pulseaudio.sh",
+      "size": 1737,
+      "sha256": "0ccb7dc40f11cd92053af805946638bb50e5ec9d0c50d6ec920f78b729b9bf25"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-vmaf.sh",
+      "size": 1373,
+      "sha256": "85c83089b536801713a581196a22afb657db10530147eabe66150c1632f57ef3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/10-xcbproto.sh",
+      "size": 588,
+      "sha256": "acfc9ca92025c4b3a138b7026143227be349335e5e3d0adfe1f09b67e06e554c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/10-xproto.sh",
+      "size": 589,
+      "sha256": "ddc9e2d89bec7265d08afb4846c3b445954ebfcc504a3c3aef353a4ac212f57a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/10-xtrans.sh",
+      "size": 728,
+      "sha256": "90b21283393378da3ae891abedb3367b405279f804b511abd1967c537f6a197e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/20-libxau.sh",
+      "size": 834,
+      "sha256": "35711e09e1711a5a147e2c83f3163f3f5b28a789f72bdc88d0562d432b43d55d"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/30-libxcb.sh",
+      "size": 1010,
+      "sha256": "929bdf28f47fe49be6b6e0429e5b60000bde0bfa0a2911a8b880e978b6f2869e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/40-libx11.sh",
+      "size": 1242,
+      "sha256": "7cc2fef32036afa0c64b385ec3cf0e7b76ca83ae24f0641e99724186d601bb27"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxext.sh",
+      "size": 1066,
+      "sha256": "b99117b5934efc61231e8eb4298b072a5a36e2ed99af0370b8d0300920d593a9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxfixes.sh",
+      "size": 846,
+      "sha256": "d4cadeaa3caced435694f8506752e6f09c085d5677c4aed33afdb689bdcd785f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxi.sh",
+      "size": 948,
+      "sha256": "ccde1b523cc0e1ea9a1378277bd1fec05df87a228d847dd337e0b0fcb11b0e9d"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxinerama.sh",
+      "size": 972,
+      "sha256": "50b65018ff7c762e097cb9411b5522c923a4ec371eb187bbc55d05962987d1fa"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxrender.sh",
+      "size": 968,
+      "sha256": "8fd4d2895753445e8d4d5398837e55f12bf44151ab0569c058bf3e3ecb52f78e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxscrnsaver.sh",
+      "size": 959,
+      "sha256": "aff9c32722d49eeaf15062e12ce7ed3b15d8732f5971e1e4eec392353a85868d"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxxf86vm.sh",
+      "size": 968,
+      "sha256": "43dab8f44d9ade6f43e80b25b9a1042bd6afd407afa2a808291e4c947ada958c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/60-libglvnd.sh",
+      "size": 803,
+      "sha256": "4dd4987080d63389f1615b5d9fd3971591e6baf33d4791c9bb1ad1e2dcfb25d7"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/60-libxcursor.sh",
+      "size": 850,
+      "sha256": "acffd389bd9e476701c3d93f9206980e2e2795a11a6b202567852eeefd02d9f3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/60-libxrandr.sh",
+      "size": 964,
+      "sha256": "2137d9292396cf231df6a0cc5e3e7d84f92d68b6cec1e09ac434ac0e3dd62d24"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/60-libxv.sh",
+      "size": 1114,
+      "sha256": "711e22ae3d59fe19f42f34d31787a865657e3d4ebbb477d0c4c6559737be44b1"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/99-finalize.sh",
+      "size": 511,
+      "sha256": "51d5311ee5a279db229b9044e5e21149b7aa2222904d6aaafff1d92bd4bf143e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/40-vulkan-headers.sh",
+      "size": 575,
+      "sha256": "a2a82a66245ca778abcb69344a6f795a141ea377b5558c29c563d922d309a802"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/45-vulkan-loader.sh",
+      "size": 892,
+      "sha256": "05e7e2a9ee6001db7419055fe7813229317908c9764c61885da6e6748e19fbd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/50-shaderc.sh",
+      "size": 2173,
+      "sha256": "af34a46aec5ea3557b908fa9c7447b87e2c0fc591ba56714301be79a3fa90046"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/55-spirv-cross.sh",
+      "size": 1482,
+      "sha256": "1f5fbf5bcf1d2d1117c9d7b29255631957ce99a74a8adf8503dcdc44fcd67fa8"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/60-spirv-headers.sh",
+      "size": 555,
+      "sha256": "c232f6be6f768ecf05a9abb34fc25213f4b8b5f6d18db123e61278a434c77f8d"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/99-enable.sh",
+      "size": 542,
+      "sha256": "cdd4ff0ef66e99ca076b4b12a63ea090b9cc88baae639980584c2032257e60ef"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-amf.sh",
+      "size": 474,
+      "sha256": "0895ee073f7839ed853f89e62ca039feb802b27a232951acd6f379d35a3e5412"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-aom.sh",
+      "size": 1183,
+      "sha256": "d7b7cb47ed538267d09c2c317bcd9064834c2dac4134f28ab77e7494e2db0e61"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-aribb24/25-libpng.sh",
+      "size": 726,
+      "sha256": "8d2efcd9ba0b3ed7c119464c4093b1d948b40d65c1bdf2acab025744a6f52f53"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-aribb24/50-libaribb24.sh",
+      "size": 1185,
+      "sha256": "8961ed928f6371abf22464d72200701204f295bf1c38694eb206cdb34cd30168"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-avisynth.sh",
+      "size": 708,
+      "sha256": "acaadedce36870100ed0e91e4899cf7c7a1e98a757db405c95a8f9de06892771"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-chromaprint.sh",
+      "size": 907,
+      "sha256": "a375daef1286cc309f1cdd0d41e6e29a148dcc1ab54ad01e2cbc04dbec33cf00"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-dav1d.sh",
+      "size": 824,
+      "sha256": "469388617bfcea7304227b3ceed883a42401ab08bc23f3dc4cee04a08670f346"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-davs2.sh",
+      "size": 1171,
+      "sha256": "dff0e5e8bf46f349f2ac92bb097122114c4e4c56b4b1b363891a1c81e154bb1e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-dvd/30-libdvdcss.sh",
+      "size": 1127,
+      "sha256": "404385b5b44d99a8d4596e49aa5ffa163d80d3dbfec65bee87d3bc32548ccde9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-dvd/40-libdvdread.sh",
+      "size": 1076,
+      "sha256": "8a41cab213aedf36e23ccc654affbf83cc5b9079a022672b87408d580b497471"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-dvd/50-libdvdnav.sh",
+      "size": 1187,
+      "sha256": "eb5faf7cb0f8e9b025c244f441a9e78de3e6391cafeae00514defecc547652c5"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-fdk-aac.sh",
+      "size": 799,
+      "sha256": "9694a8536bda8cdf3928543cac185a22628e09638f017be86cce365fc39ac918"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-ffnvcodec.sh",
+      "size": 1247,
+      "sha256": "a69969966ec64d8d056da84de85eb065fb5cea89f859881aa3abb7a4bb083434"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-frei0r.sh",
+      "size": 947,
+      "sha256": "36b75ea8b1bc1e4ea68849c2bd723582d550d2afe7343e50a446c647f5e78fbb"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-gme.sh",
+      "size": 598,
+      "sha256": "f45ce614eca30fc6898d91f3491dcbe24202ed3fb472aabdb4b52b4737e779bc"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-kvazaar.sh",
+      "size": 911,
+      "sha256": "b4e4b90840fbffd6226dd289166a4616ec95461e2e8898c468cb4c08f8e7e313"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lcevcdec.sh",
+      "size": 983,
+      "sha256": "2b3bd14abd844fe4d4e1482fb2705f9a05968dd522acd327f948bf3c5a2e978c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libaribcaption.sh",
+      "size": 1068,
+      "sha256": "f93ad5c5ee6dec1dc020d6f653b960f2f50606271fdc5cd1790d01af6385e861"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libass.sh",
+      "size": 1229,
+      "sha256": "fbfd384cbaefc67f0e7f55cf68ee5abb0b2e8549b6f8c5b3440db54e0994a71a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libbluray.sh",
+      "size": 1261,
+      "sha256": "3d686b3c0cf630694f623e0427ba49bc0d5bf382f7c3b5533ca0ae928505d4fa"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libcurl.sh",
+      "size": 1272,
+      "sha256": "f71933810aed249cabf72a52ce4c3f8dda34b3579e0de00e7fc83027debc04da"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libjxl/45-brotli.sh",
+      "size": 490,
+      "sha256": "1dc234f08ff9ca2279736bfbaa322a74b6dfb05e669447f3cc81d29dacde3d34"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libjxl/45-lcms2.sh",
+      "size": 708,
+      "sha256": "15a49ba92fd14dab003260141456bc4f15f32b5331b92fd6dd70870319e74c66"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libjxl/50-libjxl.sh",
+      "size": 2360,
+      "sha256": "d53f747559a5af189f5bd7d2b871cfa06acf318af0f9c1d5e3074767a0bbb58f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libmp3lame.sh",
+      "size": 1064,
+      "sha256": "16f38704ae3c9006818618c70e27676bda3ba9eb78af377218d7aff824c1eb20"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libopus.sh",
+      "size": 957,
+      "sha256": "2a261b7bb0649ad0de1b8340fee75cb3aa7b2586115849c0213341c035b15e5f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libplacebo.sh",
+      "size": 1462,
+      "sha256": "dab0c03af5044a497f06c2f573ecd141acfcceb4e66bfa83d4f99ace0c0cb8ea"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-librist/40-mbedtls.sh",
+      "size": 943,
+      "sha256": "bfc78b87f2d0d9de5f3f41683e8a90a79ad26d3b3335f0f444587fc5462d8995"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-librist/50-librist.sh",
+      "size": 1123,
+      "sha256": "81799c96bce30a120d742ced39f6b11ad81011912594ff9ee06c1bd9595929b4"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libssh.sh",
+      "size": 1381,
+      "sha256": "9cc8210c5127e9d42adcc83affdddb47f86771ba2dc4a26f0320e6cb74024a00"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libtheora.sh",
+      "size": 1000,
+      "sha256": "cd093a82eb271d465092c498567cdbef724dbf99165dda1fec0179ce5a60c089"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libvpx.sh",
+      "size": 1615,
+      "sha256": "0f6d46b7f8f368716f3d1ed68e872f3bb4de01155f67ab747aec44ab126eae7a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libwebp.sh",
+      "size": 1075,
+      "sha256": "bc15ce89c0c2b54f163768df00599fd833678bf66a3b04648cbe7e730f7526a2"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libzmq.sh",
+      "size": 1094,
+      "sha256": "d584c99e75a82e357444235de513dcbe04a24ef8f4d15b9b48375c987694825e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/96-lv2.sh",
+      "size": 689,
+      "sha256": "4863872ffd75697aaf8ee39ac79dce745c03289b15dcef2339cdf6e053c42f68"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/96-serd.sh",
+      "size": 692,
+      "sha256": "4ca11b9aedabf22b02b7aad35833c5693e93a88f80809d8846e3f89f3f11ae09"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/96-zix.sh",
+      "size": 725,
+      "sha256": "19dab6533fe42c691c4ac565b2ffab32ae50a11abc15eded3813759dfa7e8f64"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/97-sord.sh",
+      "size": 692,
+      "sha256": "099e9336d8d50b4885ead3f32746d7ed186ddca69cbdfda198bd16394ad2cc24"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/98-sratom.sh",
+      "size": 664,
+      "sha256": "70897a779e9a3a24998fa3a5ccaf4aeee21a551ed3be9e14acf00770b9d8bd1b"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/99-lilv.sh",
+      "size": 815,
+      "sha256": "a5f979baa7db886636461a7f3949e04ac7d1435a2a58a496ef61eba6ecf636e1"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-onevpl.sh",
+      "size": 1094,
+      "sha256": "c06518b6df63bc9c30dc6cf337f4cc41f82277f114ed9fd4f6ee3ceb2f75c5c4"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openal.sh",
+      "size": 951,
+      "sha256": "173129b371e6f3c61895d8fcfc9107d0c758f988f0206ea90a0304c58a342683"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openapv.sh",
+      "size": 1258,
+      "sha256": "79544520b552baaa92cfc21ea6bacbde91ca49a4aafe453350f876a3da8bc44c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-opencore-amr.sh",
+      "size": 892,
+      "sha256": "574666d18051057ca5bb5064e034332dfd0fc9d9575a41a17d7b079ff3154d00"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openh264.sh",
+      "size": 1255,
+      "sha256": "32b84b83c686d3cdd2092155032311b90f98c2c1f5ed1c4199ba0bb649eb69ef"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openjpeg.sh",
+      "size": 633,
+      "sha256": "e807e26e60c2a676ffc5f7b4d7fa4183a1fc9468ca94e8509559a746ad800bce"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openmpt.sh",
+      "size": 1721,
+      "sha256": "b17fbca158f9212facef102da7079a73e40b4cd448aa5029664e9b5b9743dd79"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-rav1e.sh",
+      "size": 1469,
+      "sha256": "ceebe7eea0b39ff3d0e6afd79b2d6450681ddf1daeef8da660fa2a2af136d072"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-rubberband.sh",
+      "size": 891,
+      "sha256": "0bded2e6f4daf32905622ae11ce2bdfbe6f290cc4abe4362236145739e3beb39"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-schannel.sh",
+      "size": 378,
+      "sha256": "1a815e5fd18665cd59ef40789cc24212c4663e6b09dac8a685272790b0ed2945"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-sdl.sh",
+      "size": 1987,
+      "sha256": "ad777572bdaad7e08978a9f626fd847f8e768ccef87bc639044a176ac485dc7b"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-snappy.sh",
+      "size": 694,
+      "sha256": "02cdc29bd7e2574e7aad84fb3e7fb6e6d50cb2fcde8b992096084644912babef"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-soxr.sh",
+      "size": 1097,
+      "sha256": "333ca3a3331c67fc9468ca81affdbae90385b138a9e91f5b3ad2122f42a8f0f9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-srt.sh",
+      "size": 783,
+      "sha256": "9e3af9fa1c49c21312727324893bfbdad58b005fca879e319a9bf89ed3425b30"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-svtav1.sh",
+      "size": 863,
+      "sha256": "571b0ecb5471455df4727e8cb2697dab63baddca2746d241540c467a4f3b317c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-twolame.sh",
+      "size": 1173,
+      "sha256": "ac47c5d2b47a0faf34bf2e032db75754c6d9ed6cce7c3f69f8ed64a7e95698d3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-uavs3d.sh",
+      "size": 893,
+      "sha256": "3cde849cac8a4fe08df4951840bd40c27592c82e665065f1b7fd506bef71868e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vaapi/30-libpciaccess.sh",
+      "size": 1007,
+      "sha256": "df855850411476c918313dfbfc3b88d9c4997d0e5b2af3b25545a2bc5f5b9dd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vaapi/40-libdrm.sh",
+      "size": 1255,
+      "sha256": "2cf67adbe4c3e0835701d0c2f432e2196348a53d621a4ef9647a2ab3d32b79a3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vaapi/50-libva.sh",
+      "size": 2375,
+      "sha256": "8b9e1626679d67ae6d3f5d1ac0d7f607d96c0a31aa546009530486876749b3e7"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vaapi/99-finalize.sh",
+      "size": 309,
+      "sha256": "f53ab88accece6bf1c3e43a1efb3e23cd01dfd4e7ea3e1b96eab277e9184802e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vidstab.sh",
+      "size": 898,
+      "sha256": "6150d07349969772256fc6306159c30e8cfaf03373b81f6acadf3a6507ee8875"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vvenc.sh",
+      "size": 1353,
+      "sha256": "6fe6648105b2c643cdf382b24f046711277c6b9928670ff98d2e288fa5877025"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-whisper.sh",
+      "size": 1650,
+      "sha256": "814aace92584ab787cc42e88d9a253c75c1bd6ad322f6ad50fb44331f202c85c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-x264.sh",
+      "size": 920,
+      "sha256": "37b598e715823c03347bd3ba782f829bf5e289c47cf350eae8042c2263dabfaa"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-x265.sh",
+      "size": 2107,
+      "sha256": "8f92d1890833b4eaa4cb62e106f21a897fd959ee5317aaa9162ae646321a23a6"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-xavs2.sh",
+      "size": 1474,
+      "sha256": "aec8c0ded25b8a6116e6cfddaec86591cca268b376554efd8bd44842c6e0fc80"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-xvid.sh",
+      "size": 1290,
+      "sha256": "8a932bc775b4dcf69c0c2d1818ced5076d4da13775b48adbc1712358c3f4a4ea"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-zimg.sh",
+      "size": 824,
+      "sha256": "ac8ee32fd1a9e243963dad6a8d4fd3b06a6d5f95098bab2d22074ae6c9614894"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-zvbi.sh",
+      "size": 979,
+      "sha256": "d845a8f342376529e6d964bea4626779731fcaaf285c1f05537734d512a1c2ee"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/99-rpath.sh",
+      "size": 495,
+      "sha256": "44d6b0f9a613bb319c027b734ed164229ce70bf698afbd09a9f837253c736327"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/scripts.d/zz-final.sh",
+      "size": 1481,
+      "sha256": "d6d5e8f42be90247bd5460df4f58edcb7e2cb5fa3622530f36e4124585949156"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/clean_cache.sh",
+      "size": 161,
+      "sha256": "6728b1a687e961aca9da54abc23b59ebdc34e01220f62a3438f258e0e00be87f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/dl_functions.sh",
+      "size": 140,
+      "sha256": "8a3e73feda582156646708b321f25f9dcb5934a7541b5fae588274e92c038dd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/get_dl_cache_tag.sh",
+      "size": 102,
+      "sha256": "3448b0a72a0bb4fe73dcb965800f4add42fe647e3008260a8018c4c2d9c50b63"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/prunetags.sh",
+      "size": 767,
+      "sha256": "ee7b9e3f2810a67be26155f7db54a05e9378ccf9a73bb1e754c5a66ab9042f82"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/repack_latest.sh",
+      "size": 1591,
+      "sha256": "89af372dfd78b64ed50c7a65952947686d20bf27cb8dfbcb0f0f5e728e9cba8c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/run_stage.sh",
+      "size": 1005,
+      "sha256": "24ddf31b052acdf234bb5866db202ead28250942af55d8ae2553dce869c6d079"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/update_scripts.sh",
+      "size": 3247,
+      "sha256": "6608230d8a6b68c7cbc38e5fd153dca0312d60afbc53603cac6bf5bc6457c777"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/update_wiki.sh",
+      "size": 893,
+      "sha256": "9f1e6b8eddccb142a4ab0864be8608f478f7ba0cf46a35edd28106e594e1821d"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/util/vars.sh",
+      "size": 2281,
+      "sha256": "c59a32026e25822fcbf12ea8ff9815078c7fbe83622b704298c09517553447ad"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/defaults-gpl-shared.sh",
+      "size": 113,
+      "sha256": "1f11174cb5b5bca9e7e679340736efa58d2c832370e3dddf7b373e8941356cb3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/defaults-gpl.sh",
+      "size": 153,
+      "sha256": "9d556f4a374127e584282c253ebee1eccd574caa86a74a84b10ff7f4ae42e6b4"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/defaults-lgpl-shared.sh",
+      "size": 114,
+      "sha256": "4c8c2514f03d5fd5c471449180a8d9a4a79501bf5de50e7579e17df18a6117f2"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/defaults-lgpl.sh",
+      "size": 141,
+      "sha256": "34fddfb560691429eb86d44d60a4957b5193b64371c12bc454ee5284f68a2366"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/dl-only.sh",
+      "size": 12,
+      "sha256": "b875f928546aee7855cb1db9afc8ab3f1a8a34d43de5bbd62f7076d7ba9f3917"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux-install-shared.sh",
+      "size": 732,
+      "sha256": "fc84e11b4869bc5e9b3b4a1dcbf9b7469ce368759318c9f1a9e116aa581b5e89"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux-install-static.sh",
+      "size": 331,
+      "sha256": "0dce12079fb7098e274243e0de484d8443c230ff742a9fd605ce9149bc4941f4"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux32-gpl-shared.sh",
+      "size": 129,
+      "sha256": "f9e8b47e31acd2b369e781d231845aecbb788968aff6608223a99806aa9ac7a9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux32-gpl.sh",
+      "size": 122,
+      "sha256": "73974e0d19be060b22ba95daeb5b33e2b05d3e9dc81d9dd33618a54dde4d1dd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux32-lgpl-shared.sh",
+      "size": 130,
+      "sha256": "9cbbcae8993953bdf7744ce623c3352030dca1abe40caf93fbf8376ee7c6515e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux32-lgpl.sh",
+      "size": 123,
+      "sha256": "ccdc1ef78245a346faa180e0b3ba0b939956b1497644e8c5646b54abfe36c007"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux32-nonfree-shared.sh",
+      "size": 115,
+      "sha256": "72978de4d8bd47c644eb3b05e51090f20f92ebdabdd33fe0d0f74c8b59cf481f"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux32-nonfree.sh",
+      "size": 124,
+      "sha256": "7d0685c3114605815f9346b41b1cff1149a2ed5533804f1f9451488ca635ef61"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux64-gpl-shared.sh",
+      "size": 129,
+      "sha256": "f9e8b47e31acd2b369e781d231845aecbb788968aff6608223a99806aa9ac7a9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux64-gpl.sh",
+      "size": 122,
+      "sha256": "73974e0d19be060b22ba95daeb5b33e2b05d3e9dc81d9dd33618a54dde4d1dd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux64-lgpl-shared.sh",
+      "size": 130,
+      "sha256": "9cbbcae8993953bdf7744ce623c3352030dca1abe40caf93fbf8376ee7c6515e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux64-lgpl.sh",
+      "size": 123,
+      "sha256": "ccdc1ef78245a346faa180e0b3ba0b939956b1497644e8c5646b54abfe36c007"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux64-nonfree-shared.sh",
+      "size": 115,
+      "sha256": "d0845d83fbfc4b1094161634ec47b79ba676dcf00c6e2212a0e27692f6f0c3c3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linux64-nonfree.sh",
+      "size": 124,
+      "sha256": "bb04e3e1898f6d8f9e1e050a73cf33081b8a77388959084542a9676bb8746f11"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxarm64-gpl-shared.sh",
+      "size": 129,
+      "sha256": "f9e8b47e31acd2b369e781d231845aecbb788968aff6608223a99806aa9ac7a9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxarm64-gpl.sh",
+      "size": 122,
+      "sha256": "73974e0d19be060b22ba95daeb5b33e2b05d3e9dc81d9dd33618a54dde4d1dd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxarm64-lgpl-shared.sh",
+      "size": 130,
+      "sha256": "9cbbcae8993953bdf7744ce623c3352030dca1abe40caf93fbf8376ee7c6515e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxarm64-lgpl.sh",
+      "size": 123,
+      "sha256": "ccdc1ef78245a346faa180e0b3ba0b939956b1497644e8c5646b54abfe36c007"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxarm64-nonfree-shared.sh",
+      "size": 118,
+      "sha256": "1409ccf31776e3c188f8110feef87f8c742fa4ed0c2f0b75b1db1943b4758ef5"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxarm64-nonfree.sh",
+      "size": 127,
+      "sha256": "28f61f5e7e344b9dab34ab0a5b980ed6c741fb64aea588bd40c964ec0c5f3f5e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxmips64-gpl-shared.sh",
+      "size": 129,
+      "sha256": "f9e8b47e31acd2b369e781d231845aecbb788968aff6608223a99806aa9ac7a9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxmips64-gpl.sh",
+      "size": 122,
+      "sha256": "73974e0d19be060b22ba95daeb5b33e2b05d3e9dc81d9dd33618a54dde4d1dd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxmips64-lgpl-shared.sh",
+      "size": 130,
+      "sha256": "9cbbcae8993953bdf7744ce623c3352030dca1abe40caf93fbf8376ee7c6515e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxmips64-lgpl.sh",
+      "size": 123,
+      "sha256": "ccdc1ef78245a346faa180e0b3ba0b939956b1497644e8c5646b54abfe36c007"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxmips64-nonfree-shared.sh",
+      "size": 119,
+      "sha256": "0d822cb8279645b50adca890dbf728e1983081674d21ac1bd7ab7108f723bedd"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxmips64-nonfree.sh",
+      "size": 128,
+      "sha256": "bb65e479d7b14a519be7c2527b252129e70ee80a1e8e194dc72234c4b40ea8fb"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxppc64-gpl-shared.sh",
+      "size": 129,
+      "sha256": "f9e8b47e31acd2b369e781d231845aecbb788968aff6608223a99806aa9ac7a9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxppc64-gpl.sh",
+      "size": 122,
+      "sha256": "73974e0d19be060b22ba95daeb5b33e2b05d3e9dc81d9dd33618a54dde4d1dd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxppc64-lgpl-shared.sh",
+      "size": 130,
+      "sha256": "9cbbcae8993953bdf7744ce623c3352030dca1abe40caf93fbf8376ee7c6515e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxppc64-lgpl.sh",
+      "size": 123,
+      "sha256": "ccdc1ef78245a346faa180e0b3ba0b939956b1497644e8c5646b54abfe36c007"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxppc64-nonfree-shared.sh",
+      "size": 118,
+      "sha256": "cf89fd5c816c148e86f82db6d65cd88371cbdf2f6433dc4bef2de6128a284885"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxppc64-nonfree.sh",
+      "size": 127,
+      "sha256": "a1af364504e84726341bdd72791f1294fe5c034eeb21b1243d71627acaa6c14c"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxriscv64-gpl-shared.sh",
+      "size": 129,
+      "sha256": "f9e8b47e31acd2b369e781d231845aecbb788968aff6608223a99806aa9ac7a9"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxriscv64-gpl.sh",
+      "size": 122,
+      "sha256": "73974e0d19be060b22ba95daeb5b33e2b05d3e9dc81d9dd33618a54dde4d1dd3"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxriscv64-lgpl-shared.sh",
+      "size": 130,
+      "sha256": "9cbbcae8993953bdf7744ce623c3352030dca1abe40caf93fbf8376ee7c6515e"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxriscv64-lgpl.sh",
+      "size": 123,
+      "sha256": "ccdc1ef78245a346faa180e0b3ba0b939956b1497644e8c5646b54abfe36c007"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxriscv64-nonfree-shared.sh",
+      "size": 120,
+      "sha256": "d13f8b1a02e88670fd62f0e782e755377ac959509cf4c7a412c68da66657c1b2"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/linuxriscv64-nonfree.sh",
+      "size": 129,
+      "sha256": "9d3bcfefeaa74702517412246c7031cb1cb08fc36ba4cf9a069ab00c061c84cd"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win32-gpl-shared.sh",
+      "size": 131,
+      "sha256": "90c20ef7c6042dde63a08142e374fb1d3d396a95f9d53db5804523c0e57b0318"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win32-gpl.sh",
+      "size": 124,
+      "sha256": "b3b08cc51488646050f68b723047054ee5e81cf2f209167ee6c646da6a51aeae"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win32-lgpl-shared.sh",
+      "size": 132,
+      "sha256": "80faac85f472f075c56f7d93f41b345bdafa13b4b8510d84f2db28926193408a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win32-lgpl.sh",
+      "size": 125,
+      "sha256": "40bbf3197a4e0f9c65117e8ec63e0ec56229faf0f4283ae90caf75a550f8f071"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win32-nonfree-shared.sh",
+      "size": 113,
+      "sha256": "b4c369af1ebdfaf76c7edb0a1278eeed6e3ea1fe0f3f04e09e8e09ee0743fb31"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win32-nonfree.sh",
+      "size": 122,
+      "sha256": "d36e410665a9268a903ab2e4a53e10e2caca9267886e464be73e7d84ebe78e9a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win64-gpl-shared.sh",
+      "size": 131,
+      "sha256": "90c20ef7c6042dde63a08142e374fb1d3d396a95f9d53db5804523c0e57b0318"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win64-gpl.sh",
+      "size": 124,
+      "sha256": "b3b08cc51488646050f68b723047054ee5e81cf2f209167ee6c646da6a51aeae"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win64-lgpl-shared.sh",
+      "size": 132,
+      "sha256": "80faac85f472f075c56f7d93f41b345bdafa13b4b8510d84f2db28926193408a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win64-lgpl.sh",
+      "size": 125,
+      "sha256": "40bbf3197a4e0f9c65117e8ec63e0ec56229faf0f4283ae90caf75a550f8f071"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win64-nonfree-shared.sh",
+      "size": 113,
+      "sha256": "a1928b82963f94fd5a5128b7a8d223fd4f6d550420cb6d8caebb08fbf05abe49"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/win64-nonfree.sh",
+      "size": 122,
+      "sha256": "5ee0457db457d95810f890edceecbecd95135c952cbcfa94f27b1fab4dbc6a6b"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/winarm64-gpl-shared.sh",
+      "size": 131,
+      "sha256": "90c20ef7c6042dde63a08142e374fb1d3d396a95f9d53db5804523c0e57b0318"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/winarm64-gpl.sh",
+      "size": 124,
+      "sha256": "b3b08cc51488646050f68b723047054ee5e81cf2f209167ee6c646da6a51aeae"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/winarm64-lgpl-shared.sh",
+      "size": 132,
+      "sha256": "80faac85f472f075c56f7d93f41b345bdafa13b4b8510d84f2db28926193408a"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/winarm64-lgpl.sh",
+      "size": 125,
+      "sha256": "40bbf3197a4e0f9c65117e8ec63e0ec56229faf0f4283ae90caf75a550f8f071"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/winarm64-nonfree-shared.sh",
+      "size": 113,
+      "sha256": "a1928b82963f94fd5a5128b7a8d223fd4f6d550420cb6d8caebb08fbf05abe49"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/winarm64-nonfree.sh",
+      "size": 122,
+      "sha256": "5ee0457db457d95810f890edceecbecd95135c952cbcfa94f27b1fab4dbc6a6b"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/windows-install-shared.sh",
+      "size": 717,
+      "sha256": "f3de60f635f5ac1bbcbdf7694664bc484ed90779aa5c13927c487b9f34907b41"
+    },
+    {
+      "path": "third_party_sources/ffmpeg/build-scripts/variants/windows-install-static.sh",
+      "size": 267,
+      "sha256": "1f955c9772e3b612706a0a43003462b737f3be4128e060a78cd592609e07865d"
+    }
+  ],
+  "blockers": [
+    "The BtbN linked-library source archives and nested submodules are not retained.",
+    "Some build-graph inputs use tags rather than content-addressed commits, and none of the linked dependency source archives are retained.",
+    "The exact container image digest/crosstool source closure and original build log are not retained.",
+    "A clean rebuild reproducing the conveyed ffmpeg/ffprobe bytes has not been completed."
+  ]
+}

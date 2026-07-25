@@ -1,0 +1,1458 @@
+{
+  "schema_version": 1,
+  "status": "HOLD",
+  "runtime": "CPython 3.12.9 / python-build-standalone 20250317 / Windows x64",
+  "all_declared_archives_present_and_verified": true,
+  "source_and_tool_records": [
+    {
+      "component": "CPython",
+      "version_or_commit": "3.12.9",
+      "role": "actual source",
+      "path": "third_party_sources/python-runtime/archives/Python-3.12.9.tar.xz",
+      "size": 20502440,
+      "expected_sha256": "7220835d9f90b37c006e9842a8dff4580aaca4318674f947302b8d28f3f81112",
+      "actual_sha256": "7220835d9f90b37c006e9842a8dff4580aaca4318674f947302b8d28f3f81112",
+      "verified": true
+    },
+    {
+      "component": "python-build-standalone recipes",
+      "version_or_commit": "7d8bb5e8cf054d88cbf505645257a25b8f46b286",
+      "role": "actual recipes/patches",
+      "path": "third_party_sources/python-runtime/archives/python-build-standalone-7d8bb5e8cf054d88cbf505645257a25b8f46b286.zip",
+      "size": 402456,
+      "expected_sha256": "0f2d76ea433930d72e94541b6edfecbf2a6d26fb811adc681be92f17d07ff4b4",
+      "actual_sha256": "0f2d76ea433930d72e94541b6edfecbf2a6d26fb811adc681be92f17d07ff4b4",
+      "verified": true
+    },
+    {
+      "component": "python-build-standalone binary input",
+      "version_or_commit": "20250317",
+      "role": "exact runtime asset",
+      "path": "third_party_sources/python-runtime/archives/cpython-3.12.9+20250317-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "size": 21175541,
+      "expected_sha256": "ee338839315bdd8af5fc935f9595eca20ebebdd250726c5816b2d0cf94d1e661",
+      "actual_sha256": "ee338839315bdd8af5fc935f9595eca20ebebdd250726c5816b2d0cf94d1e661",
+      "verified": true
+    },
+    {
+      "component": "libffi source",
+      "version_or_commit": "commit 16fad4855b3d8c03b5910e405ff3a04395b39a98 / libffi 3.4.2",
+      "role": "actual libffi source snapshot",
+      "path": "third_party_sources/python-runtime/archives/cpython-source-deps-16fad4855b3d8c03b5910e405ff3a04395b39a98.tar.gz",
+      "size": 1337195,
+      "expected_sha256": "f21ae7b0cce58cf9428e01d4d22aac9c3b70722a4e9b2c92b3a97d490a1b401c",
+      "actual_sha256": "f21ae7b0cce58cf9428e01d4d22aac9c3b70722a4e9b2c92b3a97d490a1b401c",
+      "verified": true
+    },
+    {
+      "component": "OpenSSL",
+      "version_or_commit": "3.0.16",
+      "role": "actual source",
+      "path": "third_party_sources/python-runtime/archives/openssl-3.0.16.tar.gz",
+      "size": 15334967,
+      "expected_sha256": "57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86",
+      "actual_sha256": "57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86",
+      "verified": true
+    },
+    {
+      "component": "SQLite",
+      "version_or_commit": "3.47.1",
+      "role": "actual source",
+      "path": "third_party_sources/python-runtime/archives/sqlite-autoconf-3470100.tar.gz",
+      "size": 3328564,
+      "expected_sha256": "416a6f45bf2cacd494b208fdee1beda509abda951d5f47bc4f2792126f01b452",
+      "actual_sha256": "416a6f45bf2cacd494b208fdee1beda509abda951d5f47bc4f2792126f01b452",
+      "verified": true
+    },
+    {
+      "component": "bzip2",
+      "version_or_commit": "1.0.8",
+      "role": "actual source",
+      "path": "third_party_sources/python-runtime/archives/bzip2-1.0.8.tar.gz",
+      "size": 810029,
+      "expected_sha256": "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269",
+      "actual_sha256": "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269",
+      "verified": true
+    },
+    {
+      "component": "XZ/liblzma",
+      "version_or_commit": "5.2.12",
+      "role": "actual PBS build source",
+      "path": "third_party_sources/python-runtime/archives/xz-5.2.12-pbs.tar.gz",
+      "size": 2190541,
+      "expected_sha256": "61bda930767dcb170a5328a895ec74cab0f5aac4558cdda561c83559db582a13",
+      "actual_sha256": "61bda930767dcb170a5328a895ec74cab0f5aac4558cdda561c83559db582a13",
+      "verified": true
+    },
+    {
+      "component": "zlib",
+      "version_or_commit": "1.3.1",
+      "role": "actual source",
+      "path": "third_party_sources/python-runtime/archives/zlib-1.3.1.tar.gz",
+      "size": 1512791,
+      "expected_sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "actual_sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23",
+      "verified": true
+    },
+    {
+      "component": "Unicode UCD",
+      "version_or_commit": "15.0.0",
+      "role": "generator/reference input",
+      "path": "third_party_sources/python-runtime/archives/UCD-15.0.0.zip",
+      "size": 7059105,
+      "expected_sha256": "5fbde400f3e687d25cc9b0a8d30d7619e76cb2f4c3e85ba9df8ec1312cb6718c",
+      "actual_sha256": "5fbde400f3e687d25cc9b0a8d30d7619e76cb2f4c3e85ba9df8ec1312cb6718c",
+      "verified": true
+    },
+    {
+      "component": "setuptools",
+      "version_or_commit": "83.0.0",
+      "role": "frozen package source; package closure tracked separately",
+      "path": "third_party_sources/python-runtime/archives/setuptools-83.0.0.tar.gz",
+      "size": 1154254,
+      "expected_sha256": "025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef",
+      "actual_sha256": "025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef",
+      "verified": true
+    },
+    {
+      "component": "Strawberry Perl build tool",
+      "version_or_commit": "5.38.2.2",
+      "role": "OpenSSL build tool binary",
+      "path": "third_party_sources/python-runtime/archives/strawberry-perl-5.38.2.2-64bit-portable.zip",
+      "size": 264199638,
+      "expected_sha256": "ea451686065d6338d7e4d4a04c9af49f17951d15aa4c2e19ab8cb56fa2373440",
+      "actual_sha256": "ea451686065d6338d7e4d4a04c9af49f17951d15aa4c2e19ab8cb56fa2373440",
+      "verified": true
+    },
+    {
+      "component": "NASM build tool",
+      "version_or_commit": "2.11.06",
+      "role": "OpenSSL build tool binary",
+      "path": "third_party_sources/python-runtime/archives/nasm-2.11.06-cpython-bin-deps.tar.gz",
+      "size": 384826,
+      "expected_sha256": "8af0ae5ceed63fa8a2ded611d44cc341027a91df22aaaa071efedc81437412a5",
+      "actual_sha256": "8af0ae5ceed63fa8a2ded611d44cc341027a91df22aaaa071efedc81437412a5",
+      "verified": true
+    },
+    {
+      "component": "jom build tool",
+      "version_or_commit": "1.1.4",
+      "role": "OpenSSL build tool binary",
+      "path": "third_party_sources/python-runtime/archives/jom_1_1_4.zip",
+      "size": 1696930,
+      "expected_sha256": "d533c1ef49214229681e90196ed2094691e8c4a0a0bef0b2c901debcb562682b",
+      "actual_sha256": "d533c1ef49214229681e90196ed2094691e8c4a0a0bef0b2c901debcb562682b",
+      "verified": true
+    }
+  ],
+  "supplemental_records": [
+    {
+      "role": "upstream checksum sidecar for the exact runtime asset",
+      "path": "third_party_sources/python-runtime/archives/cpython-3.12.9+20250317-x86_64-pc-windows-msvc-install_only_stripped.tar.gz.sha256",
+      "size": 65,
+      "expected_sha256": "7b2d7149b38b8b96f642ad5f024cd0a6eb587f026bc221ec284b2424c02ef159",
+      "actual_sha256": "7b2d7149b38b8b96f642ad5f024cd0a6eb587f026bc221ec284b2424c02ef159",
+      "verified": true
+    },
+    {
+      "role": "alternate archive of the retained recipe commit",
+      "path": "third_party_sources/python-runtime/archives/python-build-standalone-7d8bb5e8cf054d88cbf505645257a25b8f46b286.tar.gz",
+      "size": 304059,
+      "expected_sha256": "6c49ca1c047c2568b6a4d16add1a9982e2c75ece1ef598aa8cb13e85daa1dd85",
+      "actual_sha256": "6c49ca1c047c2568b6a4d16add1a9982e2c75ece1ef598aa8cb13e85daa1dd85",
+      "verified": true
+    },
+    {
+      "role": "supplemental upstream source; the actual runtime copy is vendored in CPython 3.12.9",
+      "path": "third_party_sources/python-runtime/archives/expat-2.6.4.tar.xz",
+      "size": 486732,
+      "expected_sha256": "a695629dae047055b37d50a0ff4776d1d45d0a4c842cf4ccee158441f55ff7ee",
+      "actual_sha256": "a695629dae047055b37d50a0ff4776d1d45d0a4c842cf4ccee158441f55ff7ee",
+      "verified": true
+    },
+    {
+      "role": "supplemental upstream release; PBS used xz-5.2.12-pbs.tar.gz",
+      "path": "third_party_sources/python-runtime/archives/xz-5.2.12.tar.xz",
+      "size": 1305412,
+      "expected_sha256": "f79a92b84101d19d76be833aecc93e68e56065b61ec737610964cd4f6c54ff2e",
+      "actual_sha256": "f79a92b84101d19d76be833aecc93e68e56065b61ec737610964cd4f6c54ff2e",
+      "verified": true
+    }
+  ],
+  "retained_file_manifest": [
+    {
+      "path": "third_party_sources/python-runtime/archives/bzip2-1.0.8.tar.gz",
+      "size": 810029,
+      "sha256": "ab5a03176ee106d3f0fa90e381da478ddae405918153cca248e682cd0c4a2269"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/cpython-3.12.9+20250317-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "size": 21175541,
+      "sha256": "ee338839315bdd8af5fc935f9595eca20ebebdd250726c5816b2d0cf94d1e661"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/cpython-3.12.9+20250317-x86_64-pc-windows-msvc-install_only_stripped.tar.gz.sha256",
+      "size": 65,
+      "sha256": "7b2d7149b38b8b96f642ad5f024cd0a6eb587f026bc221ec284b2424c02ef159"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/cpython-source-deps-16fad4855b3d8c03b5910e405ff3a04395b39a98.tar.gz",
+      "size": 1337195,
+      "sha256": "f21ae7b0cce58cf9428e01d4d22aac9c3b70722a4e9b2c92b3a97d490a1b401c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/expat-2.6.4.tar.xz",
+      "size": 486732,
+      "sha256": "a695629dae047055b37d50a0ff4776d1d45d0a4c842cf4ccee158441f55ff7ee"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/jom_1_1_4.zip",
+      "size": 1696930,
+      "sha256": "d533c1ef49214229681e90196ed2094691e8c4a0a0bef0b2c901debcb562682b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/nasm-2.11.06-cpython-bin-deps.tar.gz",
+      "size": 384826,
+      "sha256": "8af0ae5ceed63fa8a2ded611d44cc341027a91df22aaaa071efedc81437412a5"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/openssl-3.0.16.tar.gz",
+      "size": 15334967,
+      "sha256": "57e03c50feab5d31b152af2b764f10379aecd8ee92f16c985983ce4a99f7ef86"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/Python-3.12.9.tar.xz",
+      "size": 20502440,
+      "sha256": "7220835d9f90b37c006e9842a8dff4580aaca4318674f947302b8d28f3f81112"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/python-build-standalone-7d8bb5e8cf054d88cbf505645257a25b8f46b286.tar.gz",
+      "size": 304059,
+      "sha256": "6c49ca1c047c2568b6a4d16add1a9982e2c75ece1ef598aa8cb13e85daa1dd85"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/python-build-standalone-7d8bb5e8cf054d88cbf505645257a25b8f46b286.zip",
+      "size": 402456,
+      "sha256": "0f2d76ea433930d72e94541b6edfecbf2a6d26fb811adc681be92f17d07ff4b4"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/setuptools-83.0.0.tar.gz",
+      "size": 1154254,
+      "sha256": "025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/sqlite-autoconf-3470100.tar.gz",
+      "size": 3328564,
+      "sha256": "416a6f45bf2cacd494b208fdee1beda509abda951d5f47bc4f2792126f01b452"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/strawberry-perl-5.38.2.2-64bit-portable.zip",
+      "size": 264199638,
+      "sha256": "ea451686065d6338d7e4d4a04c9af49f17951d15aa4c2e19ab8cb56fa2373440"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/UCD-15.0.0.zip",
+      "size": 7059105,
+      "sha256": "5fbde400f3e687d25cc9b0a8d30d7619e76cb2f4c3e85ba9df8ec1312cb6718c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/xz-5.2.12-pbs.tar.gz",
+      "size": 2190541,
+      "sha256": "61bda930767dcb170a5328a895ec74cab0f5aac4558cdda561c83559db582a13"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/xz-5.2.12.tar.xz",
+      "size": 1305412,
+      "sha256": "f79a92b84101d19d76be833aecc93e68e56065b61ec737610964cd4f6c54ff2e"
+    },
+    {
+      "path": "third_party_sources/python-runtime/archives/zlib-1.3.1.tar.gz",
+      "size": 1512791,
+      "sha256": "9a93b2b7dfdac77ceba5a558a580e74667dd6fede4585b91eefb60f03b72df23"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE",
+      "size": 16725,
+      "sha256": "1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.bdb.txt",
+      "size": 7293,
+      "sha256": "3bdff06e69991c94664f2ef5c5f8096f60b7dbec071756ea6cc26b445e06ec5b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.bzip2.txt",
+      "size": 1743,
+      "sha256": "1f38bbc7caacafd65169276d759c0d88c991b753b643ce35d0e45ea1971dd441"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.cpython.txt",
+      "size": 36164,
+      "sha256": "86e61415828a8b5b06ec8d024e6f086ce155a8b85fd0c419c0ba4dc004e74fdd"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.expat.txt",
+      "size": 1144,
+      "sha256": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.libedit.txt",
+      "size": 1614,
+      "sha256": "29cea33c32bbc9785142386377915612a2fa786482c46843383384aded2e09b1"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.libffi.txt",
+      "size": 1132,
+      "sha256": "deaf3a42effb551a5b140fa9afefed183a27f1341c6d1bf430d106a5e6931fc0"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.liblzma.txt",
+      "size": 33,
+      "sha256": "828d5b508798d6a95c1c08ce5eee517a84ed1bda14eac58c440b6bce2c5cf1ca"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.libuuid.txt",
+      "size": 1432,
+      "sha256": "122ee1f7e258f2c3c0e538a75c037684f420454bf3850ddc74ce750bbf5fe86b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.libX11.txt",
+      "size": 47018,
+      "sha256": "2daec087a88e7c9b8082557cdeebad5bbb8155a4137472f0b22e269cd99d0c1e"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.libXau.txt",
+      "size": 1148,
+      "sha256": "56abe29bb1d9806a9e04fa9f80fed2c0f18027594df3f098148d814aef6bddfa"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.libxcb.txt",
+      "size": 1337,
+      "sha256": "c5ffbfeaa501071ceeb97b7de2c0d703fdaa35de01c0fb6cbac1c28453a3e9fd"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.mpdecimal.txt",
+      "size": 1284,
+      "sha256": "669512af7219f58be03a398766d7c9da11a3b3df9d3f05cb74c5ceca25c8da3b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.ncurses.txt",
+      "size": 1447,
+      "sha256": "87a4c4442337b8968ef956031c406b74f9cb7149b7ba87311bdaba534816201c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.openssl-1.1.txt",
+      "size": 6120,
+      "sha256": "9c04cce50c4989d5601dd8b07f6ab922c40388b66ac736c9007cb1ed9d9dd560"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.openssl-3.txt",
+      "size": 10175,
+      "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.sqlite.txt",
+      "size": 1481,
+      "sha256": "38bef3d28b24f145ea293bd3b6eb4b20396982abc8303128fb493986ea5bc719"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.tcl.txt",
+      "size": 2255,
+      "sha256": "c0a69a2bfd757361ec7e6143973b103c90409316b49e9c88db26ad6388e79f16"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.tix.txt",
+      "size": 2826,
+      "sha256": "3ac5cdd0bef6c43ce34c6a7ced452081d9e5a0bf94082b9f9147d23ec9e214f5"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/LICENSE.zlib.txt",
+      "size": 995,
+      "sha256": "818922b2620f12801a12bf78e399644a30990e66824abd8ca8ec24d451d6f92c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/licenses/python-licenses.rst",
+      "size": 105875,
+      "sha256": "e43fb936c6655d7996dba480d7ebdea492d6040ec388eb8ed9d1000f72de8cab"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.editorconfig",
+      "size": 67,
+      "sha256": "5824dd30a7a1a710c47d72e19ffac839a7a537b3156869d5e774f0c4e22962f0"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.github/FUNDING.yml",
+      "size": 19,
+      "sha256": "f7d95919d368cd34ef87a9b458d554ab80629eb1b0a7c9bea50b49e382237054"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.github/workflows/check.yml",
+      "size": 537,
+      "sha256": "02bc412c2912dd19774e5dab355e4602908e1cbab8d41648d119fa1d25b69025"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.github/workflows/linux.yml",
+      "size": 12228,
+      "sha256": "60783a21a3892988028c9efd4913fb42dfdc40d70a24c2598aec104243c5cad7"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.github/workflows/macos.yml",
+      "size": 5249,
+      "sha256": "14359eab2e70bf3216f6ad616abb3e18db242b11078ff27c575dcfede49ddc6a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.github/workflows/release.yml",
+      "size": 2979,
+      "sha256": "2ba7f29115386cb8841f85ad79ee68e35f443ed7d09f3bdd1ec6bd12f13ca7a4"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.github/workflows/windows.yml",
+      "size": 4980,
+      "sha256": "94a30278ed535a4a16972df0aec033de3439ddbc10f9e6d46d704ea3d956edb2"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.gitignore",
+      "size": 60,
+      "sha256": "a328a838ec32974e0fa5b5f15ed32aca50927f554774acc3f790dcff964626ce"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/.hgignore",
+      "size": 19,
+      "sha256": "fccf02622a2b697b75ae39e620068d12f0084ccc0a1286ab6110a0abaf87df6b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/build-linux.py",
+      "size": 1409,
+      "sha256": "5c047dc907d477efffc37c7a72ead33b99dbb4c192c05372f73f97694507528b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/build-macos.py",
+      "size": 1394,
+      "sha256": "7f2ce8a230d4dec589958195cecf40587ada3d67ba8192767d84eb9d53fb868d"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/build-windows.py",
+      "size": 1480,
+      "sha256": "1173a7d364944f137ce93ae6ab419c1ddfb3e5e1a2bd4206ce3e17a390aeb768"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/Cargo.lock",
+      "size": 78579,
+      "sha256": "e31064f23dc994a7ea9216b38c08f3e2ca267c18cee95dbf8be83f16b650559b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/Cargo.toml",
+      "size": 1015,
+      "sha256": "f352e0a29ddd3f274d1bb28d313280f958b8f26ec9c5c2bd0cc65115cfa351f3"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/check.py",
+      "size": 2120,
+      "sha256": "cee5928b9054265b9ea582b2b0effac14a2c08884c862526039925b1bcd0d4f6"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/ci-matrix.py",
+      "size": 8539,
+      "sha256": "14dc316338a158202efe689b8c9b0d007145ff77fff312223993fbf8c1717ba3"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/ci-runners.yaml",
+      "size": 594,
+      "sha256": "dacd4dff34d54ba3755c513e98040354f696e950cc517b5baebc9adc4cc0a4a1"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/ci-targets.yaml",
+      "size": 6738,
+      "sha256": "4e1d5f4e77110f0139e702fac84b0bb3e4e57f1d5bd9022359ff8f2e1b54dde8"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/CONTRIBUTING.rst",
+      "size": 1454,
+      "sha256": "f4fc0f0dca61756e936888286f8f4ff244a6279f4dd0eeba2782a4be97629765"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/base.Dockerfile",
+      "size": 1716,
+      "sha256": "edddcfad4cb03b40bf871db932c28dbab162c473b8d8120b52b4500833335575"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-autoconf.sh",
+      "size": 674,
+      "sha256": "79cb3f55ce11ceeb22c4f3a46eca9d2029c30790830148396dc028cf90d9916c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-bdb.sh",
+      "size": 1228,
+      "sha256": "8514f106cadf7b951562dbfd9a4d3a6efbb6e574e9883d993149a41d650189c6"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-binutils.sh",
+      "size": 860,
+      "sha256": "439b8201a7a76482d83037fa4c482fde37ca39d1c21627f166d07c9ed1243a9d"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-bzip2.sh",
+      "size": 696,
+      "sha256": "8f5aa137347b772c541828d8756f303e3b1b8c498291e4ba3657b0520f872a3f"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-cpython-host.sh",
+      "size": 3797,
+      "sha256": "7afb9e3e14a33f204cb17081e5e0f6432fb666af649aef50edc5ca2a637ee283"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-cpython.sh",
+      "size": 48418,
+      "sha256": "8a267af7dcb9514c5a9420272928840cd0ea87c14e03d31e432529a95ec236e5"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-expat.sh",
+      "size": 914,
+      "sha256": "9091ecd7ce98abcef6a00ee04069266f11f856f802228573aaaed8b16291bf11"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-inputproto.sh",
+      "size": 734,
+      "sha256": "1f7486e18557dbd2460902777ef9c5ae4db498c367af5562f71c9097072d60f7"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-kbproto.sh",
+      "size": 722,
+      "sha256": "96311825a52403c59a00bbdfe001e1fbd00799a2dc6a32fee7c3bc5cf8ae7ac2"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-libedit.sh",
+      "size": 3727,
+      "sha256": "c220a6b5a27f45cf6342d4f437d0813fe180c32c26e98b65dcf7225bc1e760c0"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-libffi-3.3.sh",
+      "size": 1001,
+      "sha256": "724638de3f3762ba9c775fcbe16d3458a8f51da73119e6acd9c3d1d61596be63"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-libffi.sh",
+      "size": 12460,
+      "sha256": "738a1a09cc5ab40569c557a22dd74d8f85dfcc9df3202be81a3a0a1d6b389871"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-libpthread-stubs.sh",
+      "size": 684,
+      "sha256": "2075a583d8f3f65c9333e9e494fdcab6ce4fea987a609251d290c5ea6be6c0ef"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-libX11.sh",
+      "size": 3993,
+      "sha256": "915849a96eaba6f8b04ff619959c51c032710a2b60db502c73c785b0df8f225c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-libXau.sh",
+      "size": 818,
+      "sha256": "5a1143bcb4d397e9c9f002dae57e0faf8c6e69ceac3f5f367c11b8c3ab9586b9"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-libxcb.sh",
+      "size": 819,
+      "sha256": "b251c72b67f4e27d896f059291c42adb3d5d08755adc8b19b25142e38645d100"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-m4.sh",
+      "size": 650,
+      "sha256": "5dfbd4b61148fb68db178986127648eb6462cdf90331783454df4761524ed798"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-main.py",
+      "size": 6811,
+      "sha256": "086f223de6c1ddd6f069c64bf2e65e4fd3ac0748616f842b2194f63e671b12ce"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-mpdecimal.sh",
+      "size": 689,
+      "sha256": "c4eb85df03f55a54285883eeba2c898880ffa96b9c6781347755ca974ce63a25"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-musl.sh",
+      "size": 2701,
+      "sha256": "ac9c15fd3961c81f4a18889cf2314fbf4d85423071bd324d238645eba48e1716"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-ncurses.sh",
+      "size": 4323,
+      "sha256": "21538810a50f46ab369ad80e1b80489ab0562f011f67f86c4bec5026957025f9"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-openssl-1.1.sh",
+      "size": 1364,
+      "sha256": "ab5a7f135cf0131f9540b33348b79c7219c91b33ab381996a9d464fc67c8aba9"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-openssl-3.0.sh",
+      "size": 1415,
+      "sha256": "e0d34abb45a40e21fab83d85d16fab320bdd6a8709c14a5257ea73758965c923"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-patchelf.sh",
+      "size": 1325,
+      "sha256": "f1a5f15c2cc9f79918a050f617b9de9bc4142da5e6142b6da3ea49dcf3dd96a0"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-sqlite.sh",
+      "size": 1114,
+      "sha256": "a165bfa5f8122b610400403024391e1b36f6d5431e6c51819f12800b1feaccd2"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-tcl.sh",
+      "size": 1919,
+      "sha256": "a23b2bdaf4694b92f6cdfb8c457504e4b9804471831063af8945f3cf8a4d48f0"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-tix.sh",
+      "size": 1746,
+      "sha256": "01d956810a5e8108bf39481b50c765209eb3fa5871b6888d86991311e0769b7e"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-tk.sh",
+      "size": 2192,
+      "sha256": "db1a3587765298e32e6356e5adc0943e1eed968a879cb90aeeac31fee9594ed5"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-uuid.sh",
+      "size": 801,
+      "sha256": "d5985717ab032218face3fdd1d8a463860390c4f32d2314cc35193eb2137e1da"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-x11-util-macros.sh",
+      "size": 661,
+      "sha256": "eac1ef11eda0459911cfa88155955d2d7bcef04cd911d4a79062a12fdba22aff"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-xcb-proto.sh",
+      "size": 730,
+      "sha256": "b39b1507dc65cad35f179e3fbfc3408d9ad4c20e51fd310e2686a8d9b3b53c8f"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-xextproto.sh",
+      "size": 1210,
+      "sha256": "5e11d4d60caa3c2bdd56173b5c3985107ee2f786a347416c2b5118e3094f5067"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-xorgproto.sh",
+      "size": 730,
+      "sha256": "0e0a56c9578a52df835aa93b081e30b24103ab8f635a3fd1e1f8da0728de5f0e"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-xproto.sh",
+      "size": 1224,
+      "sha256": "f5e38d980cfe317004fd195ae78a8d4e32a9b92e45cd7974ef06a05e48b081fa"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-xtrans.sh",
+      "size": 718,
+      "sha256": "40d7a798e42f869fee2a84330be7909d961f6d6e1dda4b43961dcfae1b00a0a9"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-xz.sh",
+      "size": 857,
+      "sha256": "34d36c5aaae850355c1bfb97bf3fcef9fa77a4166824bbb6dd39c99dcd79d6b6"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build-zlib.sh",
+      "size": 570,
+      "sha256": "541b8af2c4b616002abf8c5dce8544e8f0e369a7e5ddabfa29980dcd8e6a802d"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build.cross-riscv64.Dockerfile",
+      "size": 1768,
+      "sha256": "ed66bb4ea100a445b542d870157ad90bb84c6036248cbfc0318424c7b7380141"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build.cross.Dockerfile",
+      "size": 1871,
+      "sha256": "0a0798c36797b729bb82c8f4e4ef39aa9361215fca47cf1ff557731506648bf7"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build.Dockerfile",
+      "size": 645,
+      "sha256": "a6e06fa4815662f337c883804804ec7523a5134f66c64f1bae67ec57ce65ce62"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/build.py",
+      "size": 43061,
+      "sha256": "3a715b14a169ee60f97ef17c7ab57303ad24fbfeb9c6ba80a7d5c53abecc0b0e"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/extension-modules.yml",
+      "size": 19419,
+      "sha256": "d79a561ba7cddfdaf4bccb3b360546c0a248b48cd231b7580c016a38772b7ce3"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/gcc.Dockerfile",
+      "size": 277,
+      "sha256": "fc876a6bdcd6224f1ad8dd2554074635d2c305c206e3ee7fba08d386d0ddff1b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/Makefile",
+      "size": 12888,
+      "sha256": "e810d8cbc0ab7a3bb20530d9718c92e19424bbb845b3137b2077dd3ae7227a2b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-always-build-python-for-freeze.patch",
+      "size": 1571,
+      "sha256": "14d458d78fbee5d753e75f551f169c0c9d978c7fb9c21dd56aee5462536162df"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-apple-cross-3.12.patch",
+      "size": 2517,
+      "sha256": "207c7b1d5b62eea906a012ca63cfb158f5870033fec69d740beb4ec373f87312"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-apple-cross-3.13.patch",
+      "size": 2572,
+      "sha256": "39cd095a222aadf7abbc08e3a163886af1cd6e772ef3e25bf7ce5144cc7c2783"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-apple-cross.patch",
+      "size": 2517,
+      "sha256": "207c7b1d5b62eea906a012ca63cfb158f5870033fec69d740beb4ec373f87312"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-checksharedmods-disable.patch",
+      "size": 555,
+      "sha256": "4b90d87a1f0e4be4653df958586e16139bfc305443d15baf4416b21ff4026116"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-configure-bolt-apply-flags-128514.patch",
+      "size": 474,
+      "sha256": "17306608754e998eea19ad5b7037c8f4f7a8097b64048fe120d0fd9f4763d64d"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-configure-bolt-skip-funcs.patch",
+      "size": 662,
+      "sha256": "0fa3b7d5d8bf85f06fea2df3f87359e697d158228792d8d7837943a7a8219fd5"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-configure-crypt-no-modify-libs.patch",
+      "size": 697,
+      "sha256": "bc31dbfe59f5734bb53abeb44c419713c6052e0b55b8aff926395dfa8437cd5f"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-configure-disable-stdlib-mod-3.12.patch",
+      "size": 1418,
+      "sha256": "472fbe1af4456bd897dd0ba334fc93e37bde7784d161ac713a1ac1707aacc81d"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-configure-disable-stdlib-mod.patch",
+      "size": 1416,
+      "sha256": "bb49e657080c341bf6f29261b2a101a7c35fa89188f5e1d271b40f61568c2fe8"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-configure-remove-libtool-cruft.patch",
+      "size": 2147,
+      "sha256": "5d8900d5e3d7e601d22519a23a8a64b002a5a2edc15456788bc46cb852363862"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-cross-readelf.patch",
+      "size": 407,
+      "sha256": "0f51c3909f2ac9cc0a1dc16dd4785fb248948985279c8f6439382c9d92990f0f"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-ctypes-callproc-legacy.patch",
+      "size": 1308,
+      "sha256": "5da91339625a2f8665101197f45e321c45cd1fd71a8239ef5d3e57b4b7d809bc"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-ctypes-callproc.patch",
+      "size": 1556,
+      "sha256": "6145fab127d0d2b0df88e333b2b7931fd5615dbdf1ba07f385220cef3e68d84f"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-ctypes-static-binary.patch",
+      "size": 413,
+      "sha256": "f8b7ba955f428fa86dd1e6914098a491aa56ea6ba404004ab5aaeea9c5532a71"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-decimal-modern-mpdecimal.patch",
+      "size": 1006,
+      "sha256": "edc1be9b15985664fcb1095a70edcafd32a39bd720a86f4f9f2760d67fb0114d"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-disable-multiarch-13.patch",
+      "size": 580,
+      "sha256": "2a85da261e77736f49d8b505f9eeab0c26933a8dc1249bcd7b865549fca2faf7"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-disable-multiarch.patch",
+      "size": 415,
+      "sha256": "ab8564f30c3f46aa3b7c6ad1b60cd1fa202f2be4c97f38b160d1b8d62d268322"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-dont-clear-runshared-13.patch",
+      "size": 409,
+      "sha256": "0db4c6949c06de8dada5648add516c1601d5e4dc19fed949cdb04b91ceb27e7a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-dont-clear-runshared-14.patch",
+      "size": 379,
+      "sha256": "1a858404dbbe4dfbabf6bb85f117e5bd49f09f40926dfd067bc0b1c7bc1dc62c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-dont-clear-runshared-legacy.patch",
+      "size": 280,
+      "sha256": "dcdbfbc0b29f855c79b9d87afdb4dd3c465c4c1532a7d01a724248dea4f71ad7"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-dont-clear-runshared.patch",
+      "size": 343,
+      "sha256": "0352183b6efa1becb79b0d56bcbc51e70c01886577088cc7cdb3314b255d732a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-force-cross-compile.patch",
+      "size": 496,
+      "sha256": "bf7a1b06f9180b24d6307dc7e5bd69a0a42f55e77985ee4bb8af3b364859058a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-jit-llvm-version-3.13.patch",
+      "size": 309,
+      "sha256": "406b5dbb9ffb719dcadad7a2a3635acf4ce70447e6656db83d93cec4317476dc"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-jit-llvm-version-3.14.patch",
+      "size": 309,
+      "sha256": "671999647e90f33b074673b4746fd19fb80f4f5a7a3494b55bf442ac0b1869df"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-macos-link-extension-modules-13.patch",
+      "size": 869,
+      "sha256": "59fa0720f3270ba4320dc75f4749cfe04afd1ba6822c836451bb7b0da879ce6a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-macos-link-extension-modules.patch",
+      "size": 863,
+      "sha256": "029e923c31d22aede1ec3d44ab0beb002fedf95e5f93f31116a22a762ed851c4"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-make-testembed-nolink-tcltk.patch",
+      "size": 547,
+      "sha256": "06a3719547b269b3a7f1a6444d214ee70a6d1f582e2ca5f73b2f63d196584ff4"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-makesetup-deduplicate-objs.patch",
+      "size": 365,
+      "sha256": "24bef2d03c31c70f0801c56ed76abf471c539b518ddf7d6204f542ab78bed16d"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-pgo-make-targets.patch",
+      "size": 915,
+      "sha256": "b306c49d3945a487db85d9cb45e1fc00017fd3639e47a23ab5a878a2777e79c9"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-posixmodule-remove-system.patch",
+      "size": 467,
+      "sha256": "3e9a3f85119de7b389980ce58b232d2c6fb753b1a0e4a88e606bd601cf0462ac"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-pwd-remove-conditional.patch",
+      "size": 346,
+      "sha256": "5a73f3ffdf8b322a4cac243ce54eb608346688f970e3aacfb315c3d8691dc5c1"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-python-link-modules-3.10.patch",
+      "size": 676,
+      "sha256": "e2387ec4118e8399c3cadccefed9e0a972ff432ca85113363c3615cfdd59c48e"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-python-link-modules-3.11.patch",
+      "size": 740,
+      "sha256": "d1abc655c450f13efb87ef17f2ed8412f073ceeb10d4285a6ea73cee3e5b582b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-python-link-modules-3.9.patch",
+      "size": 712,
+      "sha256": "da538375c072335ef38707cb6e810622880cbdc442694a2b1467e45b3998defc"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-readline-libedit-completer-delims.patch",
+      "size": 2678,
+      "sha256": "fe25f6ba006d826ccc5be91d7e9a1b4d6806d5d7168333fe5302a0c4e8777710"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-readline-libedit-completions.patch",
+      "size": 1838,
+      "sha256": "e9e8fd54f37735db98eef3d908aeb5992ddac654414ad615f83085ed6a027012"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-readline-libedit.patch",
+      "size": 1862,
+      "sha256": "f77fe7337220dfd1b4212ed2e8bc597a70cf9f02fed9b1c4714d192443a4b9eb"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-test-embed-prevent-segfault.patch",
+      "size": 535,
+      "sha256": "6fa034508443068b4e38771cb6675deed35ffcaa88c123ab2c36ac6ea2eabb48"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-tkinter-3.10.patch",
+      "size": 3773,
+      "sha256": "7f7e74395d2880d6497eeb415dce26915fce2bff7a9219e2a18f494e31914d66"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-tkinter-3.11.patch",
+      "size": 4034,
+      "sha256": "2483169c3e31df4c2cdfb2f6438ebaf27db0165cdfbdb09a64ac601ddc6b783e"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-tkinter-3.12.patch",
+      "size": 4021,
+      "sha256": "0375c6353f6b6a1f59a9126aac126e58d987f4c2fb7fedf914038a945b94bc41"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-tkinter-3.13.patch",
+      "size": 4046,
+      "sha256": "0fcd703c69944750eee5a4053f4d17ec7c45a67ff58348fc630fbbfec8878a32"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-tkinter-3.9.patch",
+      "size": 3773,
+      "sha256": "1b7382bd7763a99194af8128a0eb067c4488e63b7424baebc029ff2f81a3cff2"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-write-python-for-build-3.12.patch",
+      "size": 551,
+      "sha256": "1a952cd98921343083d1a3811550abc76859c806907f8b81bee65a7a24ebc670"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-write-python-for-build.patch",
+      "size": 624,
+      "sha256": "0eb32444f1b769ad15da1c5f2e00ebfeb1b5ee6a6f80694d3163f33ef8bc5d08"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-xopen-source-ios-legacy.patch",
+      "size": 635,
+      "sha256": "24bc8506c36acb0aa9666f1e35be2efa5d00061f3754f70666e750d35c811c50"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/patch-xopen-source-ios.patch",
+      "size": 505,
+      "sha256": "0102f403d36af99baa19c77efeefb2ed72c32002d65f3bcf4bca7c82dac859c7"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/run_tests-13.py",
+      "size": 441,
+      "sha256": "dcdb3ab5002d5dd4a79c97d588cbf084a184756e7a4eeb5904d7a9e8211db1dc"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/rust.Dockerfile",
+      "size": 142,
+      "sha256": "27c7878272b8cbf1154d19d718f648b415d13fb281c3c9a2bf67915d941f4e6f"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/sccache-wrapper.sh",
+      "size": 1111,
+      "sha256": "8255dcb5313dcc0a67b5db38e793519f4ea2aa0020e2929eee3645e3384f168a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/targets.yml",
+      "size": 22900,
+      "sha256": "7a3f5e63f844f42ce8eebe2188be9be6124052bfb8c661d1ab7859c97c4884ca"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/xcb.cross-riscv64.Dockerfile",
+      "size": 80,
+      "sha256": "1b2a65cd7031e273335f50a7fa1ae8c3860351cb3089348f6b5f8f579d71177a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/xcb.cross.Dockerfile",
+      "size": 72,
+      "sha256": "26c23d9cb033bc70448095132594d7b341d59def3bd8fcfcc3f97ae9a67e8e63"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-unix/xcb.Dockerfile",
+      "size": 85,
+      "sha256": "44f90b7257415ef9c167a8ffb21eb450c3a88aa45840cca806b4b545d2107a74"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-windows/build.py",
+      "size": 59270,
+      "sha256": "e6cc94a6809f019cd64f3e26060e160d34523b52bc611a38039637863033ea92"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-windows/generate_metadata.py",
+      "size": 1822,
+      "sha256": "e2bacf1e778d9e98cf7dcab07ccfc7505387180ae1f6029c822298b87079639b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/cpython-windows/run_tests-13.py",
+      "size": 449,
+      "sha256": "67f381e836366cb7bd025c47a999a6107099ff6f874540bb99619da0b0fdd38d"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/building.rst",
+      "size": 5432,
+      "sha256": "0f6d61654e92684b1a420e0d87d4eb905042b1546fa7baa3986e9462a01ae6cd"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/conf.py",
+      "size": 289,
+      "sha256": "f924b095a1a7f7a40ecbe8bb31b6917a5cbdfa96f868c5416f26786cffb9cfb8"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/distributions.rst",
+      "size": 18594,
+      "sha256": "4c65668c85e38691a8746751b15136009eb051b4a32f85fd13d4aa9ff8a40e18"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/index.rst",
+      "size": 1758,
+      "sha256": "8a7c38a531ec10fadd44b6d5488b66a9331937b20aa6ce83611ae43af7a65b14"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/Makefile",
+      "size": 634,
+      "sha256": "8b6587b859607f200f116e2cb043fc358e1c3a26c326b563bf348453cfc68307"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/quirks.rst",
+      "size": 17492,
+      "sha256": "2c10c8df813e9923a1a2ea5f70de38f2fd0b16d1144229272b81749aecc7f505"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/running.rst",
+      "size": 11169,
+      "sha256": "86ea8d2ed46a2c4b2b0d1be76c83a3eb954eead850ef7a66c913aa0d9067fca3"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/status.rst",
+      "size": 12120,
+      "sha256": "d5150ddbcab49b5483e0f21ce8d49fdfbab3a15b08a34e9094b54d585d5cc53b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/docs/technotes.rst",
+      "size": 7498,
+      "sha256": "681d14e75d883f7bdcf5d577649532782b0cbbf8fabebfd0a2677eb364d5f916"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/Justfile",
+      "size": 3815,
+      "sha256": "f125114d074696e8b1a6f921d4ee4ab2507a762b1bdfd30512240e750f434db4"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE",
+      "size": 16725,
+      "sha256": "1f256ecad192880510e84ad60474eab7589218784b9a50bc7ceee34c2b91f1d5"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.bdb.txt",
+      "size": 7293,
+      "sha256": "3bdff06e69991c94664f2ef5c5f8096f60b7dbec071756ea6cc26b445e06ec5b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.bzip2.txt",
+      "size": 1743,
+      "sha256": "1f38bbc7caacafd65169276d759c0d88c991b753b643ce35d0e45ea1971dd441"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.cpython.txt",
+      "size": 36164,
+      "sha256": "86e61415828a8b5b06ec8d024e6f086ce155a8b85fd0c419c0ba4dc004e74fdd"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.expat.txt",
+      "size": 1144,
+      "sha256": "122f2c27000472a201d337b9b31f7eb2b52d091b02857061a8880371612d9534"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.libedit.txt",
+      "size": 1614,
+      "sha256": "29cea33c32bbc9785142386377915612a2fa786482c46843383384aded2e09b1"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.libffi.txt",
+      "size": 1132,
+      "sha256": "deaf3a42effb551a5b140fa9afefed183a27f1341c6d1bf430d106a5e6931fc0"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.liblzma.txt",
+      "size": 33,
+      "sha256": "828d5b508798d6a95c1c08ce5eee517a84ed1bda14eac58c440b6bce2c5cf1ca"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.libuuid.txt",
+      "size": 1432,
+      "sha256": "122ee1f7e258f2c3c0e538a75c037684f420454bf3850ddc74ce750bbf5fe86b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.libX11.txt",
+      "size": 47018,
+      "sha256": "2daec087a88e7c9b8082557cdeebad5bbb8155a4137472f0b22e269cd99d0c1e"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.libXau.txt",
+      "size": 1148,
+      "sha256": "56abe29bb1d9806a9e04fa9f80fed2c0f18027594df3f098148d814aef6bddfa"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.libxcb.txt",
+      "size": 1337,
+      "sha256": "c5ffbfeaa501071ceeb97b7de2c0d703fdaa35de01c0fb6cbac1c28453a3e9fd"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.mpdecimal.txt",
+      "size": 1284,
+      "sha256": "669512af7219f58be03a398766d7c9da11a3b3df9d3f05cb74c5ceca25c8da3b"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.ncurses.txt",
+      "size": 1447,
+      "sha256": "87a4c4442337b8968ef956031c406b74f9cb7149b7ba87311bdaba534816201c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.openssl-1.1.txt",
+      "size": 6120,
+      "sha256": "9c04cce50c4989d5601dd8b07f6ab922c40388b66ac736c9007cb1ed9d9dd560"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.openssl-3.txt",
+      "size": 10175,
+      "sha256": "7d5450cb2d142651b8afa315b5f238efc805dad827d91ba367d8516bc9d49e7a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.sqlite.txt",
+      "size": 1481,
+      "sha256": "38bef3d28b24f145ea293bd3b6eb4b20396982abc8303128fb493986ea5bc719"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.tcl.txt",
+      "size": 2255,
+      "sha256": "c0a69a2bfd757361ec7e6143973b103c90409316b49e9c88db26ad6388e79f16"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.tix.txt",
+      "size": 2826,
+      "sha256": "3ac5cdd0bef6c43ce34c6a7ced452081d9e5a0bf94082b9f9147d23ec9e214f5"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/LICENSE.zlib.txt",
+      "size": 995,
+      "sha256": "818922b2620f12801a12bf78e399644a30990e66824abd8ca8ec24d451d6f92c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/mypy.ini",
+      "size": 235,
+      "sha256": "3e36c7d0245af2ab5542ece220826044c343e7c676c3598384941a3ff02a95b0"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/python-licenses.rst",
+      "size": 105875,
+      "sha256": "e43fb936c6655d7996dba480d7ebdea492d6040ec388eb8ed9d1000f72de8cab"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/pythonbuild/__init__.py",
+      "size": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/pythonbuild/buildenv.py",
+      "size": 8267,
+      "sha256": "2e471f101c64fc9ca83cf1944cf98eff62efa38aff833dad8e92e5646c572bb0"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/pythonbuild/cpython.py",
+      "size": 23893,
+      "sha256": "95b609f8879bbae494e55deae905f332c17095f15c6836b630ede99725f16a80"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/pythonbuild/docker.py",
+      "size": 4790,
+      "sha256": "354d371235ad401ba828c2aeec0680e6ee9e5fcc31adac2117d8ebe30273a8a1"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/pythonbuild/downloads.py",
+      "size": 19589,
+      "sha256": "9010e9860bde40350961d712e7f19c7a3668f29a755706fcf09bbd41ce9657aa"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/pythonbuild/logging.py",
+      "size": 695,
+      "sha256": "861fb2f71ddc291ce50aff9a1ae4f78156ce79cb6c9efee94cf4a2027eaf5f75"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/pythonbuild/utils.py",
+      "size": 20247,
+      "sha256": "360735527915c38c58379c4624ae21cba9367fbd5810e8dc57c045cd113d4f8c"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/README.rst",
+      "size": 252,
+      "sha256": "241c0fae41cd18ae53032668904be3b5671a1852a45908299526096d7918faf6"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/requirements.dev.in",
+      "size": 74,
+      "sha256": "4d7d39b13dce15a59632e3b980a149f65e796211a056c825dc33b6e8d5713e86"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/requirements.dev.txt",
+      "size": 45575,
+      "sha256": "c77a66ca9ce4f99b773a279d390a59cbc989aa060da436e98f84630dee610468"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/requirements.in",
+      "size": 237,
+      "sha256": "853734198778e2763f38d2af63d80bb9fbfd70a71f25f1de3efbb00d7f3dc066"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/requirements.txt",
+      "size": 40053,
+      "sha256": "b350ecf7820812a263b68af351a736981d85fa07a4b741689a2f28b0f76df8af"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/requirements.win.txt",
+      "size": 34193,
+      "sha256": "a20239edd143345b68ce454b055a13925bef6d7ad5edac0d4fc02646b6724631"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/ruff.toml",
+      "size": 32,
+      "sha256": "34ee382f143293962b1038255b8ea53dfbd45aa419ff00228438c394b4d3b8e3"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/src/github.rs",
+      "size": 17537,
+      "sha256": "fd3a60cfe462065f9007f65271f5d554afa87b163c1ea2f806e3c9efbb0a6416"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/src/json.rs",
+      "size": 3762,
+      "sha256": "6a9cae8c7b0e9c5a12b54344cbf8aeb31b0594fdd8644483ac7ef195ab4dc886"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/src/macho.rs",
+      "size": 15952,
+      "sha256": "eb0050a042f2aeb67bc0c33836e9052fadb2c7ac79cef167d4281bd8d15f5159"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/src/main.rs",
+      "size": 8226,
+      "sha256": "4074748fdf0aabdeb2d8654e851c9c216e93fb42a82d89756c64e79b8675e921"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/src/release.rs",
+      "size": 21783,
+      "sha256": "2b23db5469b3c69588ea061e4bcb0666f53c1fbff3970e10a72d694ffdb22b16"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/src/validation.rs",
+      "size": 73460,
+      "sha256": "f993ab5e39f0e9fd5e3704a5089649a4d2d821b7073fa6956233fa15d199b44a"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/src/verify_distribution.py",
+      "size": 5422,
+      "sha256": "b13bf2481106fe4cfc17245c366167bbb72b9418d7da2eeec1b80c540d7319e6"
+    },
+    {
+      "path": "third_party_sources/python-runtime/python-build-standalone-recipes/test-distribution.py",
+      "size": 1306,
+      "sha256": "d22c88430bffb4fe5efde11094d68e9950311676cff7e8967c3287abcd203373"
+    }
+  ],
+  "binary_records": [
+    {
+      "path": "_asyncio.pyd",
+      "size": 59392,
+      "sha256": "50bd131291858692d51935caa3fdd3849931cd794e84850dc5d017855766143e",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "_bz2.pyd",
+      "size": 73216,
+      "sha256": "c464b6c94e123e3ec32b893093d162ef4edc3ee1dcecdb28e73c84b5a30c9d7d",
+      "component": "CPython 3.12.9 + bzip2 1.0.8",
+      "pe_file_version": null
+    },
+    {
+      "path": "_ctypes.pyd",
+      "size": 116224,
+      "sha256": "6968228b18fc86b0b02f3dbf2c879c2c6f689a66130a72f35a3f0b2755d99e41",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "_decimal.pyd",
+      "size": 244736,
+      "sha256": "3f5057579bc3c859bd07d237c2f86248092cfda3eb044b4ba2625530146def2a",
+      "component": "CPython 3.12.9 + mpdecimal 2.5.1",
+      "pe_file_version": null
+    },
+    {
+      "path": "_elementtree.pyd",
+      "size": 121856,
+      "sha256": "cd0d716a10545c22b0fc4757ca6bbe1fb3d9a916d9b7a23b61727d0286c7dde7",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "_hashlib.pyd",
+      "size": 54272,
+      "sha256": "20286c64126a874a57968c8cfd483bedd907b9133bac56d9c64fa2407892c2df",
+      "component": "CPython 3.12.9 + OpenSSL 3.0.16",
+      "pe_file_version": null
+    },
+    {
+      "path": "_lzma.pyd",
+      "size": 147968,
+      "sha256": "e335d7f6c588524dd92069c9d2554ae45cb0e6da5f1a0458c6f42bd7a0c44dfc",
+      "component": "CPython 3.12.9 + XZ Utils/liblzma 5.2.12",
+      "pe_file_version": null
+    },
+    {
+      "path": "_multiprocessing.pyd",
+      "size": 24064,
+      "sha256": "5aedf510e8a5dd3756e09407eecf801e6ea1d454a51a9ad3b0af18e44ffa7fe4",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "_overlapped.pyd",
+      "size": 44032,
+      "sha256": "475577388258fd9e96b7c7da0176785e69a06bcabd1ae198b9ab684da57e4865",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "_queue.pyd",
+      "size": 20992,
+      "sha256": "ae122b8a31257116e2fe93a7e8f21b5b7a68fa66e7a5620abf0ec27669f4ee6d",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "_socket.pyd",
+      "size": 71680,
+      "sha256": "a4fe6b67451a47d65333060bf24654a2371819cff0c558b99dad95a9ed33d4b8",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "_sqlite3.pyd",
+      "size": 112128,
+      "sha256": "a15942f2af97b987b6b64de80828362b27344648d2a53a4739e1baf6f20e3df9",
+      "component": "CPython 3.12.9 + SQLite 3.47.1",
+      "pe_file_version": null
+    },
+    {
+      "path": "_ssl.pyd",
+      "size": 166400,
+      "sha256": "f6ccf5deb18e5046f553fb167281e509f536faa5c6b019c7d4019ef0514358c3",
+      "component": "CPython 3.12.9 + OpenSSL 3.0.16",
+      "pe_file_version": null
+    },
+    {
+      "path": "_uuid.pyd",
+      "size": 13824,
+      "sha256": "c219a8ccfefc5b3ccf402c1d6800c2cf46203e97bf744602f3bf57684fa1858c",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "_wmi.pyd",
+      "size": 26112,
+      "sha256": "7e6da91e0445ee7f2c98bbc5a2aec4b9ad568231f07381e49e5ea87ff26d3919",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "libcrypto-3-x64.dll",
+      "size": 5932032,
+      "sha256": "1d54af6f7434a9e3be42acc1f192b0c66926582fb07ef7bb6b41226df7e73acd",
+      "component": "OpenSSL 3.0.16 (CPython standalone runtime)",
+      "pe_file_version": null
+    },
+    {
+      "path": "libffi-8.dll",
+      "size": 27648,
+      "sha256": "d1682615247e165ba8aa0cff59e090a0b1b6b90793e48733f441dff8d8e6328e",
+      "component": "libffi 3.4.2",
+      "pe_file_version": null
+    },
+    {
+      "path": "libssl-3-x64.dll",
+      "size": 936448,
+      "sha256": "4cde268f01a6f81c989de12f2b20b3548deee452674123ad00da0aa0e31ecbd0",
+      "component": "OpenSSL 3.0.16 (CPython standalone runtime)",
+      "pe_file_version": null
+    },
+    {
+      "path": "pyexpat.pyd",
+      "size": 190464,
+      "sha256": "9d09acbd76537a9842b4f10acdd897fcdeb333505d4f104a8180fa74963a588a",
+      "component": "CPython 3.12.9 + Expat 2.6.4",
+      "pe_file_version": null
+    },
+    {
+      "path": "python3.dll",
+      "size": 56320,
+      "sha256": "37b361cee2f40e922801986d7f750169b5ae95c9a2cf37ad899a690b4788754d",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "python312.dll",
+      "size": 6954496,
+      "sha256": "3cad6885f126d08ce38b2999fb127292a0399a3fa69bba65ca0bc2964c6c6168",
+      "component": "CPython 3.12.9 + zlib/HACL*/BLAKE2 runtime code",
+      "pe_file_version": null
+    },
+    {
+      "path": "select.pyd",
+      "size": 18944,
+      "sha256": "5a28b7d60be8f64f7b8af6e68d6d465671a3f9fc4a672ebb5809d57766566fe0",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    },
+    {
+      "path": "sqlite3.dll",
+      "size": 1558528,
+      "sha256": "f62eb83c9dfcfb17fc2e58534fcc0b7536affb40b269ab46d6cb5cd67c6ba9f5",
+      "component": "SQLite 3.47.1 (CPython standalone runtime)",
+      "pe_file_version": null
+    },
+    {
+      "path": "unicodedata.pyd",
+      "size": 1126400,
+      "sha256": "f96337dd3f56a0ab4f904e31452a5c05fb0119632463f107fe57d4867f620067",
+      "component": "CPython 3.12.9",
+      "pe_file_version": null
+    }
+  ],
+  "vendored_in_cpython_source": [
+    {
+      "component": "Expat",
+      "version": "2.6.4",
+      "path": "Python-3.12.9/Modules/expat"
+    },
+    {
+      "component": "mpdecimal",
+      "version": "2.5.1",
+      "path": "Python-3.12.9/Modules/_decimal/libmpdec"
+    },
+    {
+      "component": "HACL*",
+      "version": "bb3d0dc8d9d15a5cd51094d5b69e70aa09005ff0",
+      "path": "Python-3.12.9/Modules/_hacl"
+    },
+    {
+      "component": "BLAKE2 reference-derived code",
+      "version": "CPython 3.12.9 snapshot",
+      "path": "Python-3.12.9/Modules/_blake2"
+    }
+  ],
+  "modifications": "Upstream PBS recipe/patch set retained; no Neural Extractor patch to CPython or its native dependencies is declared.",
+  "blockers": [
+    "The exact Visual Studio 2022 point version, Windows SDK selection, buildhost image and original PBS release build log are not retained.",
+    "The libffi archive is a commit snapshot; the upstream recipe used a Git branch checkout and exact repository metadata is not reproduced without Git.",
+    "A clean CPython/PBS rebuild matching every conveyed native hash has not been completed.",
+    "Microsoft runtime redistribution entitlement remains separately HOLD."
+  ]
+}

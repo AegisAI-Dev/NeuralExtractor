@@ -1,4 +1,4 @@
-"""Professional PyQt6 interface for Neural Extractor V3."""
+"""Professional PySide6 interface for Neural Extractor V3."""
 
 from __future__ import annotations
 
@@ -9,9 +9,9 @@ from datetime import datetime
 from pathlib import Path
 from threading import Event, Lock
 
-from PyQt6.QtCore import QPoint, QRect, QSettings, Qt, QThread, QTimer, QUrl, pyqtSignal
-from PyQt6.QtGui import QColor, QDesktopServices, QIcon, QPixmap
-from PyQt6.QtWidgets import (
+from PySide6.QtCore import QPoint, QRect, QSettings, Qt, QThread, QTimer, QUrl, Signal, Slot
+from PySide6.QtGui import QColor, QDesktopServices, QIcon, QPixmap
+from PySide6.QtWidgets import (
     QApplication,
     QButtonGroup,
     QCheckBox,
@@ -48,12 +48,17 @@ from neural_extractor_v3.config import (
     SUBTITLE_LANGUAGES,
     VERSION,
     assets_dir,
+    base_dir,
 )
 from neural_extractor_v3.core.diagnostics import run_support_diagnostics
 from neural_extractor_v3.core.downloader import DownloadEngine
 from neural_extractor_v3.core.js_runtime import (
     MISSING_JS_RUNTIME_MESSAGE,
     ensure_youtube_js_runtime,
+)
+from neural_extractor_v3.core.pot_provider import (
+    PoTokenProviderStatus,
+    get_po_token_provider,
 )
 from neural_extractor_v3.core.update_installer import (
     PreparedUpdate,
@@ -68,6 +73,7 @@ from neural_extractor_v3.core.updater import (
     UpdateInfo,
 )
 from neural_extractor_v3.core.youtube_connection import (
+    ACTIVE_PROVIDER_KEY,
     ConnectionState,
     ManagedBrowser,
     YouTubeConnectionManager,
@@ -136,11 +142,11 @@ def _status_color(status: str) -> QColor:
 class DownloadWorker(QThread):
     """Run queued downloads without blocking the Qt event loop."""
 
-    progress = pyqtSignal(str, int, str, str)
-    job_started = pyqtSignal(str, str)
-    job_finished = pyqtSignal(str, bool, str, str)
-    log = pyqtSignal(str)
-    batch_finished = pyqtSignal()
+    progress = Signal(str, int, str, str)
+    job_started = Signal(str, str)
+    job_finished = Signal(str, bool, str, str)
+    log = Signal(str)
+    batch_finished = Signal()
 
     def __init__(self, jobs: list[DownloadJob], options: DownloadOptions) -> None:
         super().__init__()
@@ -271,9 +277,9 @@ class DownloadWorker(QThread):
 class UpdateCheckWorker(QThread):
     """Check GitHub releases without blocking the UI."""
 
-    update_available = pyqtSignal(object)
-    up_to_date = pyqtSignal()
-    error = pyqtSignal(str, str)
+    update_available = Signal(object)
+    up_to_date = Signal()
+    error = Signal(str, str)
 
     def __init__(self, current_version: str) -> None:
         super().__init__()
@@ -301,11 +307,11 @@ class UpdateCheckWorker(QThread):
 class UpdateInstallWorker(QThread):
     """Download, verify, and launch the detached updater without blocking Qt."""
 
-    progress = pyqtSignal(int, str)
-    prepared = pyqtSignal(object)
-    error = pyqtSignal(str, str)
-    cancelled = pyqtSignal()
-    cancellation_locked = pyqtSignal()
+    progress = Signal(int, str)
+    prepared = Signal(object)
+    error = Signal(str, str)
+    cancelled = Signal()
+    cancellation_locked = Signal()
 
     def __init__(self, info: UpdateInfo) -> None:
         super().__init__()
@@ -384,8 +390,8 @@ class UpdateInstallWorker(QThread):
 class DiagnosticsWorker(QThread):
     """Run support diagnostics without blocking the Qt event loop."""
 
-    line = pyqtSignal(str)
-    error = pyqtSignal(str)
+    line = Signal(str)
+    error = Signal(str)
 
     def __init__(self, options: DownloadOptions, probe_url: str | None) -> None:
         super().__init__()
@@ -401,6 +407,23 @@ class DiagnosticsWorker(QThread):
 
         for line in report.lines():
             self.line.emit(line)
+
+
+class OptionalPoHelperStatusWorker(QThread):
+    """Check the separately installed helper without blocking the GUI thread."""
+
+    status_ready = Signal(object)
+    unavailable = Signal()
+
+    def run(self) -> None:
+        try:
+            status = get_po_token_provider().refresh_status()
+        except Exception:
+            # The helper boundary may carry token material. Never forward an
+            # external exception string into the UI or application log.
+            self.unavailable.emit()
+            return
+        self.status_ready.emit(status)
 
 
 class MainWindow(QMainWindow):
@@ -431,6 +454,7 @@ class MainWindow(QMainWindow):
         self.update_progress_dialog: QProgressDialog | None = None
         self.update_install_outcome = ""
         self.diagnostics_worker: DiagnosticsWorker | None = None
+        self.po_helper_status_worker: OptionalPoHelperStatusWorker | None = None
         self._auth_waiting_job_ids: set[str] = set()
         self._auth_resume_job_ids: set[str] = set()
         self._auth_retry_counts: dict[str, int] = {}
@@ -461,6 +485,7 @@ class MainWindow(QMainWindow):
         if not self.js_runtime_status.found:
             QTimer.singleShot(500, self._show_js_runtime_warning)
         self.statusBar().showMessage("Ready")
+        QTimer.singleShot(0, self.refresh_optional_po_helper_status)
         QTimer.singleShot(1800, lambda: self.check_for_updates(silent=True))
 
     def _set_app_icon(self) -> None:
@@ -1184,6 +1209,31 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.youtube_profile_label)
         layout.addWidget(self.connection_button_grid)
 
+        self.optional_po_helper_status = QLabel(
+            "Status: Checking separately installed optional helper..."
+        )
+        self.optional_po_helper_status.setWordWrap(True)
+        self.optional_po_helper_status.setObjectName("hintLabel")
+        self.optional_po_helper_refresh_button = QPushButton("Refresh helper status")
+        self.optional_po_helper_refresh_button.clicked.connect(
+            self.refresh_optional_po_helper_status
+        )
+        self.optional_po_helper_instructions_button = QPushButton(
+            "Open installation instructions"
+        )
+        self.optional_po_helper_instructions_button.clicked.connect(
+            self.open_optional_po_helper_instructions
+        )
+        po_helper_row = QHBoxLayout()
+        po_helper_row.setSpacing(8)
+        po_helper_row.addWidget(self.optional_po_helper_refresh_button)
+        po_helper_row.addWidget(self.optional_po_helper_instructions_button)
+        po_helper_row.addStretch(1)
+        layout.addWidget(
+            self._labeled("OPTIONAL PO TOKEN HELPER", self.optional_po_helper_status)
+        )
+        layout.addWidget(self._row_widget(po_helper_row))
+
         self.cookie_edit = QLineEdit(str(self.cookie_file) if self.cookie_file else "")
         self.cookie_edit.setPlaceholderText("No cookies file loaded")
         self.cookie_edit.setReadOnly(True)
@@ -1393,6 +1443,7 @@ class MainWindow(QMainWindow):
             self.youtube_disconnect_button,
             self.youtube_firefox_button,
             self.youtube_firefox_disconnect_button,
+            self.optional_po_helper_refresh_button,
             self.legacy_browser_check,
             self.browse_cookie_button,
             self.clear_cookie_button,
@@ -1610,7 +1661,7 @@ class MainWindow(QMainWindow):
             return
         for connection in self.youtube_connections.values():
             connection.refresh_browser_state()
-        manager = self._connected_connection_manager() or self.youtube_connection
+        manager = self._active_connection_manager() or self.youtube_connection
         snapshot = manager.snapshot()
         browser_open = next(
             (
@@ -1667,11 +1718,109 @@ class MainWindow(QMainWindow):
             firefox.profile_path.exists() and not queue_running
         )
 
+    def refresh_optional_po_helper_status(self) -> None:
+        """Refresh helper state asynchronously; absence never disables downloads."""
+        worker = self.po_helper_status_worker
+        if worker is not None and worker.isRunning():
+            return
+        self.optional_po_helper_status.setText(
+            "Status: Checking separately installed optional helper..."
+        )
+        self.optional_po_helper_refresh_button.setEnabled(False)
+        worker = OptionalPoHelperStatusWorker()
+        self.po_helper_status_worker = worker
+        worker.status_ready.connect(self._on_optional_po_helper_status)
+        worker.unavailable.connect(self._on_optional_po_helper_status_error)
+        worker.finished.connect(self._on_optional_po_helper_status_finished)
+        worker.finished.connect(worker.deleteLater)
+        worker.start()
+
+    @Slot(object)
+    def _on_optional_po_helper_status(self, status: object) -> None:
+        if not isinstance(status, PoTokenProviderStatus):
+            self._on_optional_po_helper_status_error()
+            return
+        if status.available and status.integrity_verified:
+            text = (
+                "Status: Installed separately and integrity verified - "
+                f"helper {status.helper_version} / provider {status.version} / "
+                f"protocol v{status.protocol_version}"
+            )
+        elif not status.installed:
+            text = (
+                "Status: Not installed (optional) - Normal downloads remain available. "
+                "Installation is always manual."
+            )
+        else:
+            text = f"Status: Unavailable - {status.diagnostic}"
+        self.optional_po_helper_status.setText(text)
+
+    @Slot()
+    def _on_optional_po_helper_status_error(self) -> None:
+        self.optional_po_helper_status.setText(
+            "Status: Unavailable - Normal downloads remain available."
+        )
+
+    @Slot()
+    def _on_optional_po_helper_status_finished(self) -> None:
+        self.optional_po_helper_refresh_button.setEnabled(True)
+        self.po_helper_status_worker = None
+
+    def open_optional_po_helper_instructions(self) -> None:
+        """Open only the packaged, first-party manual installation guide."""
+        instructions = base_dir() / "docs" / "OPTIONAL-PO-PROVIDER.md"
+        if not instructions.is_file():
+            QMessageBox.information(
+                self,
+                APP_NAME,
+                "The optional-helper installation guide is not available in this build.",
+            )
+            return
+        QDesktopServices.openUrl(QUrl.fromLocalFile(str(instructions)))
+
+    def _active_connection_manager(self) -> YouTubeConnectionManager | None:
+        """Return the exact verified provider, with one fail-closed migration."""
+        stored = str(self.settings.value(ACTIVE_PROVIDER_KEY, "") or "").strip().casefold()
+        if stored:
+            try:
+                return self.youtube_connections[ManagedBrowser(stored)]
+            except (KeyError, ValueError):
+                return None
+
+        connected = [
+            manager
+            for manager in self.youtube_connections.values()
+            if manager.connected_profile() is not None
+        ]
+        selected: YouTubeConnectionManager | None = None
+        if len(connected) == 1:
+            selected = connected[0]
+        elif len(connected) > 1:
+            verified: list[tuple[float, YouTubeConnectionManager]] = []
+            for manager in connected:
+                try:
+                    parsed = datetime.fromisoformat(
+                        manager.last_verified.replace("Z", "+00:00")
+                    )
+                    if parsed.tzinfo is None:
+                        raise ValueError("timestamp has no timezone")
+                    verified.append((parsed.timestamp(), manager))
+                except (OverflowError, OSError, ValueError):
+                    verified = []
+                    break
+            verified.sort(key=lambda item: item[0], reverse=True)
+            if len(verified) == len(connected) and verified[0][0] > verified[1][0]:
+                selected = verified[0][1]
+
+        if selected is not None:
+            self.settings.setValue(ACTIVE_PROVIDER_KEY, selected.browser.value)
+            self.settings.sync()
+        return selected
+
     def _connected_connection_manager(self) -> YouTubeConnectionManager | None:
-        for browser in (ManagedBrowser.CHROME, ManagedBrowser.FIREFOX):
-            manager = self.youtube_connections[browser]
-            if manager.connected_profile() is not None:
-                return manager
+        manager = self._active_connection_manager()
+        if manager is not None and manager.connected_profile() is not None:
+            return manager
         return None
 
     def _connection_target_url(self) -> str:
@@ -1712,6 +1861,7 @@ class MainWindow(QMainWindow):
                 browser=ManagedBrowser.FIREFOX,
             )
         if accepted:
+            self.youtube_connection = manager
             self.log(
                 f"YouTube connection verified using the dedicated Neural Extractor "
                 f"{manager.display_name} profile."
@@ -1720,7 +1870,7 @@ class MainWindow(QMainWindow):
         return accepted
 
     def test_youtube_connection(self) -> None:
-        manager = self._connected_connection_manager() or self.youtube_connection
+        manager = self._active_connection_manager() or self.youtube_connection
         self.connect_youtube(
             renewal=manager.snapshot().state == ConnectionState.EXPIRED,
             target_url=self._connection_target_url(),
@@ -1826,6 +1976,7 @@ class MainWindow(QMainWindow):
         self.update_worker.finished.connect(self.on_update_check_finished)
         self.update_worker.start()
 
+    @Slot(object)
     def on_update_available(self, info: UpdateInfo) -> None:
         self.statusBar().showMessage(f"Update available: {info.tag_name}")
         self.log(f"Update available: {info.tag_name}")
@@ -1932,6 +2083,7 @@ class MainWindow(QMainWindow):
             return
         self.on_update_cancellation_locked()
 
+    @Slot()
     def on_update_cancellation_locked(self) -> None:
         if self.update_progress_dialog:
             self.update_progress_dialog.setCancelButton(None)
@@ -1940,12 +2092,14 @@ class MainWindow(QMainWindow):
             )
         self.statusBar().showMessage("Preparing secure updater handoff")
 
+    @Slot(int, str)
     def on_update_install_progress(self, percent: int, message: str) -> None:
         if self.update_progress_dialog:
             self.update_progress_dialog.setValue(percent)
             self.update_progress_dialog.setLabelText(message)
         self.statusBar().showMessage(message)
 
+    @Slot(object)
     def on_update_install_prepared(self, prepared: PreparedUpdate) -> None:
         self.update_install_outcome = "restart"
         self.log(
@@ -1961,6 +2115,7 @@ class MainWindow(QMainWindow):
             )
         QTimer.singleShot(900, self._quit_for_update)
 
+    @Slot(str, str)
     def on_update_install_error(self, code: str, message: str) -> None:
         self.update_install_outcome = "error"
         self.log(f"Update failed ({code}): {message}")
@@ -1970,6 +2125,7 @@ class MainWindow(QMainWindow):
             self.update_progress_dialog = None
         QMessageBox.warning(self, "Update Failed", message)
 
+    @Slot()
     def on_update_install_cancelled(self) -> None:
         self.update_install_outcome = "cancelled"
         self.log("Update download cancelled; the current application was not changed")
@@ -1978,6 +2134,7 @@ class MainWindow(QMainWindow):
             self.update_progress_dialog.close()
             self.update_progress_dialog = None
 
+    @Slot()
     def on_update_install_finished(self) -> None:
         self.update_install_worker = None
         if self.update_install_outcome != "restart":
@@ -1994,6 +2151,7 @@ class MainWindow(QMainWindow):
         self.update_button.setEnabled(not running)
         self.diagnostics_button.setEnabled(not running)
 
+    @Slot()
     def on_update_up_to_date(self) -> None:
         if self.update_check_silent:
             return
@@ -2001,6 +2159,7 @@ class MainWindow(QMainWindow):
         self.log("No update available")
         QMessageBox.information(self, APP_NAME, "You are running the latest version.")
 
+    @Slot(str, str)
     def on_update_error(self, code: str, error: str) -> None:
         if self.update_check_silent:
             return
@@ -2008,6 +2167,7 @@ class MainWindow(QMainWindow):
         self.log(f"Update check failed ({code}): {error}")
         QMessageBox.warning(self, APP_NAME, f"Could not check for updates:\n{error}")
 
+    @Slot()
     def on_update_check_finished(self) -> None:
         if hasattr(self, "update_button") and not (
             self.update_install_worker and self.update_install_worker.isRunning()
@@ -2015,10 +2175,12 @@ class MainWindow(QMainWindow):
             self.update_button.setEnabled(True)
         self.update_worker = None
 
+    @Slot(str)
     def on_diagnostics_error(self, error: str) -> None:
         self.log(f"Diagnostics failed: {error}")
         self.statusBar().showMessage("Diagnostics failed")
 
+    @Slot()
     def on_diagnostics_finished(self) -> None:
         self.log("Diagnostics finished")
         self.statusBar().showMessage("Diagnostics finished")
@@ -2049,12 +2211,14 @@ class MainWindow(QMainWindow):
             cookie_file=self.cookie_file,
             dedicated_browser=connection.browser.value if connection else None,
             dedicated_browser_profile=connection.connected_profile() if connection else None,
+            dedicated_browser_last_verified=connection.last_verified if connection else None,
             guided_youtube_auth=True,
             legacy_browser_fallback=self.legacy_browser_check.isChecked(),
         )
 
     # ------------------------------------------------------------------ worker slots
 
+    @Slot(str, str)
     def on_job_started(self, job_id: str, url: str) -> None:
         row = self.row_by_job_id.get(job_id)
         if row is None:
@@ -2064,6 +2228,7 @@ class MainWindow(QMainWindow):
         self._set_detail(row, url)
         self.statusBar().showMessage(f"Starting {url}")
 
+    @Slot(str, int, str, str)
     def on_progress(self, job_id: str, percent: int, status: str, detail: str) -> None:
         row = self.row_by_job_id.get(job_id)
         if row is None:
@@ -2082,6 +2247,7 @@ class MainWindow(QMainWindow):
         self._set_detail(row, detail)
         self.statusBar().showMessage(detail or status)
 
+    @Slot(str, bool, str, str)
     def on_job_finished(
         self,
         job_id: str,
@@ -2097,6 +2263,7 @@ class MainWindow(QMainWindow):
             "authentication_required",
             "youtube_session_expired",
             "dedicated_profile_invalid",
+            "verified_provider_not_applied",
             "browser_cookie_database_locked",
             "browser_cookie_decryption_failed",
             "browser_cookie_extraction_failed",
@@ -2114,9 +2281,20 @@ class MainWindow(QMainWindow):
             )
             return
         if not success and normalized_category == "youtube_session_expired":
-            manager = self._connected_connection_manager() or self.youtube_connection
-            manager.mark_expired(message)
+            manager = self._active_connection_manager()
+            if manager is not None:
+                manager.mark_expired(message)
             self._refresh_youtube_connection_ui()
+        if not success and normalized_category in {
+            "po_token_provider_unavailable",
+            "po_token_fetch_failed",
+            "po_token_media_403",
+            "po_token_required",
+        }:
+            self.optional_po_helper_status.setText(
+                "Status: Optional helper unavailable or unsuccessful - "
+                "ordinary downloads remain enabled; installation is always manual."
+            )
         cancelled = normalized_category in {
             "cancelled",
             "download_cancelled",
@@ -2155,7 +2333,7 @@ class MainWindow(QMainWindow):
         self.log(f"Authentication required ({failure_category}): {message}")
         if self.active_job_id == job_id:
             self.active_job_id = None
-        manager = self._connected_connection_manager() or self.youtube_connection
+        manager = self._active_connection_manager() or self.youtube_connection
         if manager.profile_path.exists():
             manager.mark_expired(message)
         self._refresh_youtube_connection_ui()
@@ -2169,7 +2347,7 @@ class MainWindow(QMainWindow):
             self._auth_dialog_active = False
             return
         target_url = self._connection_target_url()
-        manager = self._connected_connection_manager() or self.youtube_connection
+        manager = self._active_connection_manager() or self.youtube_connection
         snapshot = manager.snapshot()
         renewal = bool(snapshot.last_verified or manager.profile_path.exists())
         accepted = self.connect_youtube(
@@ -2200,6 +2378,7 @@ class MainWindow(QMainWindow):
         self._refresh_queue_summary()
         self._refresh_youtube_connection_ui()
 
+    @Slot()
     def on_batch_finished(self, worker: DownloadWorker | None = None) -> None:
         if worker is None:
             sender = self.sender()
@@ -2265,6 +2444,7 @@ class MainWindow(QMainWindow):
             # Restore the mode-dependent enabled states the blanket unlock overwrote.
             self._update_mode_controls()
 
+    @Slot(str)
     def log(self, message: str) -> None:
         self.log_box.append(f"[{datetime.now():%H:%M:%S}] {message}")
 
@@ -2379,6 +2559,12 @@ class MainWindow(QMainWindow):
         return checks
 
     def closeEvent(self, event) -> None:  # noqa: N802
+        if self.po_helper_status_worker and self.po_helper_status_worker.isRunning():
+            get_po_token_provider().cancel()
+            if not self.po_helper_status_worker.wait(5000):
+                self.statusBar().showMessage("Waiting for the optional helper check to stop safely")
+                event.ignore()
+                return
         if self.update_install_worker and self.update_install_worker.isRunning():
             if not self.update_install_worker.can_cancel():
                 self.statusBar().showMessage(

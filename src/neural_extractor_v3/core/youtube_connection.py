@@ -28,6 +28,7 @@ from neural_extractor_v3.config import YOUTUBE_HOSTS, app_data_dir
 from neural_extractor_v3.core.process_control import process_creation_identity
 
 SETTINGS_PREFIX = "youtube_connection"
+ACTIVE_PROVIDER_KEY = f"{SETTINGS_PREFIX}/active_provider"
 CHROME_PROFILE_DIRECTORY = "chrome-profile"
 FIREFOX_PROFILE_DIRECTORY = "firefox-profile"
 CHROME_COOKIE_DATABASES = (Path("Default/Network/Cookies"), Path("Default/Cookies"))
@@ -1265,6 +1266,10 @@ class YouTubeConnectionManager:
         if result.success:
             self.last_verified = datetime.now(UTC).isoformat(timespec="seconds")
             self.settings.setValue(self._key("last_verified"), self.last_verified)
+            # Persist the provider identity in the same settings sync as the
+            # verified state. Other managed profiles may still exist, but they
+            # must never override the session that was actually verified.
+            self.settings.setValue(ACTIVE_PROVIDER_KEY, self.browser.value)
             self._set_state(ConnectionState.CONNECTED)
         elif result.code in {"expired", "session_rejected", "authentication_required"}:
             self._set_state(ConnectionState.EXPIRED, result.message)
@@ -1363,6 +1368,9 @@ class YouTubeConnectionManager:
             "managed_processes",
         ):
             self.settings.remove(self._key(name))
+        active_provider = str(self.settings.value(ACTIVE_PROVIDER_KEY, "") or "")
+        if active_provider.casefold() == self.browser.value:
+            self.settings.remove(ACTIVE_PROVIDER_KEY)
         self.settings.sync()
         self.last_verified = ""
         self.failure_reason = ""
@@ -1370,6 +1378,7 @@ class YouTubeConnectionManager:
 
 
 __all__ = [
+    "ACTIVE_PROVIDER_KEY",
     "ChromeDiscovery",
     "ChromeDiscoveryResult",
     "ConnectionSnapshot",

@@ -39,8 +39,12 @@ from neural_extractor_v3.core.downloader import (
     DownloadEngine,
     YtdlpRunError,
 )
+from neural_extractor_v3.core.format_selection import select_discovered_format
 from neural_extractor_v3.core.js_runtime import ensure_youtube_js_runtime
-from neural_extractor_v3.core.pot_provider import get_po_token_provider
+from neural_extractor_v3.core.pot_provider import (
+    get_po_token_provider,
+    redact_po_token_material,
+)
 from neural_extractor_v3.core.youtube_errors import FailureCategory, classify_youtube_failure
 from neural_extractor_v3.models import DownloadOptions
 
@@ -76,7 +80,10 @@ class DiagnosticReport:
     items: list[DiagnosticItem]
 
     def lines(self) -> list[str]:
-        return ["Neural Extractor V3 environment diagnostics", *[item.line() for item in self.items]]
+        return [
+            "Neural Extractor V3 environment diagnostics",
+            *[item.line() for item in self.items],
+        ]
 
     def text(self) -> str:
         return "\n".join(self.lines())
@@ -96,6 +103,8 @@ def run_support_diagnostics(
     js_runtime = ensure_youtube_js_runtime()
     auth_resolution = resolve_auth_strategies(
         options.cookie_file,
+        dedicated_browser=options.dedicated_browser,
+        dedicated_browser_profile=options.dedicated_browser_profile,
         dedicated_firefox_profile=options.dedicated_firefox_profile,
         allow_legacy_browser_fallback=options.legacy_browser_fallback,
     )
@@ -142,7 +151,9 @@ def _add_windows_version(items: list[DiagnosticItem]) -> None:
 
 def _add_runtime_mode(items: list[DiagnosticItem]) -> None:
     mode = "packaged PyInstaller EXE" if getattr(sys, "frozen", False) else "Python source/runtime"
-    items.append(DiagnosticItem("Packaged/runtime mode", DiagnosticStatus.PASS, f"{mode}; base={base_dir()}"))
+    items.append(
+        DiagnosticItem("Packaged/runtime mode", DiagnosticStatus.PASS, f"{mode}; base={base_dir()}")
+    )
 
 
 def _add_bundled_node(items: list[DiagnosticItem]) -> None:
@@ -159,7 +170,9 @@ def _add_bundled_node(items: list[DiagnosticItem]) -> None:
 
 def _add_node_version(items: list[DiagnosticItem], node_path: Path | None) -> None:
     if not node_path:
-        items.append(DiagnosticItem("Node version command", DiagnosticStatus.FAIL, "Node runtime not found"))
+        items.append(
+            DiagnosticItem("Node version command", DiagnosticStatus.FAIL, "Node runtime not found")
+        )
         return
     completed = _run_command([str(node_path), "--version"], timeout=8)
     if completed.returncode == 0:
@@ -189,7 +202,9 @@ def _add_cache_status(items: list[DiagnosticItem]) -> None:
     cache_dir = _ytdlp_cache_dir()
     writable, detail = _directory_writable(cache_dir, create=True)
     status = DiagnosticStatus.PASS if writable else DiagnosticStatus.FAIL
-    items.append(DiagnosticItem("yt-dlp cache directory", status, f"{cache_dir}; writable={detail}"))
+    items.append(
+        DiagnosticItem("yt-dlp cache directory", status, f"{cache_dir}; writable={detail}")
+    )
 
 
 def _add_ffmpeg_status(items: list[DiagnosticItem]) -> None:
@@ -197,19 +212,27 @@ def _add_ffmpeg_status(items: list[DiagnosticItem]) -> None:
     path_ffmpeg = shutil.which("ffmpeg")
     exists = bundled.exists() or bool(path_ffmpeg)
     status = DiagnosticStatus.PASS if exists else DiagnosticStatus.FAIL
-    detail = f"bundled={bundled} exists={_yes_no(bundled.exists())}; PATH={path_ffmpeg or 'not found'}"
+    detail = (
+        f"bundled={bundled} exists={_yes_no(bundled.exists())}; PATH={path_ffmpeg or 'not found'}"
+    )
     items.append(DiagnosticItem("ffmpeg path exists", status, detail))
 
 
 def _add_output_status(items: list[DiagnosticItem], output_dir: Path) -> None:
     writable, detail = _directory_writable(output_dir, create=True)
     status = DiagnosticStatus.PASS if writable else DiagnosticStatus.FAIL
-    items.append(DiagnosticItem("Output folder writable", status, f"{output_dir}; writable={detail}"))
+    items.append(
+        DiagnosticItem("Output folder writable", status, f"{output_dir}; writable={detail}")
+    )
 
 
 def _add_cookie_status(items: list[DiagnosticItem], cookie_file: Path | None) -> None:
     if not cookie_file:
-        items.append(DiagnosticItem("cookies.txt metadata", DiagnosticStatus.WARNING, "No cookies.txt selected"))
+        items.append(
+            DiagnosticItem(
+                "cookies.txt metadata", DiagnosticStatus.WARNING, "No cookies.txt selected"
+            )
+        )
         return
 
     path = Path(cookie_file).expanduser()
@@ -254,10 +277,15 @@ def _add_browser_availability(items: list[DiagnosticItem], auth_resolution: Auth
 
 
 def _add_youtube_connection(items: list[DiagnosticItem], options: DownloadOptions) -> None:
-    configured = bool(options.dedicated_firefox_profile)
+    configured = bool(
+        options.dedicated_browser
+        and options.dedicated_browser_profile
+        and options.dedicated_browser_last_verified
+    )
     status = DiagnosticStatus.PASS if configured else DiagnosticStatus.WARNING
     detail = (
-        "Dedicated Neural Extractor Firefox profile configured (path redacted)"
+        f"Exact dedicated Neural Extractor {options.dedicated_browser} provider configured; "
+        f"last_verified={options.dedicated_browser_last_verified} (path redacted)"
         if configured
         else "Dedicated YouTube connection not configured"
     )
@@ -265,9 +293,21 @@ def _add_youtube_connection(items: list[DiagnosticItem], options: DownloadOption
 
 
 def _add_po_token_provider(items: list[DiagnosticItem]) -> None:
-    provider = get_po_token_provider().status
-    status = DiagnosticStatus.PASS if provider.available and provider.bundled else DiagnosticStatus.WARNING
-    items.append(DiagnosticItem("PO Token provider", status, provider.diagnostic))
+    helper = get_po_token_provider()
+    refresh_provider = getattr(helper, "refresh_status", None)
+    provider = refresh_provider() if callable(refresh_provider) else helper.status
+    status = (
+        DiagnosticStatus.PASS
+        if provider.available and provider.integrity_verified
+        else DiagnosticStatus.WARNING
+    )
+    items.append(
+        DiagnosticItem(
+            "Optional external PO Token helper",
+            status,
+            redact_po_token_material(provider.diagnostic),
+        )
+    )
 
 
 def _add_browser_processes(items: list[DiagnosticItem]) -> None:
@@ -380,7 +420,22 @@ def _add_format_probe(
     warnings: list[str] = []
     engine = DownloadEngine(options)
 
-    for index, auth_strategy in enumerate(auth_resolution.strategies):
+    public = next(
+        (strategy for strategy in auth_resolution.strategies if not strategy.attempted_auth),
+        None,
+    )
+    dedicated = next(
+        (
+            strategy
+            for strategy in auth_resolution.strategies
+            if strategy.is_dedicated_browser
+            and strategy.browser == str(options.dedicated_browser or "").casefold()
+        ),
+        None,
+    )
+    strategies = [strategy for strategy in (public, dedicated) if strategy is not None]
+
+    for index, auth_strategy in enumerate(strategies):
         probe_opts = _format_probe_options(options, auth_strategy, js_runtimes)
         command = _format_probe_command(probe_url, probe_opts)
         try:
@@ -403,7 +458,7 @@ def _add_format_probe(
                 FailureCategory.BROWSER_COOKIE_DECRYPTION_FAILED,
                 FailureCategory.BROWSER_COOKIE_EXTRACTION_FAILED,
             }
-            if fallback_is_justified and index < len(auth_resolution.strategies) - 1:
+            if fallback_is_justified and index < len(strategies) - 1:
                 warnings.append(detail)
                 continue
             items.append(
@@ -416,11 +471,15 @@ def _add_format_probe(
             return
 
         count = len(result.formats)
-        status = DiagnosticStatus.PASS if count else DiagnosticStatus.WARNING
+        selection = select_discovered_format(result.formats, options.media_mode)
+        has_media = bool(selection.selector or selection.media_format_count)
+        status = DiagnosticStatus.PASS if has_media else DiagnosticStatus.FAIL
         detail = (
             f"{count} formats from {probe_url}; auth={auth_strategy.display_name}; "
             f"command={command}; previous warnings={'; '.join(warnings) or 'none'}"
         )
+        if not has_media:
+            detail += "; only_sabr_or_image_formats"
         items.append(DiagnosticItem("Safe yt-dlp format probe", status, detail))
         return
 
@@ -447,7 +506,13 @@ def _format_probe_options(
         "quiet": False,
         "no_warnings": False,
         "windowsfilenames": True,
-        "extractor_args": {"youtube": {"player_client": ["mweb", "default"]}},
+        "extractor_args": {
+            "youtube": {
+                "player_client": ["default"],
+                "fetch_pot": ["never"],
+                "pot_trace": ["false"],
+            }
+        },
     }
     if js_runtimes:
         probe_opts["js_runtimes"] = js_runtimes
@@ -464,6 +529,19 @@ def _format_probe_options(
 
 def _format_probe_command(probe_url: str, probe_opts: dict[str, object]) -> str:
     args = ["yt-dlp", "-F", "--skip-download", "--no-playlist"]
+    extractor_args = probe_opts.get("extractor_args")
+    if isinstance(extractor_args, dict):
+        youtube_args = extractor_args.get("youtube")
+        if isinstance(youtube_args, dict):
+            clients = youtube_args.get("player_client") or []
+            fetch_pot = youtube_args.get("fetch_pot") or []
+            pot_trace = youtube_args.get("pot_trace") or []
+            rendered = (
+                f"youtube:player_client={','.join(map(str, clients))};"
+                f"fetch_pot={','.join(map(str, fetch_pot))};"
+                f"pot_trace={','.join(map(str, pot_trace))}"
+            )
+            args.extend(["--extractor-args", rendered])
     if probe_opts.get("cookiefile"):
         args.extend(["--cookies", "<cookies.txt>"])
     if probe_opts.get("cookiesfrombrowser"):
@@ -481,7 +559,7 @@ def _format_probe_command(probe_url: str, probe_opts: dict[str, object]) -> str:
         for component in probe_opts["remote_components"]:  # type: ignore[union-attr]
             args.extend(["--remote-components", str(component)])
     args.append(probe_url)
-    return subprocess.list2cmdline(args)
+    return redact_po_token_material(subprocess.list2cmdline(args))
 
 
 def _ytdlp_cache_dir() -> Path:
@@ -538,7 +616,7 @@ def _command_failure_detail(completed: subprocess.CompletedProcess[str]) -> str:
 
 
 def _one_line(value: str, limit: int = 260) -> str:
-    text = " ".join(value.split())
+    text = " ".join(redact_po_token_material(value).split())
     if len(text) > limit:
         return text[: limit - 3].rstrip() + "..."
     return text

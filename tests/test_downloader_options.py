@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 
 import pytest
@@ -24,6 +25,7 @@ from neural_extractor_v3.core.downloader import (
     recover_stale_download_processes,
 )
 from neural_extractor_v3.core.js_runtime import JavaScriptRuntimeStatus
+from neural_extractor_v3.core.pot_provider import PROVIDER_EXTRACTOR_KEY
 from neural_extractor_v3.core.youtube_errors import FailureCategory
 from neural_extractor_v3.models import (
     DownloadJob,
@@ -47,6 +49,25 @@ def _mock_runtime(monkeypatch, tmp_path, *, found=True):
             version="v22.17.0" if found else "",
         ),
     )
+    helper = SimpleNamespace(
+        status=SimpleNamespace(
+            available=True,
+            bundled=False,
+            installed=True,
+            integrity_verified=True,
+            provider_id="neural-extractor:external-helper",
+            version="1.3.1",
+            helper_version="1.0.0",
+            protocol_version=1,
+            diagnostic="Optional external PO Token helper ready for test.",
+        ),
+        ytdlp_options=lambda: {
+            "extractor_args": {
+                PROVIDER_EXTRACTOR_KEY: {"protocol": ["1"]},
+            }
+        },
+    )
+    monkeypatch.setattr(downloader_module, "get_po_token_provider", lambda: helper)
 
 
 def _resolution(tmp_path, *, cookie=True, browsers=("chrome", "edge", "brave", "firefox")):
@@ -127,7 +148,36 @@ def _clients(options):
     return tuple(options["extractor_args"]["youtube"]["player_client"])
 
 
-def _error(message, options, *, category_hint=None, phase="download"):
+def _media_formats():
+    return [
+        {
+            "format_id": "137",
+            "ext": "mp4",
+            "vcodec": "avc1",
+            "acodec": "none",
+            "height": 1080,
+            "protocol": "https",
+        },
+        {
+            "format_id": "140",
+            "ext": "m4a",
+            "vcodec": "none",
+            "acodec": "mp4a",
+            "abr": 128,
+            "protocol": "https",
+        },
+    ]
+
+
+def _error(
+    message,
+    options,
+    *,
+    category_hint=None,
+    phase="download",
+    formats=None,
+    metadata=None,
+):
     return YtdlpRunError(
         "yt-dlp <redacted>",
         YtdlpCapturedOutput(stderr=[message]),
@@ -136,6 +186,8 @@ def _error(message, options, *, category_hint=None, phase="download"):
         format_selector=str(options.get("format") or ""),
         player_clients=_clients(options),
         category_hint=category_hint,
+        formats=formats,
+        metadata=metadata,
     )
 
 
@@ -148,9 +200,26 @@ def test_worker_environment_forces_utf8_mode(tmp_path, monkeypatch):
     assert environment["PYTHONIOENCODING"] == "utf-8"
 
 
-def test_malformed_worker_frame_fails_with_typed_redacted_protocol_error(
-    tmp_path, monkeypatch
+def test_provider_worker_environment_isolates_cache_and_blocks_node_injection(
+    tmp_path,
+    monkeypatch,
 ):
+    _mock_runtime(monkeypatch, tmp_path)
+    monkeypatch.setenv("NODE_OPTIONS", "--require malicious.js")
+    monkeypatch.setenv("NODE_PATH", str(tmp_path / "untrusted-modules"))
+    attempt_temp = tmp_path / "attempt"
+    attempt_temp.mkdir()
+
+    environment = _engine(tmp_path)._worker_environment(attempt_temp)
+
+    assert environment["XDG_CACHE_HOME"] == str(attempt_temp / "cache")
+    assert environment["YTDLP_NO_PLUGINS"] == "1"
+    assert environment["FORCE_COLOR"] == "false"
+    assert "NODE_OPTIONS" not in environment
+    assert "NODE_PATH" not in environment
+
+
+def test_malformed_worker_frame_fails_with_typed_redacted_protocol_error(tmp_path, monkeypatch):
     _mock_runtime(monkeypatch, tmp_path)
     application_data = tmp_path / "app-data"
     monkeypatch.setattr(downloader_module, "app_data_dir", lambda: application_data)
@@ -258,12 +327,142 @@ def test_generic_http_403_never_triggers_cookie_or_browser_fallback(tmp_path, mo
     assert result.failure_category == FailureCategory.HTTP_403_MEDIA_REJECTED.value
     assert all(call[0] == "none" for call in calls)
     assert calls[0][2] == DEFAULT_YOUTUBE_CLIENTS
-    assert len(calls) == 3  # primary, one clean retry, one bounded alternative discovery
+    assert len(calls) == 2  # primary and one clean public retry; no blind discovery/auth
 
 
-def test_cookie_file_http_403_is_not_repeated_and_browser_fallback_is_controlled(
-    tmp_path, monkeypatch
+def test_media_403_owner_flow_uses_exact_firefox_then_one_mweb_provider(
+    tmp_path,
+    monkeypatch,
 ):
+    _mock_runtime(monkeypatch, tmp_path)
+    application_data = tmp_path / "NeuralExtractorV3"
+    profile = application_data / "youtube" / "firefox-profile"
+    profile.mkdir(parents=True)
+    monkeypatch.setattr(downloader_module, "app_data_dir", lambda: application_data)
+    resolution = AuthResolution(
+        strategies=[
+            AuthStrategy("none", "none", {}, attempted_auth=False),
+            AuthStrategy(
+                "dedicated_browser",
+                "Dedicated Neural Extractor Firefox profile",
+                {"cookiesfrombrowser": ("firefox", str(profile.resolve()))},
+                attempted_auth=True,
+            ),
+            AuthStrategy(
+                "browser",
+                "Chrome",
+                {"cookiesfrombrowser": ("chrome",)},
+                attempted_auth=True,
+            ),
+        ],
+        messages=[],
+        cookie_file_status=CookieFileStatus(None, False, "missing"),
+        browser_source=None,
+        browser_sources=[],
+    )
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+    logs = []
+
+    def run(self, url, options, *, discover_only=False):
+        youtube_args = options["extractor_args"]["youtube"]
+        calls.append(
+            (
+                _auth_id(options),
+                _clients(options),
+                tuple(youtube_args["fetch_pot"]),
+                tuple(youtube_args["pot_trace"]),
+                str(options["format"]),
+                PROVIDER_EXTRACTOR_KEY in options["extractor_args"],
+            )
+        )
+        if len(calls) == 4:
+            return YtdlpRunResult()
+        message = "ERROR: unable to download video data: HTTP Error 403: Forbidden"
+        if len(calls) == 3:
+            message = "WARNING: This client requires a PO Token for GVS playback\n" + message
+        raise _error(
+            message,
+            options,
+            formats=_media_formats(),
+            metadata={"id": "abc123"},
+        )
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", run)
+    engine = DownloadEngine(
+        DownloadOptions(
+            output_dir=tmp_path,
+            dedicated_browser="firefox",
+            dedicated_browser_profile=profile,
+            dedicated_browser_last_verified=datetime.now(UTC).isoformat(timespec="seconds"),
+            guided_youtube_auth=True,
+            legacy_browser_fallback=True,
+        ),
+        log_callback=logs.append,
+    )
+
+    result = engine.download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert result.success
+    assert calls == [
+        ("none", ("default",), ("never",), ("false",), VIDEO_MP4_SELECTOR, False),
+        ("none", ("default",), ("never",), ("false",), "137+140", False),
+        ("firefox", ("default",), ("never",), ("false",), "137+140", False),
+        ("firefox", ("mweb",), ("auto",), ("false",), "137+140", True),
+    ]
+    assert all(call[0] != "chrome" for call in calls)
+    assert sum(call[1] == ("mweb",) for call in calls) == 1
+    assert "Retrying media access using the verified dedicated Firefox session." in logs
+
+
+def test_stale_verified_provider_fails_closed_before_auth_or_pot(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    application_data = tmp_path / "NeuralExtractorV3"
+    profile = application_data / "youtube" / "firefox-profile"
+    profile.mkdir(parents=True)
+    monkeypatch.setattr(downloader_module, "app_data_dir", lambda: application_data)
+    resolution = AuthResolution(
+        strategies=[
+            AuthStrategy("none", "none", {}, attempted_auth=False),
+            AuthStrategy(
+                "dedicated_browser",
+                "Dedicated Neural Extractor Firefox profile",
+                {"cookiesfrombrowser": ("firefox", str(profile.resolve()))},
+                attempted_auth=True,
+            ),
+        ],
+        messages=[],
+        cookie_file_status=CookieFileStatus(None, False, "missing"),
+        browser_source=None,
+        browser_sources=[],
+    )
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+
+    def fail(self, url, options, *, discover_only=False):
+        calls.append(_auth_id(options))
+        raise _error(
+            "WARNING: PO Token may be required\n"
+            "ERROR: unable to download video data: HTTP Error 403: Forbidden",
+            options,
+            formats=_media_formats(),
+        )
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", fail)
+    result = _engine(
+        tmp_path,
+        dedicated_browser="firefox",
+        dedicated_browser_profile=profile,
+        dedicated_browser_last_verified=(datetime.now(UTC) - timedelta(days=2)).isoformat(),
+        guided_youtube_auth=True,
+    ).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.VERIFIED_PROVIDER_NOT_APPLIED.value
+    assert calls == ["none", "none"]
+
+
+def test_authenticated_media_403_stops_without_blind_browser_fallback(tmp_path, monkeypatch):
     _mock_runtime(monkeypatch, tmp_path)
     resolution = _resolution(tmp_path, browsers=("chrome",))
     _mock_resolution(monkeypatch, resolution)
@@ -287,8 +486,11 @@ def test_cookie_file_http_403_is_not_repeated_and_browser_fallback_is_controlled
         DownloadJob(PUBLIC_VIDEO_TEST_URL)
     )
 
-    assert result.success
-    assert calls == ["none", "cookies.txt", "chrome"]
+    assert not result.success
+    assert result.failure_category == (
+        FailureCategory.MEDIA_ACCESS_REJECTED_AFTER_AUTHENTICATION.value
+    )
+    assert calls == ["none", "cookies.txt"]
 
 
 def test_chrome_cookie_lock_disables_chrome_for_remainder_of_job(tmp_path, monkeypatch):
@@ -424,8 +626,20 @@ def test_format_discovery_selects_only_actual_available_ids(tmp_path, monkeypatc
             discoveries.append(str(options["format"]))
             return YtdlpRunResult(
                 formats=[
-                    {"format_id": "137", "ext": "mp4", "vcodec": "avc1", "acodec": "none", "height": 1080},
-                    {"format_id": "140", "ext": "m4a", "vcodec": "none", "acodec": "mp4a", "abr": 128},
+                    {
+                        "format_id": "137",
+                        "ext": "mp4",
+                        "vcodec": "avc1",
+                        "acodec": "none",
+                        "height": 1080,
+                    },
+                    {
+                        "format_id": "140",
+                        "ext": "m4a",
+                        "vcodec": "none",
+                        "acodec": "mp4a",
+                        "abr": 128,
+                    },
                 ]
             )
         downloads.append(str(options["format"]))
@@ -465,10 +679,10 @@ def test_image_only_discovery_does_not_start_media_fallback(tmp_path, monkeypatc
 
     assert not result.success
     assert result.failure_category == FailureCategory.ONLY_IMAGE_FORMATS_AVAILABLE.value
-    assert downloads == [VIDEO_MP4_SELECTOR]
+    assert downloads == [VIDEO_MP4_SELECTOR, VIDEO_MP4_SELECTOR]
 
 
-def test_po_token_warning_stops_without_unsafe_workaround(tmp_path, monkeypatch):
+def test_po_token_warning_uses_exactly_one_supported_provider_attempt(tmp_path, monkeypatch):
     _mock_runtime(monkeypatch, tmp_path)
     resolution = _resolution(tmp_path)
     _mock_resolution(monkeypatch, resolution)
@@ -483,8 +697,76 @@ def test_po_token_warning_stops_without_unsafe_workaround(tmp_path, monkeypatch)
     result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
 
     assert not result.success
-    assert result.failure_category == FailureCategory.PO_TOKEN_REQUIRED.value
-    assert calls == ["none"]
+    assert result.failure_category == FailureCategory.PO_TOKEN_FETCH_FAILED.value
+    assert calls == ["none", "none"]
+
+
+@pytest.mark.parametrize(
+    ("provider_error", "expected_category"),
+    [
+        (
+            "ERROR: Error fetching PO Token: external_po_helper_helper_timeout",
+            FailureCategory.PO_TOKEN_FETCH_FAILED,
+        ),
+        (
+            "ERROR: unable to download video data: HTTP Error 403: Forbidden",
+            FailureCategory.PO_TOKEN_MEDIA_403,
+        ),
+    ],
+)
+def test_provider_failures_are_precise_and_never_repeat(
+    tmp_path,
+    monkeypatch,
+    provider_error,
+    expected_category,
+):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, cookie=False, browsers=())
+    _mock_resolution(monkeypatch, resolution)
+    calls = []
+
+    def fail(self, url, options, *, discover_only=False):
+        calls.append((_clients(options), tuple(options["extractor_args"]["youtube"]["fetch_pot"])))
+        if len(calls) == 1:
+            raise _error("WARNING: This client requires a PO Token for GVS", options)
+        raise _error(provider_error, options, formats=_media_formats())
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", fail)
+
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == expected_category.value
+    assert calls == [(("default",), ("never",)), (("mweb",), ("auto",))]
+
+
+def test_matching_pot_enforcement_fails_closed_when_provider_unavailable(tmp_path, monkeypatch):
+    _mock_runtime(monkeypatch, tmp_path)
+    resolution = _resolution(tmp_path, cookie=False, browsers=())
+    _mock_resolution(monkeypatch, resolution)
+    unavailable = SimpleNamespace(
+        status=SimpleNamespace(
+            available=False,
+            bundled=False,
+            provider_id="neural-extractor:external-helper",
+            version="1.3.1",
+            diagnostic="PO Token provider unavailable for test",
+        )
+    )
+    monkeypatch.setattr(downloader_module, "get_po_token_provider", lambda: unavailable)
+    calls = []
+
+    def fail(self, url, options, *, discover_only=False):
+        calls.append(_clients(options))
+        raise _error("WARNING: This client requires a PO Token for GVS", options)
+
+    monkeypatch.setattr(DownloadEngine, "_run_yt_dlp", fail)
+
+    result = _engine(tmp_path).download(DownloadJob(PUBLIC_VIDEO_TEST_URL))
+
+    assert not result.success
+    assert result.failure_category == FailureCategory.PO_TOKEN_PROVIDER_UNAVAILABLE.value
+    assert calls == [("default",)]
 
 
 def test_node_found_plus_n_challenge_never_reports_missing_node(tmp_path, monkeypatch):
@@ -537,9 +819,7 @@ def test_mp3_m4a_subtitles_and_thumbnail_options_are_preserved(tmp_path, monkeyp
         thumbnail=True,
         embed_thumbnail=True,
     ).build_ydl_options(PUBLIC_VIDEO_TEST_URL)
-    m4a = _engine(tmp_path, media_mode=MediaMode.AUDIO_M4A).build_ydl_options(
-        PUBLIC_VIDEO_TEST_URL
-    )
+    m4a = _engine(tmp_path, media_mode=MediaMode.AUDIO_M4A).build_ydl_options(PUBLIC_VIDEO_TEST_URL)
     subtitles = _engine(
         tmp_path,
         media_mode=MediaMode.SUBTITLES_ONLY,
@@ -558,7 +838,9 @@ def test_mp3_m4a_subtitles_and_thumbnail_options_are_preserved(tmp_path, monkeyp
     assert subtitles["subtitleslangs"] == ["nl"]
 
 
-def test_mix_url_normalizes_to_current_video_only_and_command_has_no_playlist(tmp_path, monkeypatch):
+def test_mix_url_normalizes_to_current_video_only_and_command_has_no_playlist(
+    tmp_path, monkeypatch
+):
     _mock_runtime(monkeypatch, tmp_path)
     logs = []
     engine = DownloadEngine(
@@ -621,6 +903,39 @@ def test_command_and_logs_redact_cookie_path_and_secret_values(tmp_path, monkeyp
     assert str(cookie_path) not in command
     assert "super-secret" not in cleaned
     assert "authorization=token" not in cleaned
+
+
+@pytest.mark.parametrize(
+    "diagnostic",
+    [
+        "poToken=token-sentinel-123456",
+        "po_token: token-sentinel-123456",
+        "Generated POT: token-sentinel-123456",
+        "PoTokenResponse(po_token='token-sentinel-123456')",
+        "https://provider.invalid/pot/token-sentinel-123456/result",
+        "https://youtube.invalid/media?pot=token-sentinel-123456&x=1",
+        '{"integrityToken":"token-sentinel-123456"}',
+        '{"visitorData":"token-sentinel-123456"}',
+    ],
+)
+def test_po_token_material_is_redacted_from_diagnostics_and_full_errors(
+    tmp_path,
+    monkeypatch,
+    diagnostic,
+):
+    _mock_runtime(monkeypatch, tmp_path)
+    engine = _engine(tmp_path)
+
+    cleaned = engine._redact_diagnostic_text(diagnostic)
+    error = YtdlpRunError(
+        f"yt-dlp {diagnostic}",
+        YtdlpCapturedOutput(stderr=[diagnostic]),
+        cause=RuntimeError(diagnostic),
+    )
+
+    assert "token-sentinel-123456" not in cleaned
+    assert "token-sentinel-123456" not in error.diagnostic_text()
+    assert "token-sentinel-123456" not in error.full_text()
 
 
 def test_public_video_test_url_is_normal_video_url():

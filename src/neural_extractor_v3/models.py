@@ -56,6 +56,7 @@ class DownloadOptions:
     cookie_file: Path | None = None
     dedicated_browser: str | None = None
     dedicated_browser_profile: Path | None = None
+    dedicated_browser_last_verified: str | None = None
     dedicated_firefox_profile: Path | None = None
     guided_youtube_auth: bool = False
     legacy_browser_fallback: bool = False

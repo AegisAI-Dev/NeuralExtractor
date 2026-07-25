@@ -4,12 +4,22 @@ from __future__ import annotations
 
 import contextlib
 import json
+import os
 import threading
 import traceback
 from collections.abc import Mapping
 from typing import Any, BinaryIO, TextIO
 
-import yt_dlp
+# Disable arbitrary user/plugin discovery before yt-dlp itself is imported.
+os.environ["YTDLP_NO_PLUGINS"] = "1"
+
+import yt_dlp  # noqa: E402
+
+from neural_extractor_v3.core.pot_provider import (
+    configure_yt_dlp_plugins,
+    options_request_po_provider,
+    redact_po_token_material,
+)
 
 PROTOCOL_PREFIX = "NEURAL_EXTRACTOR_EVENT "
 PROTOCOL_ENCODING = "utf-8"
@@ -45,7 +55,11 @@ def _protocol_stream() -> BinaryIO:
 
 
 def _emit(kind: str, **payload: Any) -> None:
-    document = json.dumps({"kind": kind, **payload}, ensure_ascii=False, default=str)
+    document = json.dumps(
+        {"kind": kind, **_redact_protocol_payload(payload)},
+        ensure_ascii=False,
+        default=str,
+    )
     frame = f"{PROTOCOL_PREFIX}{document}\n".encode(PROTOCOL_ENCODING)
     with _PROTOCOL_LOCK:
         stream = _protocol_stream()
@@ -56,6 +70,16 @@ def _emit(kind: str, **payload: Any) -> None:
                 raise OSError("Could not write the complete worker protocol frame")
             remaining = remaining[written:]
         stream.flush()
+
+
+def _redact_protocol_payload(value: Any) -> Any:
+    if isinstance(value, str):
+        return redact_po_token_material(value)
+    if isinstance(value, Mapping):
+        return {str(key): _redact_protocol_payload(item) for key, item in value.items()}
+    if isinstance(value, list | tuple):
+        return [_redact_protocol_payload(item) for item in value]
+    return value
 
 
 def run_protocol_smoke() -> int:
@@ -157,6 +181,7 @@ def _summarize_formats(info: Any) -> list[dict[str, Any]]:
                 "tbr": item.get("tbr"),
                 "abr": item.get("abr"),
                 "protocol": str(item.get("protocol") or ""),
+                "format_note": str(item.get("format_note") or ""),
             }
         )
     return summarized
@@ -184,6 +209,16 @@ def run_worker(request: Mapping[str, Any]) -> int:
     mode = str(request.get("mode") or "download")
     playlist = bool(request.get("playlist"))
     options = dict(raw_options)
+    provider_requested = options_request_po_provider(options)
+    try:
+        configure_yt_dlp_plugins(enable_po_provider=provider_requested)
+    except Exception as exc:
+        _emit(
+            "error",
+            phase="startup",
+            message=(f"external_po_helper_unavailable: {redact_po_token_material(str(exc))}"),
+        )
+        return 1
     options["logger"] = ProtocolLogger()
     options["progress_hooks"] = [_progress_hook]
     if isinstance(options.get("cookiesfrombrowser"), list):
@@ -204,7 +239,9 @@ def run_worker(request: Mapping[str, Any]) -> int:
         with contextlib.redirect_stdout(redirected_out), contextlib.redirect_stderr(redirected_err):
             with yt_dlp.YoutubeDL(options) as ydl:
                 if mode == "discover":
-                    _emit("phase", phase="discovery", message="Inspecting available YouTube formats")
+                    _emit(
+                        "phase", phase="discovery", message="Inspecting available YouTube formats"
+                    )
                     info = ydl.extract_info(url, download=False)
                     _emit("metadata", **_metadata_event(info))
                 else:

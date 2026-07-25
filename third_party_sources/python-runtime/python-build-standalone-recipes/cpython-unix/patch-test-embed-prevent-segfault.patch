@@ -1,0 +1,12 @@
+diff --git a/Lib/test/test_embed.py b/Lib/test/test_embed.py
+index 13713cf37b8..40ee4837bfe 100644
+--- a/Lib/test/test_embed.py
++++ b/Lib/test/test_embed.py
+@@ -1615,6 +1615,7 @@ def test_getpath_abspath_win32(self):
+         for (_, expected), result in zip(CASES, results):
+             self.assertEqual(result, expected)
+ 
++    @unittest.skipIf(support.check_bolt_optimized, "segfaults on BOLT instrumented binaries")
+     def test_global_pathconfig(self):
+         # Test C API functions getting the path configuration:
+         #

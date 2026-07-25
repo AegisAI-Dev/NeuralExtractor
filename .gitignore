@@ -6,6 +6,11 @@ __pycache__/
 .ruff_cache/
 .mypy_cache/
 
+# Test coverage output
+.coverage
+.coverage.*
+htmlcov/
+
 # Virtual environments
 .venv/
 venv/
@@ -15,6 +20,19 @@ build/
 dist/
 bin/*.exe
 *.spec.tmp
+
+# Downloaded/generated compliance build-input payloads.
+# The hash-pinning record stays tracked as compliance evidence, so the
+# directory contents are ignored with an explicit re-include instead of
+# ignoring the directory itself (git cannot re-include below an ignored
+# directory).
+build_inputs/*
+!build_inputs/PREPARATION-MANIFEST.json
+
+# Temporary local test and audit workspaces
+tmp/
+temp/
+.pyinstaller/
 
 # Local output
 downloads/

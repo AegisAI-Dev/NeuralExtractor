@@ -8,6 +8,8 @@ import subprocess
 import tempfile
 from pathlib import Path
 
+from neural_extractor_v3.config import VERSION
+
 
 def _run(executable: Path, argument: str, result: Path, timeout: int = 30) -> dict:
     completed = subprocess.run(
@@ -51,12 +53,45 @@ def main() -> int:
             "--internal-youtube-connection-smoke",
             root / "connection.json",
         )
+        provider_media = _run(
+            executable,
+            "--internal-provider-media-smoke",
+            root / "provider-media.json",
+            timeout=60,
+        )
         gui = _run(
             executable,
             "--internal-gui-startup-smoke",
             root / "gui.json",
         )
-    print(json.dumps({"connection": connection, "gui": gui}, indent=2, sort_keys=True))
+    version = subprocess.run(
+        [str(executable), "--version"],
+        stdin=subprocess.DEVNULL,
+        capture_output=True,
+        shell=False,
+        check=False,
+        close_fds=True,
+        timeout=30,
+        text=True,
+    )
+    expected_version = f"NeuralExtractorV3 {VERSION}"
+    if version.returncode or version.stdout.strip() != expected_version:
+        raise RuntimeError(
+            f"Packaged version smoke failed: exit={version.returncode}; "
+            f"stdout={version.stdout!r}; stderr={version.stderr!r}"
+        )
+    print(
+        json.dumps(
+            {
+                "connection": connection,
+                "provider_media": provider_media,
+                "gui": gui,
+                "version": expected_version,
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
     return 0
 
 

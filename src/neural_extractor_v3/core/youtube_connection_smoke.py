@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Any
 
 from neural_extractor_v3.core.youtube_connection import (
+    ACTIVE_PROVIDER_KEY,
     ChromeDiscovery,
     FirefoxDiscovery,
     ManagedBrowser,
@@ -159,6 +160,7 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
         ),
         "https://www.youtube.com/watch?v=offline",
     )
+    chrome_became_active = settings.value(ACTIVE_PROVIDER_KEY) == "chrome"
     manager.mark_expired("cookies are no longer valid")
     renewal_reused_profile = manager.create_profile() == profile
     chrome_resolution = resolve_auth_strategies(
@@ -176,7 +178,6 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
     chrome_authenticated_options = chrome_strategy is not None and chrome_strategy.ydl_options.get(
         "cookiesfrombrowser"
     ) == ("chrome", str(profile / "Default"))
-    disconnected = manager.disconnect()
     firefox_manager = YouTubeConnectionManager(
         settings,
         browser=ManagedBrowser.FIREFOX,
@@ -190,6 +191,27 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
         identity_provider=lambda _pid: None,
     )
     firefox_profile = firefox_manager.create_profile()
+    firefox_database = sqlite3.connect(firefox_profile / "cookies.sqlite")
+    try:
+        firefox_database.execute(
+            "CREATE TABLE moz_cookies (host TEXT, name TEXT, value TEXT)"
+        )
+        firefox_database.execute(
+            "INSERT INTO moz_cookies VALUES (?, ?, ?)",
+            (".youtube.com", "SAPISID", "never-log-firefox-cookie"),
+        )
+        firefox_database.commit()
+    finally:
+        firefox_database.close()
+    firefox_verified = firefox_manager.verify(
+        lambda checked_profile, _url: VerificationResult(
+            checked_profile == firefox_profile,
+            "connected",
+            "YouTube session verified.",
+        ),
+        "https://www.youtube.com/watch?v=offline",
+    )
+    firefox_became_active = settings.value(ACTIVE_PROVIDER_KEY) == "firefox"
     firefox_resolution = resolve_auth_strategies(
         None,
         browser_detector=lambda: [],
@@ -207,12 +229,20 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
         and firefox_strategy.ydl_options.get("cookiesfrombrowser")
         == ("firefox", str(firefox_profile))
     )
+    disconnected = manager.disconnect()
+    nonactive_disconnect_preserved_firefox = (
+        disconnected.success and settings.value(ACTIVE_PROVIDER_KEY) == "firefox"
+    )
     firefox_preserved_separately = (
         firefox_profile.name == "firefox-profile"
         and firefox_profile != profile
         and firefox_manager.disconnect().success
     )
-    settings_private = "never-log-this-cookie" not in repr(settings.values)
+    settings_dump = repr(settings.values)
+    settings_private = (
+        "never-log-this-cookie" not in settings_dump
+        and "never-log-firefox-cookie" not in settings_dump
+    )
     return {
         "profile_path_safe": profile_path_safe,
         "path_traversal_rejected": traversal_rejected,
@@ -220,6 +250,9 @@ def _run_offline_youtube_connection_smoke_at_root(root: Path) -> dict[str, bool]
         "stale_profile_state_recovered": stale_recovered,
         "stale_recovery_logged": stale_recovery_logged,
         "authentication_state_machine": verified.success,
+        "chrome_became_active": chrome_became_active,
+        "firefox_became_active": firefox_verified.success and firefox_became_active,
+        "nonactive_disconnect_preserved_active_provider": nonactive_disconnect_preserved_firefox,
         "chrome_authenticated_options": chrome_authenticated_options,
         "firefox_authenticated_options": firefox_authenticated_options,
         "firefox_fallback_separate": firefox_preserved_separately,

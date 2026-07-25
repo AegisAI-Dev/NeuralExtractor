@@ -1,0 +1,29 @@
+{
+  "application_version": "3.0.8",
+  "build_a": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\build\\rc-20260723\\out5\\BUILD-REPORT.json",
+  "build_b": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\build\\rc-20260723\\out6\\BUILD-REPORT.json",
+  "comparison_status": "PASS",
+  "differing_path_count": 0,
+  "differing_paths": [],
+  "distribution_tree_sha256": {
+    "build_a": "3f429adc538b96c12a24016e46f90b14649b1735ca9e8ef8b97843e6761b33dc",
+    "build_b": "3f429adc538b96c12a24016e46f90b14649b1735ca9e8ef8b97843e6761b33dc"
+  },
+  "executable_sha256": {
+    "build_a": "ffb36bd0afdc0206202db1c8869690644a815f65de038590a78a09b55e0b342f",
+    "build_b": "ffb36bd0afdc0206202db1c8869690644a815f65de038590a78a09b55e0b342f"
+  },
+  "generated_at": "2026-07-23T21:54:13+00:00",
+  "matches": {
+    "distribution_file_count": true,
+    "distribution_tree_sha256": true,
+    "executable_sha256": true,
+    "executable_size": true,
+    "no_path_set_difference": true,
+    "no_per_file_hash_difference": true,
+    "zip_sha256": true
+  },
+  "paths_only_in_a": [],
+  "paths_only_in_b": [],
+  "schema_version": 1
+}

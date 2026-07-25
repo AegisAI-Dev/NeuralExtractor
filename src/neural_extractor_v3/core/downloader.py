@@ -14,6 +14,7 @@ import traceback
 from collections import deque
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 from uuid import uuid4
@@ -46,7 +47,11 @@ from neural_extractor_v3.core.js_runtime import (
     clean_youtube_challenge_runtime_error,
     ensure_youtube_js_runtime,
 )
-from neural_extractor_v3.core.pot_provider import get_po_token_provider
+from neural_extractor_v3.core.pot_provider import (
+    PROVIDER_EXTRACTOR_KEY,
+    get_po_token_provider,
+    redact_po_token_material,
+)
 from neural_extractor_v3.core.process_control import (
     OwnedProcessSupervisor,
     ProcessCancelledError,
@@ -99,6 +104,12 @@ DEFAULT_YOUTUBE_CLIENTS = ("default",)
 ALTERNATIVE_YOUTUBE_CLIENTS = (("web",),)
 MAX_DOWNLOAD_ATTEMPTS = 6
 MAX_FORMAT_DISCOVERY_ATTEMPTS = 2
+VERIFIED_PROVIDER_MAX_AGE = timedelta(hours=24)
+
+VERIFIED_SESSION_MEDIA_403_MESSAGE = (
+    "The browser session is valid, but YouTube rejected the media request. "
+    "A PO Token may be required."
+)
 
 HTTP_403_FINAL_MESSAGE = (
     "YouTube rejected media access with HTTP 403. Cookies were not used automatically; "
@@ -135,13 +146,15 @@ class DownloadAttemptProfile:
     node_runtime_available: bool
     remote_ejs_enabled: bool
     reason: str = "public_primary"
+    po_token_provider: bool = False
 
-    def key(self) -> tuple[str, str, tuple[str, ...], str]:
+    def key(self) -> tuple[str, str, tuple[str, ...], str, bool]:
         return (
             self.auth_strategy.provider_id,
             self.format_selector,
             self.player_clients,
             self.reason,
+            self.po_token_provider,
         )
 
 
@@ -184,6 +197,8 @@ class YtdlpRunError(RuntimeError):
         format_selector: str = "",
         player_clients: tuple[str, ...] = (),
         category_hint: FailureCategory | None = None,
+        formats: list[dict[str, Any]] | None = None,
+        metadata: dict[str, Any] | None = None,
     ) -> None:
         self.command = command
         self.output = output
@@ -193,13 +208,15 @@ class YtdlpRunError(RuntimeError):
         self.format_selector = format_selector
         self.player_clients = player_clients
         self.category_hint = category_hint
+        self.formats = list(formats or [])
+        self.metadata = dict(metadata or {})
         super().__init__(self.full_text())
 
     def diagnostic_text(self) -> str:
         details = self.output.diagnostic_text()
         if self.cause is not None:
             details = "\n".join(part for part in (details, str(self.cause)) if part)
-        return details
+        return redact_po_token_material(details)
 
     def full_text(self) -> str:
         sections = ["Download failed."]
@@ -214,8 +231,9 @@ class YtdlpRunError(RuntimeError):
             cause_text = "".join(
                 traceback.format_exception(type(self.cause), self.cause, self.cause.__traceback__)
             ).strip()
+            cause_text = redact_po_token_material(cause_text)
             sections.append(f"Python exception:\n{cause_text}")
-        return "\n\n".join(sections)
+        return redact_po_token_material("\n\n".join(sections))
 
 
 def _height_limited_video_selector(height: int) -> str:
@@ -246,7 +264,9 @@ def recover_stale_download_processes(log_callback: LogCallback | None = None) ->
             if log_callback:
                 log_callback(message)
         elif result.state in {RecoveryState.INVALID_RECORD, RecoveryState.FAILED}:
-            message = f"Stale download recovery: {result.state.value} ({result.detail or 'no detail'})."
+            message = (
+                f"Stale download recovery: {result.state.value} ({result.detail or 'no detail'})."
+            )
             messages.append(message)
             if log_callback:
                 log_callback(message)
@@ -303,7 +323,11 @@ class DownloadEngine:
         self._last_activity_status = ""
         self._last_discovery_failure: FailureAnalysis | None = None
         self.js_runtime_status = ensure_youtube_js_runtime()
-        self.po_token_provider_status = get_po_token_provider().status
+        self.po_token_provider = get_po_token_provider()
+        refresh_provider = getattr(self.po_token_provider, "refresh_status", None)
+        self.po_token_provider_status = (
+            refresh_provider() if callable(refresh_provider) else self.po_token_provider.status
+        )
         limits = process_limits or ProcessLimits(
             inactivity_timeout=YTDLP_INACTIVITY_TIMEOUT_SECONDS,
             total_timeout=YTDLP_ATTEMPT_TOTAL_TIMEOUT_SECONDS,
@@ -383,11 +407,21 @@ class DownloadEngine:
             )
 
         public_strategy = self._public_strategy(auth_resolution)
+        verified_strategy, verified_problem = self._recent_verified_strategy(auth_resolution)
+        verified_configured = bool(
+            self.options.dedicated_browser
+            or self.options.dedicated_browser_profile
+            or self.options.dedicated_browser_last_verified
+        )
         queue: deque[DownloadAttemptProfile] = deque(
             [self._profile(public_strategy, reason="public_primary")]
         )
-        attempted_profiles: set[tuple[str, str, tuple[str, ...], str]] = set()
+        attempted_profiles: set[tuple[str, str, tuple[str, ...], str, bool]] = set()
         clean_no_cookie_retry_used = False
+        verified_media_retry_used = False
+        po_provider_retry_used = False
+        po_enforcement_seen = False
+        proven_media_selector = ""
         discovery_attempts = 0
         attempts = 0
         last_analysis = FailureAnalysis(
@@ -420,8 +454,28 @@ class DownloadEngine:
                 )
             except YtdlpRunError as error:
                 self._log(error.full_text())
+                if self.cancel_requested:
+                    return self._failure_result(
+                        job,
+                        FailureCategory.DOWNLOAD_CANCELLED,
+                        "Download cancelled",
+                    )
                 analysis = self._analyse_error(error, profile)
                 last_analysis = analysis
+                if self._has_po_enforcement_signal(
+                    error.diagnostic_text()
+                ) or analysis.category in {
+                    FailureCategory.PO_TOKEN_REQUIRED,
+                    FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS,
+                    FailureCategory.VERIFIED_SESSION_MEDIA_403,
+                }:
+                    po_enforcement_seen = True
+                if self._is_proven_media_403(error):
+                    proven_media_selector = (
+                        self._media_selector_from_formats(error.formats)
+                        or proven_media_selector
+                        or profile.format_selector
+                    )
                 self._log(
                     f"Attempt {attempts} classified as {analysis.category.value}: "
                     f"{analysis.user_message}"
@@ -434,7 +488,9 @@ class DownloadEngine:
                 }:
                     if not profile.auth_strategy.attempted_auth and not clean_no_cookie_retry_used:
                         clean_no_cookie_retry_used = True
-                        self._log("No response received; recovering with a clean no-cookie subprocess.")
+                        self._log(
+                            "No response received; recovering with a clean no-cookie subprocess."
+                        )
                         self._emit_activity_status("Starting clean retry")
                         queue.append(
                             self._profile(
@@ -456,7 +512,9 @@ class DownloadEngine:
 
                 if analysis.category == FailureCategory.COOKIE_FILE_REJECTED:
                     auth_state.reject_cookie_file(analysis.user_message)
-                    self._log("cookies.txt may be stale or rejected; it will not be repeated in this job.")
+                    self._log(
+                        "cookies.txt may be stale or rejected; it will not be repeated in this job."
+                    )
                     next_strategy = self._next_authenticated_strategy(auth_state)
                     if next_strategy:
                         queue.append(self._profile(next_strategy, reason="authenticated_fallback"))
@@ -468,7 +526,9 @@ class DownloadEngine:
                     FailureCategory.BROWSER_COOKIE_DECRYPTION_FAILED,
                     FailureCategory.BROWSER_COOKIE_EXTRACTION_FAILED,
                 }:
-                    browser = profile.auth_strategy.browser or profile.auth_strategy.display_name.lower()
+                    browser = (
+                        profile.auth_strategy.browser or profile.auth_strategy.display_name.lower()
+                    )
                     failure_kind = classify_browser_cookie_extraction_error(error.diagnostic_text())
                     auth_state.disable_browser(browser, analysis.category.value)
                     self._log(
@@ -484,55 +544,97 @@ class DownloadEngine:
                     break
 
                 if analysis.category == FailureCategory.HTTP_403_MEDIA_REJECTED:
-                    if profile.auth_strategy.attempted_auth and auth_state.authenticated_fallback_justified:
-                        next_strategy = self._next_authenticated_strategy(auth_state)
-                        if next_strategy:
-                            queue.append(self._profile(next_strategy, reason="authenticated_fallback"))
-                            continue
-                        break
                     if not clean_no_cookie_retry_used:
                         clean_no_cookie_retry_used = True
-                        self._log("HTTP 403 is not proof of authentication. Starting one clean no-cookie retry.")
+                        self._log(
+                            "HTTP 403 is not proof of authentication. Starting one clean no-cookie retry."
+                        )
                         self._emit_activity_status("Starting clean retry")
                         queue.append(
                             self._profile(
                                 public_strategy,
-                                format_selector=profile.format_selector,
+                                format_selector=proven_media_selector or profile.format_selector,
                                 player_clients=profile.player_clients,
                                 reason="public_clean_recovery",
                             )
                         )
                         continue
-                    if discovery_attempts < MAX_FORMAT_DISCOVERY_ATTEMPTS:
-                        discovery_attempts += 1
-                        alternative = self._discover_profile(
-                            url,
-                            public_strategy,
-                            ALTERNATIVE_YOUTUBE_CLIENTS[0],
-                            reason="public_alternative_client",
-                        )
-                        if alternative:
-                            queue.append(alternative)
-                            continue
-                        if self._queue_authentication_from_discovery(auth_state, queue):
-                            continue
-                        if self._last_discovery_failure and self._last_discovery_failure.category in {
-                            FailureCategory.PO_TOKEN_REQUIRED,
-                            FailureCategory.ONLY_IMAGE_FORMATS_AVAILABLE,
-                            FailureCategory.JAVASCRIPT_RUNTIME_UNAVAILABLE,
-                            FailureCategory.CHALLENGE_SOLVER_COMPONENT_UNAVAILABLE,
-                        }:
-                            last_analysis = self._last_discovery_failure
-                        else:
-                            last_analysis = FailureAnalysis(
-                                FailureCategory.HTTP_403_MEDIA_REJECTED,
-                                HTTP_403_FINAL_MESSAGE,
+
+                    if proven_media_selector and not verified_media_retry_used:
+                        if verified_strategy is not None:
+                            verified_media_retry_used = True
+                            auth_state.mark_attempted(verified_strategy)
+                            self._log(
+                                "Retrying media access using the verified dedicated "
+                                f"{verified_strategy.browser.title()} session."
                             )
+                            queue.append(
+                                self._profile(
+                                    verified_strategy,
+                                    format_selector=proven_media_selector,
+                                    reason="verified_session_media_retry",
+                                )
+                            )
+                            continue
+                        if verified_configured:
+                            last_analysis = FailureAnalysis(
+                                FailureCategory.VERIFIED_PROVIDER_NOT_APPLIED,
+                                verified_problem
+                                or "The verified browser provider could not be applied exactly.",
+                                authentication_specific=True,
+                            )
+                            break
+
+                    if po_enforcement_seen and not po_provider_retry_used:
+                        queued, provider_failure = self._queue_po_provider_attempt(
+                            queue,
+                            public_strategy,
+                            proven_media_selector or profile.format_selector,
+                        )
+                        po_provider_retry_used = queued
+                        if queued:
+                            continue
+                        last_analysis = provider_failure or analysis
                     else:
                         last_analysis = FailureAnalysis(
                             FailureCategory.HTTP_403_MEDIA_REJECTED,
                             HTTP_403_FINAL_MESSAGE,
                         )
+                    break
+
+                if analysis.category == FailureCategory.VERIFIED_SESSION_MEDIA_403:
+                    if not po_provider_retry_used:
+                        queued, provider_failure = self._queue_po_provider_attempt(
+                            queue,
+                            profile.auth_strategy,
+                            proven_media_selector or profile.format_selector,
+                            after_verified=True,
+                        )
+                        po_provider_retry_used = queued
+                        if queued:
+                            continue
+                        last_analysis = provider_failure or analysis
+                    break
+
+                if analysis.category in {
+                    FailureCategory.PO_TOKEN_REQUIRED,
+                    FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS,
+                }:
+                    if not po_provider_retry_used:
+                        provider_auth = (
+                            profile.auth_strategy
+                            if profile.auth_strategy.is_dedicated_browser
+                            else public_strategy
+                        )
+                        queued, provider_failure = self._queue_po_provider_attempt(
+                            queue,
+                            provider_auth,
+                            proven_media_selector or profile.format_selector,
+                        )
+                        po_provider_retry_used = queued
+                        if queued:
+                            continue
+                        last_analysis = provider_failure or analysis
                     break
 
                 if analysis.category == FailureCategory.REQUESTED_FORMAT_UNAVAILABLE:
@@ -551,27 +653,25 @@ class DownloadEngine:
                             continue
                         if self._last_discovery_failure:
                             last_analysis = self._last_discovery_failure
-                    break
-
-                if analysis.category == FailureCategory.ONLY_IMAGE_FORMATS_AVAILABLE:
-                    if (
-                        not profile.auth_strategy.attempted_auth
-                        and discovery_attempts < MAX_FORMAT_DISCOVERY_ATTEMPTS
-                    ):
-                        discovery_attempts += 1
-                        alternative = self._discover_profile(
-                            url,
-                            public_strategy,
-                            ALTERNATIVE_YOUTUBE_CLIENTS[0],
-                            reason="public_image_only_recovery",
-                        )
-                        if alternative:
-                            queue.append(alternative)
-                            continue
-                        if self._queue_authentication_from_discovery(auth_state, queue):
-                            continue
-                        if self._last_discovery_failure:
-                            last_analysis = self._last_discovery_failure
+                            if (
+                                last_analysis.category == FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS
+                                and not profile.auth_strategy.attempted_auth
+                                and not clean_no_cookie_retry_used
+                            ):
+                                clean_no_cookie_retry_used = True
+                                self._log(
+                                    "Image-only discovery is not proof of PO enforcement. "
+                                    "Starting one clean public retry."
+                                )
+                                queue.append(
+                                    self._profile(
+                                        public_strategy,
+                                        format_selector=profile.format_selector,
+                                        player_clients=profile.player_clients,
+                                        reason="public_clean_recovery",
+                                    )
+                                )
+                                continue
                     break
 
                 break
@@ -614,7 +714,13 @@ class DownloadEngine:
             "restrictfilenames": self.options.restrict_filenames,
             "overwrites": self.options.overwrite,
             "continuedl": True,
-            "extractor_args": {"youtube": {"player_client": list(DEFAULT_YOUTUBE_CLIENTS)}},
+            "extractor_args": {
+                "youtube": {
+                    "player_client": list(DEFAULT_YOUTUBE_CLIENTS),
+                    "fetch_pot": ["never"],
+                    "pot_trace": ["false"],
+                }
+            },
             **THROTTLE_SAFE_OPTIONS,
         }
 
@@ -670,9 +776,7 @@ class DownloadEngine:
             kind="dedicated_browser",
             display_name=f"Dedicated Neural Extractor {selected_browser.display_name} profile",
             attempted_auth=True,
-            ydl_options={
-                "cookiesfrombrowser": (selected_browser.value, str(extraction_profile))
-            },
+            ydl_options={"cookiesfrombrowser": (selected_browser.value, str(extraction_profile))},
         )
         prepared_url = self.prepare_url(url)
         attempt = self._profile(strategy, reason="youtube_connection_verification")
@@ -692,6 +796,7 @@ class DownloadEngine:
         format_selector: str | None = None,
         player_clients: tuple[str, ...] = DEFAULT_YOUTUBE_CLIENTS,
         reason: str,
+        po_token_provider: bool = False,
     ) -> DownloadAttemptProfile:
         return DownloadAttemptProfile(
             auth_strategy=auth_strategy,
@@ -700,6 +805,7 @@ class DownloadEngine:
             node_runtime_available=self.js_runtime_status.found,
             remote_ejs_enabled="ejs:github" in YOUTUBE_REMOTE_COMPONENTS,
             reason=reason,
+            po_token_provider=po_token_provider,
         )
 
     def _run_profile(self, prepared_url: str, profile: DownloadAttemptProfile) -> YtdlpRunResult:
@@ -745,7 +851,14 @@ class DownloadEngine:
         extractor_args = dict(ydl_opts.get("extractor_args") or {})
         youtube_args = dict(extractor_args.get("youtube") or {})
         youtube_args["player_client"] = list(profile.player_clients)
+        youtube_args["fetch_pot"] = ["auto" if profile.po_token_provider else "never"]
+        youtube_args["pot_trace"] = ["false"]
         extractor_args["youtube"] = youtube_args
+        if profile.po_token_provider:
+            provider_options = self.po_token_provider.ytdlp_options()
+            provider_extractor_args = provider_options.get("extractor_args") or {}
+            provider_args = provider_extractor_args.get(PROVIDER_EXTRACTOR_KEY) or {}
+            extractor_args[PROVIDER_EXTRACTOR_KEY] = dict(provider_args)
         ydl_opts["extractor_args"] = extractor_args
         return ydl_opts
 
@@ -792,8 +905,8 @@ class DownloadEngine:
         if selection.image_only:
             self._log("Only image formats available; no media download will be attempted.")
             self._last_discovery_failure = FailureAnalysis(
-                FailureCategory.ONLY_IMAGE_FORMATS_AVAILABLE,
-                "YouTube exposed only image formats; no downloadable audio or video format was available.",
+                FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS,
+                "YouTube exposed only SABR or image formats; no directly downloadable media format was available.",
             )
             return None
         if not selection.selector:
@@ -943,6 +1056,8 @@ class DownloadEngine:
                 format_selector=str(ydl_opts.get("format") or ""),
                 player_clients=self._player_clients_from_options(ydl_opts),
                 category_hint=FailureCategory.NETWORK_INACTIVITY_TIMEOUT,
+                formats=formats,
+                metadata=metadata,
             ) from exc
         except ProcessTotalTimeoutError as exc:
             flush_buffers()
@@ -960,6 +1075,8 @@ class DownloadEngine:
                 format_selector=str(ydl_opts.get("format") or ""),
                 player_clients=self._player_clients_from_options(ydl_opts),
                 category_hint=FailureCategory.TOTAL_ATTEMPT_TIMEOUT,
+                formats=formats,
+                metadata=metadata,
             ) from exc
         except ProcessLaunchError as exc:
             flush_buffers()
@@ -972,6 +1089,8 @@ class DownloadEngine:
                 phase="startup",
                 format_selector=str(ydl_opts.get("format") or ""),
                 player_clients=self._player_clients_from_options(ydl_opts),
+                formats=formats,
+                metadata=metadata,
             ) from exc
 
         flush_buffers()
@@ -983,14 +1102,121 @@ class DownloadEngine:
                 phase=phase,
                 format_selector=str(ydl_opts.get("format") or ""),
                 player_clients=self._player_clients_from_options(ydl_opts),
-                category_hint=(
-                    FailureCategory.WORKER_PROTOCOL_ERROR if protocol_error else None
-                ),
+                category_hint=(FailureCategory.WORKER_PROTOCOL_ERROR if protocol_error else None),
+                formats=formats,
+                metadata=metadata,
             )
         return YtdlpRunResult(
             formats=formats,
             metadata=metadata,
             diagnostic=output.diagnostic_text(),
+        )
+
+    def _recent_verified_strategy(
+        self,
+        resolution: AuthResolution,
+    ) -> tuple[AuthStrategy | None, str]:
+        browser_name = str(self.options.dedicated_browser or "").casefold()
+        profile_path = self.options.dedicated_browser_profile
+        verified_at = str(self.options.dedicated_browser_last_verified or "").strip()
+        if not browser_name and not profile_path and not verified_at:
+            return None, ""
+        if not browser_name or profile_path is None:
+            return None, "The verified browser provider state is incomplete."
+        try:
+            browser = ManagedBrowser(browser_name)
+        except ValueError:
+            return None, "The verified browser provider identity is invalid."
+        try:
+            parsed = datetime.fromisoformat(verified_at.replace("Z", "+00:00"))
+            if parsed.tzinfo is None:
+                raise ValueError("timestamp has no timezone")
+            age = datetime.now(UTC) - parsed.astimezone(UTC)
+        except (OverflowError, OSError, ValueError):
+            return None, "The verified browser timestamp is missing or invalid."
+        if age < -timedelta(minutes=5) or age > VERIFIED_PROVIDER_MAX_AGE:
+            return None, "The verified browser session is no longer recent; verify it again."
+
+        matches = [
+            strategy
+            for strategy in resolution.strategies
+            if strategy.is_dedicated_browser and strategy.browser == browser.value
+        ]
+        if len(matches) != 1:
+            return None, "The exact verified browser provider was not applied."
+        return matches[0], ""
+
+    def _queue_po_provider_attempt(
+        self,
+        queue: deque[DownloadAttemptProfile],
+        auth_strategy: AuthStrategy,
+        format_selector: str,
+        *,
+        after_verified: bool = False,
+    ) -> tuple[bool, FailureAnalysis | None]:
+        status = self.po_token_provider_status
+        if not status.available or not status.integrity_verified:
+            message = (
+                "The optional external PO Token helper is not installed, failed integrity "
+                "verification, or is unavailable."
+            )
+            if after_verified:
+                message = f"{VERIFIED_SESSION_MEDIA_403_MESSAGE} {message}"
+            return False, FailureAnalysis(
+                FailureCategory.PO_TOKEN_PROVIDER_UNAVAILABLE,
+                message,
+            )
+        self._log(
+            "PO Token enforcement matched; starting one separately installed external "
+            "helper attempt for mweb GVS with automatic content binding."
+        )
+        self._emit_activity_status("Requesting protected YouTube media")
+        queue.append(
+            self._profile(
+                auth_strategy,
+                format_selector=format_selector,
+                player_clients=("mweb",),
+                reason="po_provider_mweb",
+                po_token_provider=True,
+            )
+        )
+        return True, None
+
+    def _media_selector_from_formats(self, formats: list[dict[str, Any]]) -> str:
+        selection = select_discovered_format(
+            formats,
+            self.options.media_mode,
+            max_height=QUALITY_PRESETS.get(self.options.quality),
+        )
+        return selection.selector or ""
+
+    def _is_proven_media_403(self, error: YtdlpRunError) -> bool:
+        return (
+            error.phase == "download"
+            and self._raw_http_403(error.diagnostic_text())
+            and bool(self._media_selector_from_formats(error.formats))
+        )
+
+    @staticmethod
+    def _raw_http_403(error_text: str) -> bool:
+        lowered = error_text.casefold()
+        return any(
+            marker in lowered for marker in ("http error 403", "http status 403", "403 forbidden")
+        )
+
+    @staticmethod
+    def _has_po_enforcement_signal(error_text: str) -> bool:
+        lowered = error_text.casefold()
+        return any(
+            marker in lowered
+            for marker in (
+                "po token",
+                "proof of origin token",
+                "gvs token",
+                "missing pot",
+                "sabr-only",
+                "only sabr",
+            )
         )
 
     def _queue_authentication_from_discovery(
@@ -1012,9 +1238,15 @@ class DownloadEngine:
         auth_state: AuthenticationState,
     ) -> AuthStrategy | None:
         auth_state.justify_authenticated_fallback()
-        if self.options.guided_youtube_auth and not (
-            self.options.dedicated_browser_profile or self.options.dedicated_firefox_profile
-        ):
+        if self.options.guided_youtube_auth:
+            expected_browser = str(self.options.dedicated_browser or "").casefold()
+            for strategy in auth_state.eligible_authenticated_strategies():
+                if not strategy.is_dedicated_browser:
+                    continue
+                if expected_browser and strategy.browser != expected_browser:
+                    continue
+                auth_state.mark_attempted(strategy)
+                return strategy
             return None
         return auth_state.next_authenticated_strategy()
 
@@ -1047,11 +1279,65 @@ class DownloadEngine:
                 "The internal yt-dlp worker returned malformed protocol data. Retry the download; "
                 "if it repeats, include the Activity Log in a support report.",
             )
-        return classify_youtube_failure(
+        attempt_kind = "public"
+        if profile.po_token_provider:
+            attempt_kind = "po_token"
+        elif profile.reason == "verified_session_media_retry":
+            attempt_kind = "verified_session"
+        elif profile.auth_strategy.attempted_auth:
+            attempt_kind = "authenticated"
+        classified = classify_youtube_failure(
             error.diagnostic_text(),
             auth_kind=profile.auth_strategy.kind,
             javascript_runtime_available=self.js_runtime_status.found,
+            attempt_kind=attempt_kind,
         )
+        if classified.category in {
+            FailureCategory.PO_TOKEN_PROVIDER_UNAVAILABLE,
+            FailureCategory.PO_TOKEN_FETCH_FAILED,
+        }:
+            return classified
+        if profile.po_token_provider and classified.category == FailureCategory.PO_TOKEN_REQUIRED:
+            return FailureAnalysis(
+                FailureCategory.PO_TOKEN_FETCH_FAILED,
+                "The PO Token provider did not supply the required token.",
+            )
+        if error.phase == "download" and self._raw_http_403(error.diagnostic_text()):
+            if profile.po_token_provider:
+                return FailureAnalysis(
+                    FailureCategory.PO_TOKEN_MEDIA_403,
+                    "The PO Token provider ran, but YouTube still rejected the media request.",
+                )
+            if profile.reason == "verified_session_media_retry":
+                return FailureAnalysis(
+                    FailureCategory.VERIFIED_SESSION_MEDIA_403,
+                    VERIFIED_SESSION_MEDIA_403_MESSAGE,
+                    authentication_specific=True,
+                )
+            if profile.auth_strategy.attempted_auth:
+                return FailureAnalysis(
+                    FailureCategory.MEDIA_ACCESS_REJECTED_AFTER_AUTHENTICATION,
+                    "YouTube rejected the media request after authentication.",
+                    authentication_specific=True,
+                )
+            return FailureAnalysis(
+                FailureCategory.HTTP_403_MEDIA_REJECTED,
+                "YouTube rejected the media request with HTTP 403.",
+            )
+        if profile.po_token_provider:
+            if classified.category == FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS:
+                return classified
+            if profile.auth_strategy.attempted_auth:
+                return FailureAnalysis(
+                    FailureCategory.MEDIA_ACCESS_REJECTED_AFTER_AUTHENTICATION,
+                    "YouTube rejected media access after the authenticated PO Token attempt.",
+                    authentication_specific=True,
+                )
+            return FailureAnalysis(
+                FailureCategory.PO_TOKEN_FETCH_FAILED,
+                "The PO Token provider attempt did not produce usable protected media.",
+            )
+        return classified
 
     def _worker_command(self) -> list[str]:
         if getattr(sys, "frozen", False):
@@ -1068,9 +1354,14 @@ class DownloadEngine:
         environment["PYTHONPATH"] = os.pathsep.join(paths)
         environment["PYTHONUTF8"] = "1"
         environment["PYTHONIOENCODING"] = "utf-8"
+        environment["YTDLP_NO_PLUGINS"] = "1"
+        environment["FORCE_COLOR"] = "false"
+        environment.pop("NODE_OPTIONS", None)
+        environment.pop("NODE_PATH", None)
         if attempt_temp is not None:
             environment["TEMP"] = str(attempt_temp)
             environment["TMP"] = str(attempt_temp)
+            environment["XDG_CACHE_HOME"] = str(attempt_temp / "cache")
         return environment
 
     def _create_attempt_temp(self) -> Path:
@@ -1132,13 +1423,14 @@ class DownloadEngine:
         elif profile.reason == "public_clean_recovery":
             self._log("Starting clean retry without cookies (auth=none).")
             self._emit_activity_status("Starting clean retry")
+        elif profile.po_token_provider:
+            self._log("Starting the single supported external-helper mweb GVS attempt.")
+            self._emit_activity_status("Requesting protected YouTube media")
         elif profile.auth_strategy.is_cookie_file:
             self._log("Authenticating with cookies.txt.")
             self._emit_activity_status("Authenticating with cookies.txt")
         elif profile.auth_strategy.is_dedicated_browser:
-            self._log(
-                f"Using the {profile.auth_strategy.display_name} for YouTube authentication."
-            )
+            self._log(f"Using the {profile.auth_strategy.display_name} for YouTube authentication.")
             self._emit_activity_status("Authenticating with the YouTube connection")
         elif profile.auth_strategy.is_browser:
             self._log(f"Trying browser cookies from {profile.auth_strategy.display_name}.")
@@ -1160,10 +1452,12 @@ class DownloadEngine:
             auth_source = "none"
         node_state = "found" if profile.node_runtime_available else "not found"
         ejs_state = "enabled" if profile.remote_ejs_enabled else "disabled"
+        pot_state = "external-helper:mweb-gvs" if profile.po_token_provider else "disabled"
         return (
             f"auth={auth_source}; format={profile.format_selector}; "
             f"client={','.join(profile.player_clients) or 'default'}; "
-            f"node={node_state}; remote EJS={ejs_state}; reason={profile.reason}"
+            f"node={node_state}; remote EJS={ejs_state}; PO provider={pot_state}; "
+            f"reason={profile.reason}"
         )
 
     def _log_discovery_selection(self, selection: DiscoveredFormatSelection) -> None:
@@ -1213,7 +1507,25 @@ class DownloadEngine:
 
         player_clients = self._player_clients_from_options(ydl_opts)
         if player_clients:
-            add_option("--extractor-args", f"youtube:player_client={','.join(player_clients)}")
+            extractor_args = ydl_opts.get("extractor_args") or {}
+            youtube_args = extractor_args.get("youtube") or {}
+            fetch_pot = youtube_args.get("fetch_pot") or ()
+            if isinstance(fetch_pot, str):
+                fetch_pot = (fetch_pot,)
+            pot_trace = youtube_args.get("pot_trace") or ()
+            if isinstance(pot_trace, str):
+                pot_trace = (pot_trace,)
+            rendered = f"youtube:player_client={','.join(player_clients)}"
+            if fetch_pot:
+                rendered += f";fetch_pot={','.join(map(str, fetch_pot))}"
+            if pot_trace:
+                rendered += f";pot_trace={','.join(map(str, pot_trace))}"
+            add_option("--extractor-args", rendered)
+            if extractor_args.get(PROVIDER_EXTRACTOR_KEY):
+                add_option(
+                    "--extractor-args",
+                    f"{PROVIDER_EXTRACTOR_KEY}:protocol=1",
+                )
         if ydl_opts.get("ffmpeg_location"):
             add_option("--ffmpeg-location", ydl_opts["ffmpeg_location"])
         if ydl_opts.get("cookiefile"):
@@ -1261,7 +1573,7 @@ class DownloadEngine:
             elif key == "FFmpegSubtitlesConvertor":
                 add_option("--convert-subs", processor.get("format"))
         args.append(url)
-        return subprocess.list2cmdline(args)
+        return self._redact_diagnostic_text(subprocess.list2cmdline(args))
 
     def _output_template(self, playlist: bool) -> str:
         if playlist:
@@ -1373,7 +1685,7 @@ class DownloadEngine:
         )
 
     def _redact_diagnostic_text(self, value: str) -> str:
-        text = str(value or "")
+        text = redact_po_token_material(str(value or ""))
         if self.options.cookie_file:
             text = text.replace(str(self.options.cookie_file), "<cookies.txt>")
         if self.options.dedicated_firefox_profile:
@@ -1394,7 +1706,7 @@ class DownloadEngine:
             r"\1=<redacted>",
             text,
         )
-        return text
+        return redact_po_token_material(text)
 
     def _clean_error_message(self, error_text: str) -> str:
         analysis = classify_youtube_failure(

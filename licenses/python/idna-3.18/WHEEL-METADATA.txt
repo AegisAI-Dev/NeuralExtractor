@@ -1,0 +1,5 @@
+Name: idna
+Version: 3.18
+License expression/field: BSD-3-Clause
+Copied files:
+- idna-3.18.dist-info__licenses__LICENSE.md SHA-256 1a9a4f0e3d479a27240ddd59a9137a66ab4a0f9dfdc8ca6188cc0bfd85187f04

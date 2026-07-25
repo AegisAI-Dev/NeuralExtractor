@@ -23,7 +23,12 @@ def select_discovered_format(
 ) -> DiscoveredFormatSelection:
     """Return a selector composed only from concrete discovered format IDs."""
 
-    media = [item for item in formats if _has_video(item) or _has_audio(item)]
+    media = [
+        item
+        for item in formats
+        if not _is_sabr_or_image_transport(item)
+        and (_has_video(item) or _has_audio(item))
+    ]
     if not media:
         return DiscoveredFormatSelection(None, 0, bool(formats))
 
@@ -85,6 +90,19 @@ def _has_video(item: dict[str, Any]) -> bool:
 
 def _has_audio(item: dict[str, Any]) -> bool:
     return _codec_present(item.get("acodec"))
+
+
+def _is_sabr_or_image_transport(item: dict[str, Any]) -> bool:
+    protocol = str(item.get("protocol") or "").casefold()
+    extension = str(item.get("ext") or "").casefold()
+    format_note = str(item.get("format_note") or "").casefold()
+    return (
+        "sabr" in protocol
+        or "sabr" in format_note
+        or protocol in {"mhtml", "images"}
+        or extension in {"mhtml", "html"}
+        or "storyboard" in format_note
+    )
 
 
 def _number(value: Any) -> float:

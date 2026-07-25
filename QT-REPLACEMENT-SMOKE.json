@@ -1,0 +1,197 @@
+{
+  "integrity_block_absent": true,
+  "lgpl_relink_proven": false,
+  "overlay_targets": [
+    "PySide6/plugins/platforms/qoffscreen.dll",
+    "PySide6/plugins/platforms/qwindows.dll"
+  ],
+  "release_gate_status": "HOLD",
+  "replacement_gui": {
+    "checks": {
+      "browse_visible_at_minimum": true,
+      "connection_buttons_accessible": true,
+      "dpi_scenarios_supported": true,
+      "narrow_buttons_stack": true,
+      "no_horizontal_settings_scroll": true,
+      "output_path_expands": true,
+      "qt_ico_plugin": true,
+      "qt_png_asset": true,
+      "queue_and_log_usable": true,
+      "requested_platform_plugin": true,
+      "settings_vertically_scrollable": true,
+      "splitter_adjustable": true,
+      "window_resizable": true
+    },
+    "passed": true,
+    "platform": "offscreen",
+    "qt_binding_module_paths": {
+      "QtCore.pyd": "PySide6/QtCore.pyd",
+      "QtGui.pyd": "PySide6/QtGui.pyd",
+      "QtWidgets.pyd": "PySide6/QtWidgets.pyd",
+      "Shiboken.pyd": "shiboken6/Shiboken.pyd"
+    },
+    "qt_library_paths": [
+      "PySide6/plugins",
+      "."
+    ],
+    "qt_loaded_library_paths": {
+      "Qt6Core.dll": "PySide6/Qt6Core.dll",
+      "Qt6Gui.dll": "PySide6/Qt6Gui.dll",
+      "Qt6Widgets.dll": "PySide6/Qt6Widgets.dll",
+      "pyside6.abi3.dll": "PySide6/pyside6.abi3.dll",
+      "qico.dll": "PySide6/plugins/imageformats/qico.dll",
+      "qoffscreen.dll": "PySide6/plugins/platforms/qoffscreen.dll",
+      "shiboken6.abi3.dll": "shiboken6/shiboken6.abi3.dll"
+    },
+    "qt_plugins_path": "PySide6/plugins",
+    "window_title": "Neural Extractor V3 3.0.8"
+  },
+  "replacement_set": "PyPI win_amd64 PySide6-Essentials/Shiboken6 6.11.1",
+  "replacement_sha256": {
+    "PySide6/MSVCP140.dll": "708dd7bbc7bd23bce9e93f7837a70c2dd7ad55cff43801e92c0f7fcd7dda47cd",
+    "PySide6/MSVCP140_1.dll": "b2113956aa3fcb9decfe65be1ee7829f8e3ae0899633ae89fe04888ada201594",
+    "PySide6/MSVCP140_2.dll": "1b806b427ffb573deff8478cf6fe336465fe2c67e0919bb95f452b6f31d25736",
+    "PySide6/Qt6Core.dll": "65fe6224b6c47a15b058738031d31dce9928c4d7a58e1b8db6434f6f5cddd702",
+    "PySide6/Qt6Gui.dll": "cd071161ad325ff2de92b0e33d71334ef20712544796949623ce92dfb3957e90",
+    "PySide6/Qt6Widgets.dll": "5a9f37dedd3dc5bcc1a4bb8ea919c49fc62df751a1450accc34379eb6710eab6",
+    "PySide6/QtCore.pyd": "be52341a5df1f76ecca2fb1e94eb429dfa46f0b659ed6536f25119b565b21ea8",
+    "PySide6/QtGui.pyd": "f0549716b10a8b4fbd5c6c041f36af215223809f919f4c4722d44cc199d5c593",
+    "PySide6/QtWidgets.pyd": "85cb6c2181b4b09887a7d8507dd950844d1b8f74a9c4002c7b71169f75bf6fda",
+    "PySide6/VCRUNTIME140.dll": "c6e841078cd352299a58925991e2552f7251b046253ba895b3ad50cd5cd32ec6",
+    "PySide6/VCRUNTIME140_1.dll": "b322e382ea249b50009f14a9a71ad16729eb6e4b58a8d3b3be6ac66ea6342a22",
+    "PySide6/opengl32sw.dll": "4a7d90f91fdecb5df7b426bc2d05974b8d7ffa450af2d1f93f3eca05800718da",
+    "PySide6/plugins/imageformats/qico.dll": "f81378dd51392ff0d3ae094d5e59dfc4fa664a0ef4d756d6ed40584f90af2758",
+    "PySide6/plugins/platforms/qoffscreen.dll": "c957ade9ea8e657fc0880d71610635efcce3d359caf29de5489d73726bbed9d0",
+    "PySide6/plugins/platforms/qwindows.dll": "e236830cb25e39ee39b4d0843952182e050dab8019d54aa79d8ba113e0ab0d91",
+    "PySide6/plugins/styles/qmodernwindowsstyle.dll": "9af96b09ebaf7ff13e22c70bf69b9c3f226f069375d1a9f9efd63e944e43f5fb",
+    "PySide6/pyside6.abi3.dll": "d4072be872b31f3748de5e6c28cb2976dafbf063d3ccfa38e5dabda29babcdaf",
+    "shiboken6/MSVCP140.dll": "005f2324c7ff79bbe9a44992b0708abb4c871bd24bcc7a34aca5eab4439c1f4a",
+    "shiboken6/Shiboken.pyd": "0e2c5318c5ac60a016a12230bbb1f6a9d990c45cbf4a7c4af24aefb5ab7dc40a",
+    "shiboken6/VCRUNTIME140.dll": "8d9c679c825c5fff298d66c41af30f35c289fc101868dfc9635547bada0daba6",
+    "shiboken6/VCRUNTIME140_1.dll": "e4d7ea5f4f4ff6d0c208e693853617cdef0ad71cfe5dd5c3ae16c8a6b64c18ea",
+    "shiboken6/shiboken6.abi3.dll": "47f4f9b44c95037565dd14f4be04f350f20c53c05483b750e0be867c39a7441e"
+  },
+  "replacement_windows_gui": {
+    "checks": {
+      "browse_visible_at_minimum": true,
+      "connection_buttons_accessible": true,
+      "dpi_scenarios_supported": true,
+      "narrow_buttons_stack": true,
+      "no_horizontal_settings_scroll": true,
+      "output_path_expands": true,
+      "qt_ico_plugin": true,
+      "qt_png_asset": true,
+      "queue_and_log_usable": true,
+      "requested_platform_plugin": true,
+      "settings_vertically_scrollable": true,
+      "splitter_adjustable": true,
+      "window_resizable": true
+    },
+    "passed": true,
+    "platform": "windows",
+    "qt_binding_module_paths": {
+      "QtCore.pyd": "PySide6/QtCore.pyd",
+      "QtGui.pyd": "PySide6/QtGui.pyd",
+      "QtWidgets.pyd": "PySide6/QtWidgets.pyd",
+      "Shiboken.pyd": "shiboken6/Shiboken.pyd"
+    },
+    "qt_library_paths": [
+      "PySide6/plugins",
+      "."
+    ],
+    "qt_loaded_library_paths": {
+      "Qt6Core.dll": "PySide6/Qt6Core.dll",
+      "Qt6Gui.dll": "PySide6/Qt6Gui.dll",
+      "Qt6Widgets.dll": "PySide6/Qt6Widgets.dll",
+      "pyside6.abi3.dll": "PySide6/pyside6.abi3.dll",
+      "qico.dll": "PySide6/plugins/imageformats/qico.dll",
+      "qwindows.dll": "PySide6/plugins/platforms/qwindows.dll",
+      "shiboken6.abi3.dll": "shiboken6/shiboken6.abi3.dll"
+    },
+    "qt_plugins_path": "PySide6/plugins",
+    "window_title": "Neural Extractor V3 3.0.8"
+  },
+  "rollback_byte_exact": true,
+  "rollback_gui": {
+    "checks": {
+      "browse_visible_at_minimum": true,
+      "connection_buttons_accessible": true,
+      "dpi_scenarios_supported": true,
+      "narrow_buttons_stack": true,
+      "no_horizontal_settings_scroll": true,
+      "output_path_expands": true,
+      "qt_ico_plugin": true,
+      "qt_png_asset": true,
+      "queue_and_log_usable": true,
+      "requested_platform_plugin": true,
+      "settings_vertically_scrollable": true,
+      "splitter_adjustable": true,
+      "window_resizable": true
+    },
+    "passed": true,
+    "platform": "offscreen",
+    "qt_binding_module_paths": {
+      "QtCore.pyd": "PySide6/QtCore.pyd",
+      "QtGui.pyd": "PySide6/QtGui.pyd",
+      "QtWidgets.pyd": "PySide6/QtWidgets.pyd",
+      "Shiboken.pyd": "shiboken6/Shiboken.pyd"
+    },
+    "qt_library_paths": [
+      "PySide6/plugins",
+      "."
+    ],
+    "qt_loaded_library_paths": {
+      "Qt6Core.dll": "PySide6/Qt6Core.dll",
+      "Qt6Gui.dll": "PySide6/Qt6Gui.dll",
+      "Qt6Widgets.dll": "PySide6/Qt6Widgets.dll",
+      "pyside6.abi3.dll": "PySide6/pyside6.abi3.dll",
+      "qico.dll": "PySide6/plugins/imageformats/qico.dll",
+      "qoffscreen.dll": "PySide6/plugins/platforms/qoffscreen.dll",
+      "shiboken6.abi3.dll": "shiboken6/shiboken6.abi3.dll"
+    },
+    "qt_plugins_path": "PySide6/plugins",
+    "window_title": "Neural Extractor V3 3.0.8"
+  },
+  "status": "PASS",
+  "test_classification": "external-library-integrity-policy-smoke; not a source-built LGPL relink proof",
+  "windows_gui": {
+    "checks": {
+      "browse_visible_at_minimum": true,
+      "connection_buttons_accessible": true,
+      "dpi_scenarios_supported": true,
+      "narrow_buttons_stack": true,
+      "no_horizontal_settings_scroll": true,
+      "output_path_expands": true,
+      "qt_ico_plugin": true,
+      "qt_png_asset": true,
+      "queue_and_log_usable": true,
+      "requested_platform_plugin": true,
+      "settings_vertically_scrollable": true,
+      "splitter_adjustable": true,
+      "window_resizable": true
+    },
+    "passed": true,
+    "platform": "windows",
+    "qt_binding_module_paths": {
+      "QtCore.pyd": "PySide6/QtCore.pyd",
+      "QtGui.pyd": "PySide6/QtGui.pyd",
+      "QtWidgets.pyd": "PySide6/QtWidgets.pyd",
+      "Shiboken.pyd": "shiboken6/Shiboken.pyd"
+    },
+    "qt_library_paths": [
+      "PySide6/plugins",
+      "."
+    ],
+    "qt_loaded_library_paths": {
+      "Qt6Core.dll": "PySide6/Qt6Core.dll",
+      "Qt6Gui.dll": "PySide6/Qt6Gui.dll",
+      "Qt6Widgets.dll": "PySide6/Qt6Widgets.dll",
+      "pyside6.abi3.dll": "PySide6/pyside6.abi3.dll",
+      "qico.dll": "PySide6/plugins/imageformats/qico.dll",
+      "qwindows.dll": "PySide6/plugins/platforms/qwindows.dll",
+      "shiboken6.abi3.dll": "shiboken6/shiboken6.abi3.dll"
+    },
+    "qt_plugins_path": "PySide6/plugins",
+    "window_title": "Neural Extractor V3 3.0.8"
+  }
+}

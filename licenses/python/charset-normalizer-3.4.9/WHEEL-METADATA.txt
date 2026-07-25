@@ -1,0 +1,5 @@
+Name: charset-normalizer
+Version: 3.4.9
+License expression/field: MIT
+Copied files:
+- charset_normalizer-3.4.9.dist-info__licenses__LICENSE SHA-256 18577485d3704f1a479ded8e573c0976cfed315fd2fd17983fa988da4c2f70d1

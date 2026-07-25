@@ -14,7 +14,9 @@ Neural Extractor V3 is a clean rebuild of the app as a separate professional edi
 - Optional `cookies.txt` support retained as an advanced compatibility fallback.
 - Optional metadata JSON output.
 - CLI mode for scripted downloads.
-- PyQt6 desktop interface with progress, queue status, and logs.
+- PySide6 desktop interface with progress, queue status, and logs.
+- Optional PO-token support only through a separately installed, hash-verified
+  external helper; ordinary downloads do not require it.
 
 ## Start
 

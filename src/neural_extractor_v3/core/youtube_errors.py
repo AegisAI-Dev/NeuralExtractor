@@ -18,9 +18,16 @@ class FailureCategory(str, Enum):
     BROWSER_COOKIE_DECRYPTION_FAILED = "browser_cookie_decryption_failed"
     BROWSER_COOKIE_EXTRACTION_FAILED = "browser_cookie_extraction_failed"
     HTTP_403_MEDIA_REJECTED = "http_403_media_rejected"
+    VERIFIED_PROVIDER_NOT_APPLIED = "verified_provider_not_applied"
+    VERIFIED_SESSION_MEDIA_403 = "verified_session_media_403"
+    PO_TOKEN_PROVIDER_UNAVAILABLE = "po_token_provider_unavailable"
+    PO_TOKEN_FETCH_FAILED = "po_token_fetch_failed"
+    PO_TOKEN_MEDIA_403 = "po_token_media_403"
+    MEDIA_ACCESS_REJECTED_AFTER_AUTHENTICATION = "media_access_rejected_after_authentication"
     PO_TOKEN_REQUIRED = "po_token_required"
     REQUESTED_FORMAT_UNAVAILABLE = "requested_format_unavailable"
-    ONLY_IMAGE_FORMATS_AVAILABLE = "only_image_formats_available"
+    ONLY_SABR_OR_IMAGE_FORMATS = "only_sabr_or_image_formats"
+    ONLY_IMAGE_FORMATS_AVAILABLE = "only_sabr_or_image_formats"
     NETWORK_TRANSIENT = "network_transient"
     NETWORK_INACTIVITY_TIMEOUT = "network_inactivity_timeout"
     TOTAL_ATTEMPT_TIMEOUT = "total_attempt_timeout"
@@ -110,6 +117,28 @@ _PO_TOKEN_PATTERNS = (
     "proof of origin token",
 )
 
+_PO_PROVIDER_UNAVAILABLE_PATTERNS = (
+    "external_po_helper_unavailable",
+    "external_po_helper_helper_unavailable",
+    "po_token_provider_unavailable",
+    "po token provider unavailable",
+    "no po token providers registered",
+    "no po token providers were able",
+    "po token provider is not available",
+)
+
+_PO_FETCH_FAILURE_PATTERNS = (
+    "external_po_helper_",
+    "_get_pot_via_script failed",
+    "error fetching po token",
+    "unexpected error when fetching po token",
+    "invalid po token response",
+    "script did not respond with a po_token",
+    "failed while generating pot",
+    "failed to check script version",
+    "timeout expired when trying to run script",
+)
+
 _MISSING_RUNTIME_PATTERNS = (
     "no supported javascript runtime could be found",
     "no javascript runtime could be found",
@@ -133,6 +162,7 @@ def classify_youtube_failure(
     *,
     auth_kind: str = "none",
     javascript_runtime_available: bool = True,
+    attempt_kind: str = "public",
 ) -> FailureAnalysis:
     """Classify actual yt-dlp output, never a rendered command line.
 
@@ -195,6 +225,34 @@ def classify_youtube_failure(
             authentication_specific=True,
         )
 
+    if any(pattern in lowered for pattern in _PO_PROVIDER_UNAVAILABLE_PATTERNS):
+        return FailureAnalysis(
+            FailureCategory.PO_TOKEN_PROVIDER_UNAVAILABLE,
+            "The optional external PO Token helper is unavailable.",
+        )
+
+    if any(pattern in lowered for pattern in _PO_FETCH_FAILURE_PATTERNS):
+        return FailureAnalysis(
+            FailureCategory.PO_TOKEN_FETCH_FAILED,
+            "The optional external PO Token helper could not obtain a valid token.",
+        )
+
+    if any(
+        pattern in lowered
+        for pattern in (
+            "only sabr formats",
+            "only sabr or image formats",
+            "sabr-only",
+            "only images are available",
+            "only image formats",
+            "only storyboard formats",
+        )
+    ):
+        return FailureAnalysis(
+            FailureCategory.ONLY_SABR_OR_IMAGE_FORMATS,
+            "YouTube exposed only SABR or image formats; no directly downloadable media format was available.",
+        )
+
     if any(token in lowered for token in _PO_TOKEN_PATTERNS) and any(
         marker in lowered
         for marker in ("required", "requires", "missing", "not provided", "without")
@@ -202,12 +260,6 @@ def classify_youtube_failure(
         return FailureAnalysis(
             FailureCategory.PO_TOKEN_REQUIRED,
             "The selected YouTube client requires a PO Token to expose downloadable media formats.",
-        )
-
-    if "only images are available" in lowered or "only image formats" in lowered:
-        return FailureAnalysis(
-            FailureCategory.ONLY_IMAGE_FORMATS_AVAILABLE,
-            "YouTube exposed only image formats; no downloadable audio or video format was available.",
         )
 
     if any(pattern in lowered for pattern in _COMPONENT_PATTERNS):
@@ -233,6 +285,23 @@ def classify_youtube_failure(
         )
 
     if "http error 403" in lowered or "http status 403" in lowered or "403 forbidden" in lowered:
+        if attempt_kind == "po_token":
+            return FailureAnalysis(
+                FailureCategory.PO_TOKEN_MEDIA_403,
+                "The PO Token provider ran, but YouTube still rejected the media request.",
+            )
+        if attempt_kind == "verified_session":
+            return FailureAnalysis(
+                FailureCategory.VERIFIED_SESSION_MEDIA_403,
+                "The browser session is valid, but YouTube rejected the media request. A PO Token may be required.",
+                authentication_specific=True,
+            )
+        if attempt_kind == "authenticated":
+            return FailureAnalysis(
+                FailureCategory.MEDIA_ACCESS_REJECTED_AFTER_AUTHENTICATION,
+                "YouTube rejected the media request after authentication.",
+                authentication_specific=True,
+            )
         if auth_kind == "cookies_file":
             return FailureAnalysis(
                 FailureCategory.COOKIE_FILE_REJECTED,
@@ -290,7 +359,7 @@ def _is_cookie_decryption_failure(lowered: str) -> bool:
             "app-bound",
             "app bound",
             "application-bound",
-            "cookie version: \"v20\"",
+            'cookie version: "v20"',
         )
     )
 

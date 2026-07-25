@@ -1,0 +1,5 @@
+Name: youtube-transcript-api
+Version: 1.2.4
+License expression/field: MIT
+Copied files:
+- youtube_transcript_api-1.2.4.dist-info__licenses__LICENSE SHA-256 e7608cc316ea65729d6ce63cd619fb185ae44d329740388d30099fe7e4b16a4d
