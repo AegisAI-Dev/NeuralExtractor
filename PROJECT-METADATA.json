@@ -1,0 +1,47 @@
+{
+  "ai_assisted_development": true,
+  "application_version": "3.0.8",
+  "company_registration_number": null,
+  "copyright_period": "2025-2026",
+  "development_started": 2025,
+  "employer_client_or_commissioning_party": null,
+  "known_other_human_contributors": [],
+  "legal_identity_behind_pseudonym_published": false,
+  "mit_licensing_intent": "explicitly confirmed",
+  "project": "Neural Extractor",
+  "project_license": "MIT for project-owned portions",
+  "project_type": "Personal free and open-source software",
+  "public_attribution": "0xRootNull",
+  "public_author_and_copyright_holder": "0xRootNull",
+  "public_distribution_verdict": "HOLD",
+  "qualified_legal_review_status": "HOLD",
+  "registered_company_or_legal_entity": null,
+  "schema_version": 1,
+  "scope": "project-owned portions only",
+  "source_records": [
+    {
+      "path": "LICENSE",
+      "sha256": "80fd0a5a34226ede10870c657aadebd9e929ec29baeb3d02adbfdc8a73bf9180"
+    },
+    {
+      "path": "README.md",
+      "sha256": "5df4999ed41c71687f40045fc4a9a88d2248385b02a4b549ccf6f0e034623d81"
+    },
+    {
+      "path": "docs/COPYRIGHT-OWNERSHIP-QUESTIONS.md",
+      "sha256": "72308bf295c6b6506fbef13e56d6b40e605482daf9f05161146f6d0e3e71d307"
+    },
+    {
+      "path": "docs/PROJECT-OWNERSHIP-DECLARATION.md",
+      "sha256": "7ced776c6c19a66f87da8f7ac2cf708bad51f551a8225ab2044113489629b17c"
+    },
+    {
+      "path": "pyproject.toml",
+      "sha256": "115be79abe3e31b3f1ff3bb4a0982cb6f30587ac434eb42f84af8c14f9f15510"
+    },
+    {
+      "path": "version_info.txt",
+      "sha256": "4359505f925a39c98f726c3d3eb34683c5b6e002469b890ede556b62b3e3f646"
+    }
+  ]
+}

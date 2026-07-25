@@ -19,8 +19,11 @@ REQUIRED_COMPLIANCE_FILES: tuple[Path, ...] = tuple(
     Path(value)
     for value in (
         "LICENSE",
+        "PROJECT-METADATA.json",
         "THIRD_PARTY_LICENSES.txt",
         "THIRD_PARTY_NOTICES.md",
+        "docs/COPYRIGHT-OWNERSHIP-QUESTIONS.md",
+        "docs/PROJECT-OWNERSHIP-DECLARATION.md",
         "docs/DEPENDENCY-SOURCE.md",
         "docs/BUILD-REPRODUCIBILITY.md",
         "docs/LGPL-COMPLIANCE.md",

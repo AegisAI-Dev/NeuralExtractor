@@ -188,8 +188,9 @@ No project EULA or runtime control may prohibit reverse engineering to the
 extent needed to debug recipient modifications to LGPL-covered components. The
 engineering candidate introduces no signature or integrity requirement for the
 external Qt/PySide files. Qualified review must still confirm that the final
-application terms, ownership record, distribution channel, updater wording,
-and selected license route preserve all required rights.
+application terms, distribution channel, updater wording, and selected license
+route preserve all required rights. The project-owned author/year/MIT record
+is resolved separately and does not establish LGPL compliance.
 
 ## Remaining HOLD conditions
 
@@ -201,7 +202,6 @@ following are complete:
 - complete Qt/PySide/Shiboken/software-render source and notice closure;
 - a valid, operational source-delivery method for every distribution channel;
 - Microsoft runtime redistribution evidence;
-- confirmed application copyright ownership and licensing authority; and
 - qualified legal review of the exact final artifact and distribution method.
 
 Public-distribution verdict: **HOLD**.

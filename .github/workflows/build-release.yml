@@ -26,13 +26,37 @@ jobs:
       - name: Enforce licensing release gate
         shell: pwsh
         run: |
-          $license = Get-Content -Raw -LiteralPath "LICENSE"
+          $ownership = Get-Content -Raw -LiteralPath "PROJECT-METADATA.json" | ConvertFrom-Json
           $notices = Get-Content -Raw -LiteralPath "THIRD_PARTY_NOTICES.md"
           $inventory = Get-Content -Raw -LiteralPath "THIRD_PARTY_LICENSES.txt"
           $sourcePlan = Get-Content -Raw -LiteralPath "docs\DEPENDENCY-SOURCE.md"
           $blockers = @()
-          if ($license -notmatch '(?m)^Copyright-owner-status: PASS\s*$') {
-            $blockers += "LICENSE has no authorized copyright owner/year PASS record"
+          if ($ownership.public_author_and_copyright_holder -ne "0xRootNull") {
+            $blockers += "Project copyright owner is not supplied"
+          }
+          if ($ownership.development_started -ne 2025) {
+            $blockers += "Copyright start year is not supplied"
+          }
+          if ($ownership.copyright_period -ne "2025-2026") {
+            $blockers += "Copyright year range is not supplied"
+          }
+          if ($ownership.public_attribution -ne "0xRootNull") {
+            $blockers += "Public attribution is not supplied"
+          }
+          if (
+            $ownership.project_license -ne "MIT for project-owned portions" -or
+            $ownership.mit_licensing_intent -ne "explicitly confirmed"
+          ) {
+            $blockers += "MIT licensing intent is not explicitly confirmed"
+          }
+          if (
+            $null -ne $ownership.registered_company_or_legal_entity -or
+            $null -ne $ownership.employer_client_or_commissioning_party
+          ) {
+            $blockers += "A company, employer, client, or commissioning ownership claim remains"
+          }
+          if ($ownership.known_other_human_contributors.Count -ne 0) {
+            $blockers += "An additional human contributor claim remains"
           }
           if ($notices -notmatch '(?m)^Release-gate-status: PASS\s*$') {
             $blockers += "THIRD_PARTY_NOTICES.md is not explicitly marked PASS"
@@ -58,11 +82,14 @@ jobs:
           foreach ($required in @(
             "uv.lock",
             "requirements.lock",
+            "PROJECT-METADATA.json",
             "SOURCE-HASHES.sha256",
             "licenses\RELEASE-LICENSE-MANIFEST.sha256",
             "docs\BUILD-REPRODUCIBILITY.md",
+            "docs\COPYRIGHT-OWNERSHIP-QUESTIONS.md",
             "docs\LGPL-COMPLIANCE.md",
-            "docs\OPTIONAL-PO-PROVIDER.md"
+            "docs\OPTIONAL-PO-PROVIDER.md",
+            "docs\PROJECT-OWNERSHIP-DECLARATION.md"
           )) {
             if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
               $blockers += "Required release input is missing: $required"
@@ -188,6 +215,8 @@ jobs:
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:PYTHONPATH = "$PWD\src"
           & $env:PYTHON_EXE -m pytest tests -q
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $env:PYTHON_EXE scripts/generate_project_metadata.py --check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & $env:PYTHON_EXE scripts/generate_compliance_manifests.py --check
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }

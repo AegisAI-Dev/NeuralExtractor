@@ -41,6 +41,7 @@ def test_spec_and_verifier_pin_one_cpython_libffi_and_auditable_pyz():
     assert "noarchive=False" in spec
     assert "open_embedded_archive" in verifier
     assert "exactly one libffi DLL at root" in verifier
+    assert 'version=str(project_root / "version_info.txt")' in spec
 
 
 def test_distribution_contract_requires_all_user_facing_compliance_materials():
@@ -50,8 +51,11 @@ def test_distribution_contract_requires_all_user_facing_compliance_materials():
     )
     for name in (
         "LICENSE",
+        "PROJECT-METADATA.json",
         "THIRD_PARTY_LICENSES.txt",
         "THIRD_PARTY_NOTICES.md",
+        "COPYRIGHT-OWNERSHIP-QUESTIONS.md",
+        "PROJECT-OWNERSHIP-DECLARATION.md",
         "DEPENDENCY-SOURCE.md",
         "BUILD-REPRODUCIBILITY.md",
         "LGPL-COMPLIANCE.md",

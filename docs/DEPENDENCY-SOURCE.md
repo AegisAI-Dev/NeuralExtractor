@@ -3,7 +3,7 @@
 Public-distribution verdict: HOLD
 Release-gate-status: HOLD
 Qualified-review-status: HOLD
-Audit-blocker-count: 7
+Audit-blocker-count: 6
 
 Audit date: 2026-07-22  
 Target: Neural Extractor V3.0.8, Windows x64, PyInstaller one-file
@@ -219,18 +219,21 @@ not recorded here as an offer by the distributor.
 
 ## Open blockers
 
-1. Application copyright owner or owners and applicable year or range are not
-   authorized.
-2. The one-file LGPL replacement/relink procedure is not independently tested.
-3. Complete FFmpeg Corresponding Source and a distributor-controlled delivery
+The project-owned author, copyright period, and MIT-intent fields are resolved
+in `PROJECT-METADATA.json` and
+`docs/PROJECT-OWNERSHIP-DECLARATION.md`. That resolution does not close any
+third-party source or legal-review condition below.
+
+1. The one-file LGPL replacement/relink procedure is not independently tested.
+2. Complete FFmpeg Corresponding Source and a distributor-controlled delivery
    method are absent.
-4. The CPython/python-build-standalone transitive source and recipe closure
+3. The CPython/python-build-standalone transitive source and recipe closure
    needs final review and missing exact source hashes.
-5. Microsoft runtime redistribution coverage for every inventoried DLL is
+4. Microsoft runtime redistribution coverage for every inventoried DLL is
    unconfirmed.
-6. Qt/PySide notice, attribution, source, and software-render fallback closure
+5. Qt/PySide notice, attribution, source, and software-render fallback closure
    needs final review.
-7. Qualified legal review has not approved the distribution or external-helper
+6. Qualified legal review has not approved the distribution or external-helper
    classification.
 
 The public-release verdict remains HOLD even if all technical scans pass.

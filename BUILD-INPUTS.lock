@@ -422,13 +422,6 @@
     },
     {
       "kind": "third-party-source-or-build-provenance",
-      "path": "third_party_sources/ffmpeg/archives/ffmpeg-N-125365-g9a01c1cb6a-win64-gpl.zip",
-      "pin_provenance": "component-local source manifest; release remains HOLD unless component closure is independently PASS",
-      "sha256": "52c0383c460f0ec1039088f1591921fb82e3b870b32aab8faf2ff1e5ae14bf9d",
-      "size": 167310447
-    },
-    {
-      "kind": "third-party-source-or-build-provenance",
       "path": "third_party_sources/ffmpeg/BINARY-INVENTORY.json",
       "pin_provenance": "component-local source manifest; release remains HOLD unless component closure is independently PASS",
       "sha256": "26494dd47a3f7f6bd8e4ea615b49334391c473ba50a65f06df556f72388827f0",
@@ -2727,13 +2720,6 @@
       "pin_provenance": "component-local source manifest; release remains HOLD unless component closure is independently PASS",
       "sha256": "416a6f45bf2cacd494b208fdee1beda509abda951d5f47bc4f2792126f01b452",
       "size": 3328564
-    },
-    {
-      "kind": "third-party-source-or-build-provenance",
-      "path": "third_party_sources/python-runtime/archives/strawberry-perl-5.38.2.2-64bit-portable.zip",
-      "pin_provenance": "component-local source manifest; release remains HOLD unless component closure is independently PASS",
-      "sha256": "ea451686065d6338d7e4d4a04c9af49f17951d15aa4c2e19ab8cb56fa2373440",
-      "size": 264199638
     },
     {
       "kind": "third-party-source-or-build-provenance",

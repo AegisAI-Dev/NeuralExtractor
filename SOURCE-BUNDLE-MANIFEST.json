@@ -2,8 +2,8 @@
   "application_version": "3.0.8",
   "archive": {
     "path": "NeuralExtractorV3-3.0.8-corresponding-source.zip",
-    "sha256": "0992571e3f6c4719b6db60233b01eb945645bba81b91920ed80efe10f286e347",
-    "size": 1279020095
+    "sha256": "efb0e4064790af7967801301eacc03ec27561d2d1f5465425201cb991e369304",
+    "size": 853283191
   },
   "closure_status": "HOLD",
   "component_closure": {
@@ -15,17 +15,17 @@
     "qt-pyside-source-hashes": true,
     "source-hash-manifest-exact": true
   },
-  "file_count": 1045,
+  "file_count": 1048,
   "files": [
     {
       "path": ".github/workflows/build-release.yml",
-      "sha256": "ccf52efdf50decc4b0ab95293b7b5abcacf0cff0e01fed479c1c2ad9a1715d66",
-      "size": 18144
+      "sha256": "5231c9bf33055c6bb03ec75c66cda4763b3faf797452b7512b630db9f6c781fa",
+      "size": 19552
     },
     {
       "path": ".gitignore",
-      "sha256": "d6769d78f1f40b9eaf86ed1b3f4ccb43db0a042a86282fea1a13abf18c7b9ad9",
-      "size": 272
+      "sha256": "1e9bb3218da09eb44c1133a50ca773d2d04327e6ca726b206cae7c5c5474e29c",
+      "size": 719
     },
     {
       "path": "assets/background.png",
@@ -59,13 +59,13 @@
     },
     {
       "path": "BINARY-TO-SOURCE-MAP.json",
-      "sha256": "83058fe381a8150a82cb8d506d7d3a629f5c0f90ff8584f7cd7822a107967072",
-      "size": 264478
+      "sha256": "735c4dffe5c869088b00305feae4c0aea0c13be201cbccfec0314f3c257cd53e",
+      "size": 144603
     },
     {
       "path": "BUILD-INPUTS.lock",
-      "sha256": "e045af8b31a3eb2b2e2341caabc83b8d5553daa6b4e3c53f1ec7308130682008",
-      "size": 238129
+      "sha256": "1130572d7524567819406a7210ad2d1937c7ef1fb2d4e522e978a19e3bf1cc9d",
+      "size": 237305
     },
     {
       "path": "build.bat",
@@ -274,18 +274,18 @@
     },
     {
       "path": "docs/COPYRIGHT-OWNERSHIP-QUESTIONS.md",
-      "sha256": "4f14dfdc86cb2c3e05e683a4d2ea10503c20d00a3eeed5624cd48d5ebd296ea8",
-      "size": 10809
+      "sha256": "72308bf295c6b6506fbef13e56d6b40e605482daf9f05161146f6d0e3e71d307",
+      "size": 3416
     },
     {
       "path": "docs/DEPENDENCY-SOURCE.md",
-      "sha256": "df6b244212c5c50ec554e937156d8f4c684ac012cc2c06c77723dd14c95fb7d9",
-      "size": 12831
+      "sha256": "200d86d2037c32e7d58268919ae953b68cbcb7cbbbbb1e1c2f03bd689c64f82f",
+      "size": 12977
     },
     {
       "path": "docs/EXISTING-RELEASE-COMPLIANCE-REVIEW.md",
-      "sha256": "6c7d209caf9556c97c90aae5932f5c31cabfa4fc0bf0cd717d2d940064c861c7",
-      "size": 17018
+      "sha256": "9e25b6c0967db1cb8fb901ec42f8981f238fd873976b685989558a65a3c84af4",
+      "size": 17051
     },
     {
       "path": "docs/FFMPEG-SOURCE-AND-BUILD.md",
@@ -294,8 +294,8 @@
     },
     {
       "path": "docs/LGPL-COMPLIANCE.md",
-      "sha256": "a25bba77c00a7842d970ef0be51158d35f9829effea18459cea6360fb1b0d531",
-      "size": 9424
+      "sha256": "a7bf928cf27df5e07c78c76d9b3d3e33f610484716f0a5ed419c73b61a0af6e8",
+      "size": 9437
     },
     {
       "path": "docs/MICROSOFT-RUNTIME-REDISTRIBUTION.md",
@@ -306,6 +306,11 @@
       "path": "docs/OPTIONAL-PO-PROVIDER.md",
       "sha256": "384b5b3364d72d918db3fddc7eb6d98598e8053183ee2cedd0c0b5dd70610ec2",
       "size": 20617
+    },
+    {
+      "path": "docs/PROJECT-OWNERSHIP-DECLARATION.md",
+      "sha256": "7ced776c6c19a66f87da8f7ac2cf708bad51f551a8225ab2044113489629b17c",
+      "size": 1840
     },
     {
       "path": "docs/PYTHON-RUNTIME-REPRODUCIBILITY.md",
@@ -349,8 +354,8 @@
     },
     {
       "path": "docs/release-notes/V3.0.8.md",
-      "sha256": "a7a23e4fa41d86199abe92dc5df35f619cf79708722feba9c06163d1e635b23e",
-      "size": 4387
+      "sha256": "446b2aa22ab8a4f1a31226d93c5e7ebd4d18383e9c9f4dd659aeb180df71a3a7",
+      "size": 4483
     },
     {
       "path": "docs/UPDATE_ARCHITECTURE.md",
@@ -374,8 +379,8 @@
     },
     {
       "path": "LICENSE",
-      "sha256": "6140829a355cca8614e3d6c39583677177f6a1208929526f82016dcd9cb43115",
-      "size": 1796
+      "sha256": "80fd0a5a34226ede10870c657aadebd9e929ec29baeb3d02adbfdc8a73bf9180",
+      "size": 1072
     },
     {
       "path": "licenses/CPython-3.12.9-LICENSE.txt",
@@ -2154,13 +2159,18 @@
     },
     {
       "path": "NeuralExtractorV3.spec",
-      "sha256": "57bcf385a617822659f150f4b0f0017c5182e65486b854bd33fed0d79c2b8a00",
-      "size": 11175
+      "sha256": "03d8b7941a7491aadc4ba33ad8c90fd808423ee5efde4fb4b16169f5e4d7feba",
+      "size": 11659
+    },
+    {
+      "path": "PROJECT-METADATA.json",
+      "sha256": "2eb7dea2b25d0f4876fdea6b3f38aee23db50935b5eddbb9feccf0f477eae13f",
+      "size": 1683
     },
     {
       "path": "pyproject.toml",
-      "sha256": "75bb4296b7a837afa8089601d05d839a7f6d2e07b3738d22a254839245734e42",
-      "size": 1661
+      "sha256": "115be79abe3e31b3f1ff3bb4a0982cb6f30587ac434eb42f84af8c14f9f15510",
+      "size": 1643
     },
     {
       "path": "QT-PYSIDE-COMPONENTS.json",
@@ -2169,8 +2179,8 @@
     },
     {
       "path": "README.md",
-      "sha256": "8f861452097ff1e046c399d6f86ff5efc2472d541c904b6d7ca5ea97509ad8fa",
-      "size": 4553
+      "sha256": "5df4999ed41c71687f40045fc4a9a88d2248385b02a4b549ccf6f0e034623d81",
+      "size": 5168
     },
     {
       "path": "requirements.lock",
@@ -2184,8 +2194,8 @@
     },
     {
       "path": "scripts/build_offline_distribution.py",
-      "sha256": "2c6fa60d6cdd5ce5e412603974b46f9a904d94fabb73f789d3f479fc6cac0fbe",
-      "size": 16859
+      "sha256": "870ed2debed45e8cdb342adf7fcbe89b20ce6b686dfa7534f94c5a892270328a",
+      "size": 16986
     },
     {
       "path": "scripts/collect_python_licenses.py",
@@ -2194,23 +2204,28 @@
     },
     {
       "path": "scripts/generate_compliance_manifests.py",
-      "sha256": "4873a5f2117d0fd85bc3f925d8c0ad2e74658b105b058773aac3aa9bb7c4b6bd",
-      "size": 5820
+      "sha256": "20f2f2bf6fda1d1d4ffffd6e395fd77df963aee60c793be4fee50f24023a1b0a",
+      "size": 5873
     },
     {
       "path": "scripts/generate_distribution_inventory.py",
-      "sha256": "8d21c60d77ca075dcd4a6850cd4486ae0d372ea074ab142cffb01565ac9f376c",
-      "size": 62371
+      "sha256": "30943b8b3053c0ad6b5d97043310d22b33a1cb2a941f2bfa7ef1814f2e519031",
+      "size": 62423
+    },
+    {
+      "path": "scripts/generate_project_metadata.py",
+      "sha256": "f183eb475868ae37ea1a71a86281509c84afb4868d25c3ef29ca46fa5fef4043",
+      "size": 7520
     },
     {
       "path": "scripts/generate_source_bundle.py",
-      "sha256": "59b59c57d2a222b31e99e89c44f179eb2c6eb737d3eac34c1f63e0c634202269",
-      "size": 30672
+      "sha256": "8301a7a05e3f412364b99102cd2d4f22b7869ce95878684f2d3ad80a6210bb4b",
+      "size": 30725
     },
     {
       "path": "scripts/generate_third_party_licenses.py",
-      "sha256": "3bb7aea6327c8048a6bddb527e6ebaceead2eb088a5c9c48d135d0c671639aef",
-      "size": 76782
+      "sha256": "df1c4985daa0bb78f1b3d5c576938d9949b53c7cd9c97f6742cc4aaca606c8fc",
+      "size": 76819
     },
     {
       "path": "scripts/packaged_directory_updater_smoke.py",
@@ -2244,8 +2259,8 @@
     },
     {
       "path": "scripts/release_compliance_gate.py",
-      "sha256": "f9be6719a62a9701bf4175015e4cc3e8240cce80bc3e69c0a3d49062a1eacb64",
-      "size": 23138
+      "sha256": "2f97751175ca278dec392ab609a4155a96bc0e47c43f0cc3ce80e4a31918314d",
+      "size": 25083
     },
     {
       "path": "scripts/release_tools.py",
@@ -2259,18 +2274,18 @@
     },
     {
       "path": "scripts/verify_distribution_boundary.py",
-      "sha256": "25b49c234c09cc5f09f6896e08afb2dfe922f5535ca184fdb4744181b48c0fac",
-      "size": 21012
+      "sha256": "78b5163d5d490ac57f4fc6bb0a59821a4be5dd66de75c4fc33aa092c915e11b7",
+      "size": 21143
     },
     {
       "path": "scripts/verify_distribution_closure.py",
-      "sha256": "1b9bb751c0464bdbdf15bbad0c278cde16def116cac0d2ec0ac81ac1b44abb7d",
-      "size": 14202
+      "sha256": "d6cebc6ed6fbe844930de708061ed95ffc856ad16cba20ab4cef6095daa10ff3",
+      "size": 15351
     },
     {
       "path": "scripts/verify_packaged_licensing.py",
-      "sha256": "a91bbc5d255f4d71d430c03bc911a3a227745697cf45421442d88c7ed042640f",
-      "size": 22890
+      "sha256": "c6e7c73f7ec9a48170e6a10e19c191319b2a45560fbba93f49ec3a3dde640b38",
+      "size": 23009
     },
     {
       "path": "scripts/verify_release_companion.py",
@@ -2279,13 +2294,13 @@
     },
     {
       "path": "SOURCE-HASHES.json",
-      "sha256": "a43dbb0f46d6d57aabdc292ba77341c9c2108e4565600fe948333eb71bfc1f4c",
-      "size": 216816
+      "sha256": "54823262c3a3f13aff5808c7a502b5a9b8e728553b9045c52369e9feaccf7650",
+      "size": 217207
     },
     {
       "path": "SOURCE-HASHES.sha256",
-      "sha256": "7b3a38e168bea1b502ece3c1cb0a67d794c4f3f4951b9524357e432d000e272c",
-      "size": 98648
+      "sha256": "2cc6c91ea6b6c907db2bcf901e1a83aa3c13f2ae5f5206e5dfccc536d489232e",
+      "size": 98838
     },
     {
       "path": "src/neural_extractor_v3/__init__.py",
@@ -2509,8 +2524,8 @@
     },
     {
       "path": "tests/test_packaging_contract.py",
-      "sha256": "6a952beacac0ef560e4382bedc4cec80a06d8a47aabd52cf92210e8938e92a0b",
-      "size": 2496
+      "sha256": "347dbb0aebbdc165bfbb55345247a7e66b535fd44259dbb6d53d96ab32c07557",
+      "size": 2685
     },
     {
       "path": "tests/test_pot_provider.py",
@@ -2521,6 +2536,11 @@
       "path": "tests/test_process_control.py",
       "sha256": "24d0aad4352c07fe51dffdb0607feb9cf17696b8489223e461956ea828deb5bf",
       "size": 14912
+    },
+    {
+      "path": "tests/test_project_ownership_metadata.py",
+      "sha256": "87bfcfb4b0d98a32ecd0abbf2972a7fb8ba4cc574ff9bced4ef18967ab0e79eb",
+      "size": 3026
     },
     {
       "path": "tests/test_qt_onefolder_compliance.py",
@@ -2604,13 +2624,13 @@
     },
     {
       "path": "THIRD_PARTY_LICENSES.txt",
-      "sha256": "b2ea71db2f6c3fb573c4968d4c5acafb0c1e997e15cba0b270dd19db630dc430",
-      "size": 70985
+      "sha256": "b41553de5dc4b72bbaf8a03166142165e847d8254e284ffeea0b4178531779bb",
+      "size": 71103
     },
     {
       "path": "THIRD_PARTY_NOTICES.md",
-      "sha256": "63240a8020f75c065ecb386bf67fa052947f789114ca3e628eee18a9e0c71061",
-      "size": 14596
+      "sha256": "c81cee97a72ce18c16d370aedf4fa8d04c790fbde02d3ee859e6e68eb9657f51",
+      "size": 14703
     },
     {
       "path": "third_party_sources/ffmpeg/archives/btbn-ffmpeg-builds-7a83528ea3431e9eca982a712bc3a7cd0789d5d0.tar.gz",
@@ -2621,11 +2641,6 @@
       "path": "third_party_sources/ffmpeg/archives/ffmpeg-9a01c1cb6a4cf87529fe9898b66ec55c5b032639.tar.gz",
       "sha256": "b752d9b889d87ff96522438450268b1cfad449f4a8e66ff5058432636f491129",
       "size": 17327862
-    },
-    {
-      "path": "third_party_sources/ffmpeg/archives/ffmpeg-N-125365-g9a01c1cb6a-win64-gpl.zip",
-      "sha256": "52c0383c460f0ec1039088f1591921fb82e3b870b32aab8faf2ff1e5ae14bf9d",
-      "size": 167310447
     },
     {
       "path": "third_party_sources/ffmpeg/BINARY-INVENTORY.json",
@@ -4203,11 +4218,6 @@
       "size": 3328564
     },
     {
-      "path": "third_party_sources/python-runtime/archives/strawberry-perl-5.38.2.2-64bit-portable.zip",
-      "sha256": "ea451686065d6338d7e4d4a04c9af49f17951d15aa4c2e19ab8cb56fa2373440",
-      "size": 264199638
-    },
-    {
       "path": "third_party_sources/python-runtime/archives/UCD-15.0.0.zip",
       "sha256": "5fbde400f3e687d25cc9b0a8d30d7619e76cb2f4c3e85ba9df8ec1312cb6718c",
       "size": 7059105
@@ -5241,6 +5251,11 @@
       "path": "uv.lock",
       "sha256": "74920f694b323e5e42957a279708ab58c619ed2b220ead325d7ea212a36d26f1",
       "size": 156748
+    },
+    {
+      "path": "version_info.txt",
+      "sha256": "4359505f925a39c98f726c3d3eb34683c5b6e002469b890ede556b62b3e3f646",
+      "size": 932
     }
   ],
   "missing_required_files": [],

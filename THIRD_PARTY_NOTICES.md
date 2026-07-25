@@ -3,7 +3,7 @@
 Public-distribution verdict: HOLD
 Release-gate-status: HOLD
 Qualified-review-status: HOLD
-Audit-blocker-count: 7
+Audit-blocker-count: 6
 
 Audit date: 2026-07-22  
 Target: Windows x64, PyInstaller one-file  
@@ -42,15 +42,18 @@ and notice sets.
 
 ## Neural Extractor license and ownership
 
-Project metadata declares Neural Extractor-authored material as MIT. The root
-`LICENSE` preserves the historical notice verbatim:
+The project maintainer explicitly confirmed the public attribution, copyright
+period, and MIT licensing intent for project-owned portions. The root
+`LICENSE` contains the standard MIT notice:
 
-`Copyright (c) Neuralshield & 0xRootNull`
+`Copyright (c) 2025-2026 0xRootNull`
 
-The authorized legal owner or owners and the applicable year or range have not
-been confirmed. `Copyright-owner-status` therefore remains HOLD. The MIT grant
-applies only where the named party or parties possess the necessary rights and
-does not relicense third-party material.
+`PROJECT-METADATA.json` and
+`docs/PROJECT-OWNERSHIP-DECLARATION.md` record the resolved project-owned
+findings. The public identity is the pseudonym `0xRootNull`; the identity
+behind it is intentionally not published. The MIT grant applies only to
+Neural Extractor-owned material and does not relicense third-party material.
+Qualified legal review remains unresolved.
 
 ## Main-EXE boundary findings
 
@@ -124,7 +127,7 @@ unmodified license texts under `licenses/`.
 
 | Component | Version | Recorded license route | Required distribution action |
 |---|---:|---|---|
-| Neural Extractor | 3.0.8 | MIT declared; owner/year unresolved | Confirm rights holder and year; ship `LICENSE`, application source, build scripts, locks, and manifests. |
+| Neural Extractor | 3.0.8 | MIT for project-owned portions; `Copyright (c) 2025-2026 0xRootNull` | Ship `LICENSE`, `PROJECT-METADATA.json`, the ownership declaration, application source, build scripts, locks, and manifests. |
 | CPython / python-build-standalone | 3.12.9 / 20250317 | Python-2.0 plus historical terms; recipes MPL-2.0 | Ship all selected notices; retain exact CPython and recipe source, patches, toolchain, and transitive source closure. |
 | libffi | 3.4.2 | MIT | Preserve notice/source/provenance and exactly one validated root `libffi-8.dll`. |
 | OpenSSL | 3.0.16 | Apache-2.0 | Preserve license/acknowledgements and retain exact source hash and standalone-build recipe. |
@@ -231,18 +234,16 @@ recipient rights, and delivery mechanics before it accompanies any binary.
 
 ## Open blockers
 
-1. Application copyright owner or owners and applicable year or range are not
-   authorized.
-2. The one-file LGPL replacement/relink procedure is not independently tested.
-3. Complete FFmpeg Corresponding Source and a distributor-controlled delivery
+1. The one-file LGPL replacement/relink procedure is not independently tested.
+2. Complete FFmpeg Corresponding Source and a distributor-controlled delivery
    method are absent.
-4. The CPython/python-build-standalone transitive source and recipe closure
+3. The CPython/python-build-standalone transitive source and recipe closure
    needs final review and missing exact source hashes.
-5. Microsoft runtime redistribution coverage for every inventoried DLL is
+4. Microsoft runtime redistribution coverage for every inventoried DLL is
    unconfirmed.
-6. Qt/PySide notice, attribution, source, and software-render fallback closure
+5. Qt/PySide notice, attribution, source, and software-render fallback closure
    needs final review.
-7. Qualified legal review has not approved the distribution or external-helper
+6. Qualified legal review has not approved the distribution or external-helper
    classification.
 
 ## Existing 3.0.8 release artifact

@@ -40,6 +40,7 @@ INCLUDE_FILES = (
     "LICENSE",
     "main.py",
     "NeuralExtractorV3.spec",
+    "PROJECT-METADATA.json",
     "pyproject.toml",
     "README.md",
     "requirements.lock",
@@ -50,6 +51,7 @@ INCLUDE_FILES = (
     "THIRD_PARTY_LICENSES.txt",
     "THIRD_PARTY_NOTICES.md",
     "uv.lock",
+    "version_info.txt",
 )
 FORBIDDEN_PARTS = {
     ".git",

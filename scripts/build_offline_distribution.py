@@ -42,6 +42,7 @@ PROJECT_FILES = (
     "LICENSE",
     "main.py",
     "NeuralExtractorV3.spec",
+    "PROJECT-METADATA.json",
     "pyproject.toml",
     "README.md",
     "requirements.lock",
@@ -51,9 +52,11 @@ PROJECT_FILES = (
     "THIRD_PARTY_LICENSES.txt",
     "THIRD_PARTY_NOTICES.md",
     "uv.lock",
+    "version_info.txt",
 )
 COMPLIANCE_FILES = (
     "LICENSE",
+    "PROJECT-METADATA.json",
     "THIRD_PARTY_LICENSES.txt",
     "THIRD_PARTY_NOTICES.md",
     "SOURCE-HASHES.sha256",
@@ -72,6 +75,7 @@ COMPLIANCE_FILES = (
     "docs/PYTHON-RUNTIME-REPRODUCIBILITY.md",
     "docs/MICROSOFT-RUNTIME-REDISTRIBUTION.md",
     "docs/COPYRIGHT-OWNERSHIP-QUESTIONS.md",
+    "docs/PROJECT-OWNERSHIP-DECLARATION.md",
     "docs/EXISTING-RELEASE-COMPLIANCE-REVIEW.md",
 )
 
