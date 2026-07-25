@@ -126,3 +126,18 @@ runtime. The EXE is SHA-256 verified but is not Authenticode publisher-signed.
 See [docs/V3.0.5-YOUTUBE-CONNECTION.md](docs/V3.0.5-YOUTUBE-CONNECTION.md)
 for the profile architecture, privacy model, PO Token provider decision, known
 limitations, renewal/disconnect behavior, and owner field-test plan.
+
+## License and ownership
+
+Neural Extractor-owned portions are free and open-source software under the
+MIT License:
+
+`Copyright (c) 2025-2026 0xRootNull`
+
+The public author and copyright-holder attribution is the pseudonym
+`0xRootNull`; the identity behind the pseudonym is intentionally not
+published. `Neuralshield` is a project name, not a registered company or legal
+entity. Third-party components remain governed by their respective licenses
+and are not relicensed under MIT. See
+[docs/PROJECT-OWNERSHIP-DECLARATION.md](docs/PROJECT-OWNERSHIP-DECLARATION.md)
+and [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

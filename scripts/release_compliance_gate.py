@@ -18,7 +18,6 @@ PROHIBITED_NAMES = re.compile(
     re.IGNORECASE,
 )
 TEXT_GATES = {
-    "copyright-owner": ("LICENSE", "Copyright-owner-status", "PASS"),
     "third-party-notices": ("THIRD_PARTY_NOTICES.md", "Release-gate-status", "PASS"),
     "third-party-inventory": ("THIRD_PARTY_LICENSES.txt", "Release-gate-status", "PASS"),
     "zero-audit-blockers": ("THIRD_PARTY_LICENSES.txt", "Audit-blocker-count", "0"),
@@ -52,6 +51,25 @@ TEXT_GATES = {
         "PASS",
     ),
 }
+OWNERSHIP_GATES: dict[str, dict[str, Any]] = {
+    "project-copyright-owner-supplied": {
+        "public_author_and_copyright_holder": "0xRootNull",
+    },
+    "copyright-start-year-supplied": {"development_started": 2025},
+    "copyright-year-range-supplied": {"copyright_period": "2025-2026"},
+    "public-attribution-supplied": {"public_attribution": "0xRootNull"},
+    "mit-licensing-intent-explicitly-confirmed": {
+        "project_license": "MIT for project-owned portions",
+        "mit_licensing_intent": "explicitly confirmed",
+    },
+    "no-company-employer-client-ownership-claim": {
+        "registered_company_or_legal_entity": None,
+        "employer_client_or_commissioning_party": None,
+    },
+    "no-known-additional-human-contributor-claim": {
+        "known_other_human_contributors": [],
+    },
+}
 JSON_GATES = {
     "binary-to-source-map": (
         "BINARY-TO-SOURCE-MAP.json",
@@ -81,6 +99,7 @@ JSON_GATES = {
 }
 REQUIRED_FILES = (
     "BUILD-INPUTS.lock",
+    "PROJECT-METADATA.json",
     "SOURCE-HASHES.json",
     "SOURCE-BUNDLE-MANIFEST.json",
     "BINARY-TO-SOURCE-MAP.json",
@@ -91,12 +110,14 @@ REQUIRED_FILES = (
     "requirements.lock",
     "licenses/RELEASE-LICENSE-MANIFEST.sha256",
     "docs/COPYRIGHT-OWNERSHIP-QUESTIONS.md",
+    "docs/PROJECT-OWNERSHIP-DECLARATION.md",
     "docs/QT-REPLACEMENT-GUIDE.md",
     "docs/QT-BUILD-PROVENANCE.md",
     "docs/PYTHON-RUNTIME-REPRODUCIBILITY.md",
 )
 ARTIFACT_BINDINGS = (
     "LICENSE",
+    "PROJECT-METADATA.json",
     "THIRD_PARTY_LICENSES.txt",
     "THIRD_PARTY_NOTICES.md",
     "BUILD-INPUTS.lock",
@@ -106,10 +127,12 @@ ARTIFACT_BINDINGS = (
     "SOURCE-HASHES.json",
     "SOURCE-HASHES.sha256",
     "docs/BUILD-REPRODUCIBILITY.md",
+    "docs/COPYRIGHT-OWNERSHIP-QUESTIONS.md",
     "docs/DEPENDENCY-SOURCE.md",
     "docs/FFMPEG-SOURCE-AND-BUILD.md",
     "docs/LGPL-COMPLIANCE.md",
     "docs/MICROSOFT-RUNTIME-REDISTRIBUTION.md",
+    "docs/PROJECT-OWNERSHIP-DECLARATION.md",
     "docs/PYTHON-RUNTIME-SOURCE.md",
     "docs/QT-BUILD-PROVENANCE.md",
     "docs/QT-REPLACEMENT-GUIDE.md",
@@ -128,6 +151,27 @@ def exact_status_value(text: str, key: str) -> str | None:
     pattern = re.compile(rf"^{re.escape(key)}:\s*(\S+)\s*$")
     values = [match.group(1) for line in text.splitlines() if (match := pattern.match(line))]
     return values[0] if len(values) == 1 else None
+
+
+def ownership_checks(root: Path) -> tuple[list[dict[str, str]], list[str]]:
+    path = root / "PROJECT-METADATA.json"
+    try:
+        payload = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        payload = {}
+    checks: list[dict[str, str]] = []
+    failures: list[str] = []
+    for identifier, expectations in OWNERSHIP_GATES.items():
+        passed = all(payload.get(key) == expected for key, expected in expectations.items())
+        checks.append({"id": identifier, "status": "PASS" if passed else "HOLD"})
+        if not passed:
+            required = ", ".join(
+                f"{key}={expected!r}" for key, expected in expectations.items()
+            )
+            failures.append(
+                f"PROJECT-METADATA.json does not resolve {identifier}: {required}"
+            )
+    return checks, failures
 
 
 def safe_manifest_path(root: Path, value: str) -> Path | None:
@@ -472,6 +516,9 @@ def audit(
 ) -> dict[str, Any]:
     failures: list[str] = []
     checks: list[dict[str, str]] = []
+    ownership_rows, ownership_failures = ownership_checks(root)
+    checks.extend(ownership_rows)
+    failures.extend(ownership_failures)
     for identifier, (relative, key, expected) in TEXT_GATES.items():
         path = root / relative
         text = path.read_text(encoding="utf-8", errors="replace") if path.is_file() else ""

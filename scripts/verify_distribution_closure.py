@@ -37,8 +37,14 @@ COMPONENTS: dict[str, Component] = {
     "project": Component(
         "project",
         "3.0.8",
-        "MIT (declared; copyright owner/year HOLD)",
-        ("src", "main.py", "NeuralExtractorV3.spec"),
+        "MIT for project-owned portions; Copyright (c) 2025-2026 0xRootNull",
+        (
+            "src",
+            "main.py",
+            "NeuralExtractorV3.spec",
+            "PROJECT-METADATA.json",
+            "docs/PROJECT-OWNERSHIP-DECLARATION.md",
+        ),
     ),
     "pyinstaller": Component(
         "pyinstaller",
@@ -233,7 +239,34 @@ def source_evidence(project_root: Path, component: Component) -> dict[str, Any]:
 
 def required_review_gates(project_root: Path) -> list[dict[str, Any]]:
     requirements = {
-        "copyright-owner": ("LICENSE", "Copyright-owner-status: PASS"),
+        "project-copyright-owner-supplied": (
+            "PROJECT-METADATA.json",
+            '"public_author_and_copyright_holder": "0xRootNull"',
+        ),
+        "copyright-start-year-supplied": (
+            "PROJECT-METADATA.json",
+            '"development_started": 2025',
+        ),
+        "copyright-year-range-supplied": (
+            "PROJECT-METADATA.json",
+            '"copyright_period": "2025-2026"',
+        ),
+        "public-attribution-supplied": (
+            "PROJECT-METADATA.json",
+            '"public_attribution": "0xRootNull"',
+        ),
+        "mit-licensing-intent-explicitly-confirmed": (
+            "PROJECT-METADATA.json",
+            '"mit_licensing_intent": "explicitly confirmed"',
+        ),
+        "no-company-employer-client-ownership-claim": (
+            "PROJECT-METADATA.json",
+            '"employer_client_or_commissioning_party": null',
+        ),
+        "no-known-additional-human-contributor-claim": (
+            "PROJECT-METADATA.json",
+            '"known_other_human_contributors": []',
+        ),
         "qualified-review": ("THIRD_PARTY_NOTICES.md", "Qualified-review-status: PASS"),
         "lgpl-replacement": ("docs/LGPL-COMPLIANCE.md", "Replacement-test-status: PASS"),
         "ffmpeg-source": ("docs/FFMPEG-SOURCE-AND-BUILD.md", "Closure-status: PASS"),

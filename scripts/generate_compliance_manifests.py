@@ -16,6 +16,7 @@ SOURCE_FILES = (
     ".gitignore",
     "LICENSE",
     "NeuralExtractorV3.spec",
+    "PROJECT-METADATA.json",
     "README.md",
     "THIRD_PARTY_LICENSES.txt",
     "THIRD_PARTY_NOTICES.md",
@@ -26,6 +27,7 @@ SOURCE_FILES = (
     "requirements.txt",
     "start.bat",
     "uv.lock",
+    "version_info.txt",
 )
 SOURCE_DIRECTORIES = (
     "assets",

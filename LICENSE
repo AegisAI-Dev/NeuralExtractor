@@ -1,12 +1,6 @@
 MIT License
 
-Copyright-owner-status: HOLD
-
-The exact legal copyright owner(s) and applicable year(s) have not yet been
-confirmed by an authorized rightsholder. The historical notice below is
-preserved verbatim; this unresolved metadata blocks public distribution.
-
-Copyright (c) Neuralshield & 0xRootNull
+Copyright (c) 2025-2026 0xRootNull
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -25,13 +19,3 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
-
-Scope clarification
--------------------
-
-This license applies only to code and assets for which Neuralshield and/or
-0xRootNull hold the necessary rights. Third-party components retain their own
-licenses, as recorded in THIRD_PARTY_LICENSES.txt and THIRD_PARTY_NOTICES.md.
-This file does not determine the license of a combined executable containing
-GPL-covered components and is not a representation that the current Windows
-binary is ready for public distribution.

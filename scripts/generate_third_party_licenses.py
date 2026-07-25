@@ -1413,9 +1413,10 @@ def generate(*, output: Path, node_license: Path | None) -> None:
         (
             "Neural Extractor project-authored code",
             "3.0.8",
-            "MIT (declared in pyproject.toml; root LICENSE added by this audit)",
-            "local project source",
-            "ship LICENSE; if treated as one GPL work, provide complete source/build scripts under GPLv3-compatible terms",
+            "MIT for project-owned portions",
+            "0xRootNull; Copyright (c) 2025-2026",
+            "ship the standard MIT LICENSE and ownership declaration; if treated as "
+            "one GPL work, provide complete source/build scripts under GPLv3-compatible terms",
         ),
         (
             "CPython",

@@ -23,8 +23,11 @@ python_ctypes = Path(sys.base_prefix) / "DLLs" / "_ctypes.pyd"
 
 compliance_files = [
     project_root / "LICENSE",
+    project_root / "PROJECT-METADATA.json",
     project_root / "THIRD_PARTY_LICENSES.txt",
     project_root / "THIRD_PARTY_NOTICES.md",
+    project_root / "docs" / "COPYRIGHT-OWNERSHIP-QUESTIONS.md",
+    project_root / "docs" / "PROJECT-OWNERSHIP-DECLARATION.md",
     project_root / "docs" / "DEPENDENCY-SOURCE.md",
     project_root / "docs" / "BUILD-REPRODUCIBILITY.md",
     project_root / "docs" / "LGPL-COMPLIANCE.md",
@@ -123,8 +126,17 @@ datas = [
     (str(ffmpeg_bin / "ffmpeg.exe"), "bin"),
     (str(ffmpeg_bin / "ffprobe.exe"), "bin"),
     (str(project_root / "LICENSE"), "."),
+    (str(project_root / "PROJECT-METADATA.json"), "."),
     (str(project_root / "THIRD_PARTY_LICENSES.txt"), "."),
     (str(project_root / "THIRD_PARTY_NOTICES.md"), "."),
+    (
+        str(project_root / "docs" / "COPYRIGHT-OWNERSHIP-QUESTIONS.md"),
+        "docs",
+    ),
+    (
+        str(project_root / "docs" / "PROJECT-OWNERSHIP-DECLARATION.md"),
+        "docs",
+    ),
     (str(project_root / "docs" / "DEPENDENCY-SOURCE.md"), "docs"),
     (str(project_root / "docs" / "BUILD-REPRODUCIBILITY.md"), "docs"),
     (str(project_root / "docs" / "LGPL-COMPLIANCE.md"), "docs"),
@@ -331,6 +343,7 @@ exe = EXE(
     codesign_identity=None,
     entitlements_file=None,
     icon=str(assets / "NeuralExtractoricon.ico"),
+    version=str(project_root / "version_info.txt"),
     # PyInstaller's legacy one-folder layout keeps the external libraries and
     # compliance material at stable, recipient-visible paths.  Do not switch
     # this to one-file or an opaque contents archive for a public candidate.

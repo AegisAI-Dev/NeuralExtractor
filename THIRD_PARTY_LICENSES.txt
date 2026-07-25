@@ -5,7 +5,7 @@ Status: HOLD - NOT APPROVED FOR PUBLIC DISTRIBUTION
 Public-distribution verdict: HOLD
 Release-gate-status: HOLD
 Qualified-review-status: HOLD
-Audit-blocker-count: 7
+Audit-blocker-count: 6
 Report schema: Neural Extractor distribution inventory v1
 
 This is an artifact-derived engineering record, not legal advice or a claim of
@@ -28,7 +28,7 @@ Component, license, source, and distribution-action inventory
 
 | Component | Version | License | Copyright holder | Distribution location/evidence | Upstream/source/hash provenance | Modifications | Required notice/source/relink action | Boundary |
 |---|---|---|---|---|---|---|---|---|
-| Neural Extractor V3 | 3.0.8 | MIT (declared; owner/year unresolved) | UNRESOLVED - root LICENSE lacks an approved legal owner/year | Frozen application modules in the embedded PYZ plus entry-point script | Project corresponding source; embedded SOURCE-HASHES.sha256 records inputs | Locally authored/modified project; exact distributed authorship chain UNRESOLVED | HOLD until an authorized owner/year and complete rights chain are confirmed; ship LICENSE and corresponding build/source inputs. | MAIN EXE |
+| Neural Extractor V3 | 3.0.8 | MIT for project-owned portions | 0xRootNull; Copyright (c) 2025-2026 | Frozen application modules in the embedded PYZ plus entry-point script | Project corresponding source; embedded SOURCE-HASHES.sha256 records inputs | Project-maintainer declaration records no known other human contributor claim; AI-assisted development used under maintainer direction and approval | Ship the standard MIT LICENSE, PROJECT-METADATA.json, ownership declaration, and corresponding build/source inputs. Third-party terms remain separate. | MAIN EXE |
 | CPython / python-build-standalone | CPython 3.12.9; python-build-standalone 20250317 | Python-2.0 plus historical and bundled-component terms; build recipes MPL-2.0 | Python Software Foundation and historical licensors; standalone-build and bundled-component per-file holders (exact closure in notices) | python312.dll, python3.dll, stdlib/PYZ modules, and CPython extension modules | https://www.python.org/ftp/python/3.12.9/Python-3.12.9.tar.xz (SHA-256 7220835d9f90b37c006e9842a8dff4580aaca4318674f947302b8d28f3f81112); https://github.com/astral-sh/python-build-standalone/releases/tag/20250317 install-only asset SHA-256 ee338839315bdd8af5fc935f9595eca20ebebdd250726c5816b2d0cf94d1e661 | Upstream standalone build/patch set; no project source patch declared; exact upstream build transformation must accompany source provenance | Ship CPython, standalone-build, and all selected bundled-component notices; retain exact source, patches, recipes, toolchain, and reconstruction steps. | MAIN EXE |
 | libffi | 3.4.2 | MIT | Anthony Green, Red Hat, and libffi contributors (exact per-file holders in license) | libffi-8.dll | python/cpython-source-deps commit 16fad4855b3d8c03b5910e405ff3a04395b39a98; exact binary hash is in the boundary section | Built by the audited CPython standalone runtime; no project source patch declared | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. Keep exactly one audited root DLL; do not shadow it. | MAIN EXE |
 | OpenSSL | 3.0.16 | Apache-2.0 | The OpenSSL Project Authors and individual contributors | libcrypto-3-x64.dll, libssl-3-x64.dll, _hashlib.pyd and _ssl.pyd | https://www.openssl.org/source/openssl-3.0.16.tar.gz; exact source-archive hash is not yet recorded (HOLD) | Built into the pinned python-build-standalone runtime; no project patch declared | Ship Apache-2.0 and source-exact acknowledgements/copyright material; retain the exact source archive hash and standalone-build recipe before release. | MAIN EXE |
@@ -332,8 +332,11 @@ all exact compliance sizes and SHA-256 values.
 | Path | Present | Size | SHA-256 |
 |---|---|---|---|
 | LICENSE | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| PROJECT-METADATA.json | NO | MISSING | MISSING |
 | THIRD_PARTY_LICENSES.txt | YES | SELF-REFERENTIAL | SEE POST-BUILD SIDECAR |
 | THIRD_PARTY_NOTICES.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| docs/COPYRIGHT-OWNERSHIP-QUESTIONS.md | NO | MISSING | MISSING |
+| docs/PROJECT-OWNERSHIP-DECLARATION.md | NO | MISSING | MISSING |
 | docs/DEPENDENCY-SOURCE.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
 | docs/BUILD-REPRODUCIBILITY.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
 | docs/LGPL-COMPLIANCE.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
@@ -610,18 +613,17 @@ contains it, this post-build report is the artifact companion of the identified 
 If the report is changed and then embedded by rebuilding, regenerate a new companion
 for that new artifact and never claim the prior artifact hash applies to the rebuild.
 
-Open audit blockers (7)
+Open audit blockers (6)
 -----------------------
 
-1. Application copyright owner(s) and applicable year(s) are not authorized.
-2. The one-file LGPL replacement/relink procedure is not yet independently tested.
-3. Complete FFmpeg Corresponding Source and a distributor-controlled delivery method are absent.
-4. The CPython/python-build-standalone transitive source and recipe closure needs final review.
-5. Microsoft runtime redistribution coverage for every inventoried DLL is unconfirmed.
-6. Qt/PySide notice, attribution, source, and software-render fallback closure needs final review.
-7. Qualified legal review has not approved the distribution or external-helper classification.
+1. The one-file LGPL replacement/relink procedure is not yet independently tested.
+2. Complete FFmpeg Corresponding Source and a distributor-controlled delivery method are absent.
+3. The CPython/python-build-standalone transitive source and recipe closure needs final review.
+4. Microsoft runtime redistribution coverage for every inventoried DLL is unconfirmed.
+5. Qt/PySide notice, attribution, source, and software-render fallback closure needs final review.
+6. Qualified legal review has not approved the distribution or external-helper classification.
 
 Final verdict: HOLD FOR PUBLIC DISTRIBUTION.
 This status must not be changed merely because zero-count or hash checks pass. It
-requires complete source/notice/relink closure, reproducibility evidence, approved
-application copyright ownership/year, and qualified legal review.
+requires complete source/notice/relink closure, reproducibility evidence, and
+qualified legal review.
