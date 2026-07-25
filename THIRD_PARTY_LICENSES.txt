@@ -1,0 +1,627 @@
+NEURAL EXTRACTOR V3 - DETERMINISTIC DISTRIBUTION INVENTORY
+==============================================================
+
+Status: HOLD - NOT APPROVED FOR PUBLIC DISTRIBUTION
+Public-distribution verdict: HOLD
+Release-gate-status: HOLD
+Qualified-review-status: HOLD
+Audit-blocker-count: 7
+Report schema: Neural Extractor distribution inventory v1
+
+This is an artifact-derived engineering record, not legal advice or a claim of
+license compliance. UNRESOLVED means qualified legal or provenance review is still
+required. The report records uncompressed CArchive payload bytes; the outer-artifact
+hash covers the bootloader, compressed archive, and all other executable bytes.
+
+Artifact identity
+-----------------
+
+Artifact file: NeuralExtractorV3.exe
+Artifact size: OMITTED FROM EMBEDDED REPORT (see post-build sidecar/final audit)
+Artifact SHA-256: OMITTED FROM EMBEDDED REPORT (self-reference avoidance)
+Audited non-compliance payload fingerprint SHA-256: 69d425a20c5c52a1ec725cffdb6e26869cacb2a661652f3f09bbb76199b8677d
+CArchive entries: 336
+Embedded PYZ entries: 1535
+
+Component, license, source, and distribution-action inventory
+-------------------------------------------------------------
+
+| Component | Version | License | Copyright holder | Distribution location/evidence | Upstream/source/hash provenance | Modifications | Required notice/source/relink action | Boundary |
+|---|---|---|---|---|---|---|---|---|
+| Neural Extractor V3 | 3.0.8 | MIT (declared; owner/year unresolved) | UNRESOLVED - root LICENSE lacks an approved legal owner/year | Frozen application modules in the embedded PYZ plus entry-point script | Project corresponding source; embedded SOURCE-HASHES.sha256 records inputs | Locally authored/modified project; exact distributed authorship chain UNRESOLVED | HOLD until an authorized owner/year and complete rights chain are confirmed; ship LICENSE and corresponding build/source inputs. | MAIN EXE |
+| CPython / python-build-standalone | CPython 3.12.9; python-build-standalone 20250317 | Python-2.0 plus historical and bundled-component terms; build recipes MPL-2.0 | Python Software Foundation and historical licensors; standalone-build and bundled-component per-file holders (exact closure in notices) | python312.dll, python3.dll, stdlib/PYZ modules, and CPython extension modules | https://www.python.org/ftp/python/3.12.9/Python-3.12.9.tar.xz (SHA-256 7220835d9f90b37c006e9842a8dff4580aaca4318674f947302b8d28f3f81112); https://github.com/astral-sh/python-build-standalone/releases/tag/20250317 install-only asset SHA-256 ee338839315bdd8af5fc935f9595eca20ebebdd250726c5816b2d0cf94d1e661 | Upstream standalone build/patch set; no project source patch declared; exact upstream build transformation must accompany source provenance | Ship CPython, standalone-build, and all selected bundled-component notices; retain exact source, patches, recipes, toolchain, and reconstruction steps. | MAIN EXE |
+| libffi | 3.4.2 | MIT | Anthony Green, Red Hat, and libffi contributors (exact per-file holders in license) | libffi-8.dll | python/cpython-source-deps commit 16fad4855b3d8c03b5910e405ff3a04395b39a98; exact binary hash is in the boundary section | Built by the audited CPython standalone runtime; no project source patch declared | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. Keep exactly one audited root DLL; do not shadow it. | MAIN EXE |
+| OpenSSL | 3.0.16 | Apache-2.0 | The OpenSSL Project Authors and individual contributors | libcrypto-3-x64.dll, libssl-3-x64.dll, _hashlib.pyd and _ssl.pyd | https://www.openssl.org/source/openssl-3.0.16.tar.gz; exact source-archive hash is not yet recorded (HOLD) | Built into the pinned python-build-standalone runtime; no project patch declared | Ship Apache-2.0 and source-exact acknowledgements/copyright material; retain the exact source archive hash and standalone-build recipe before release. | MAIN EXE |
+| SQLite | 3.47.1 | Public-domain dedication | D. Richard Hipp and SQLite contributors | sqlite3.dll and _sqlite3.pyd | https://www.sqlite.org/2024/sqlite-autoconf-3470100.tar.gz; exact source-archive hash is not yet recorded (HOLD) | Built into the pinned python-build-standalone runtime; no project patch declared | Retain the public-domain dedication, exact source/archive hash, and build provenance. | MAIN EXE |
+| bzip2 | 1.0.8 | bzip2 permissive license | Julian Seward | statically linked into _bz2.pyd | https://sourceware.org/pub/bzip2/bzip2-1.0.8.tar.gz; exact source-archive hash is not yet recorded (HOLD) | Built into the pinned python-build-standalone runtime; no project patch declared | Ship the exact copyright, conditions and disclaimer; retain exact source/build inputs. | MAIN EXE |
+| XZ Utils / liblzma | 5.2.12 | Source-exact public-domain notices | Lasse Collin, Igor Pavlov, and XZ contributors as identified per source file | statically linked into _lzma.pyd | https://github.com/tukaani-project/xz/tree/v5.2.12; exact source-archive hash is not yet recorded (HOLD) | Built into the pinned python-build-standalone runtime; no project patch declared | Retain exact source and every notice applicable to the selected files. | MAIN EXE |
+| zlib | 1.3.1 | Zlib | Jean-loup Gailly and Mark Adler | CPython runtime compression paths, including python312.dll | https://github.com/madler/zlib/releases/tag/v1.3.1; exact source-archive hash is not yet recorded (HOLD) | Built into the pinned python-build-standalone runtime; no project patch declared | Ship the exact zlib notice and retain exact source/build inputs. | MAIN EXE |
+| Expat | 2.6.4 | MIT | Expat maintainers and contributors | statically linked into pyexpat.pyd | https://github.com/libexpat/libexpat/tree/R_2_6_4; exact source-archive hash is not yet recorded (HOLD) | Built into the pinned python-build-standalone runtime; no project patch declared | Ship the exact MIT notice and retain exact source/build inputs. | MAIN EXE |
+| mpdecimal | 2.5.1 | BSD-2-Clause | Stefan Krah and mpdecimal contributors | statically linked into _decimal.pyd | CPython 3.12.9 Modules/_decimal/libmpdec; covered by the pinned CPython source hash | Built into CPython; no project patch declared | Ship the exact BSD-2-Clause notice and retain the covered CPython source. | MAIN EXE |
+| HACL* vendor code | CPython snapshot bb3d0dc8d9d15a5cd51094d5b69e70aa09005ff0 | MIT | HACL*/EverCrypt contributors as identified by CPython source headers | CPython hashing/runtime code in python312.dll | CPython 3.12.9 Modules/_hacl and refresh.sh; covered by the pinned CPython source hash | Vendored/transformed by upstream CPython; no project patch declared | Preserve MIT headers, the exact vendor source, and upstream transformation steps. | MAIN EXE |
+| Unicode Character Database | 15.0.0 | Unicode data files and software license | Unicode, Inc. | generated Unicode tables in CPython runtime | https://www.unicode.org/Public/15.0.0/ucd/; exact source/archive and license hash are not yet retained (HOLD) | Generated by upstream CPython; no project modification declared | Obtain and ship the exact UCD 15.0.0 permission notice and retain generator inputs. | MAIN EXE |
+| BLAKE2 reference-derived code | CPython 3.12.9 snapshot | CC0-1.0 / public-domain dedication | BLAKE2 reference authors and CPython contributors | CPython BLAKE2 implementation in the runtime | CPython 3.12.9 Modules/_blake2; covered by the pinned CPython source hash | Vendored/adapted upstream by CPython; no project patch declared | Preserve the exact dedication, source provenance, and transformation record. | MAIN EXE |
+| PyInstaller | 6.21.0 | GPL-2.0-or-later with PyInstaller bootloader exception; selected files Apache-2.0 | Gordon McMillan, the PyInstaller Development Team, and per-file contributors | Outer bootloader/generated CArchive and frozen PyInstaller runtime hooks | https://github.com/pyinstaller/pyinstaller/tree/v6.21.0; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | Build-time freezing only; no local PyInstaller source patch declared | Retain the exact COPYING/exception and relevant per-file notices as audit evidence; retain exact build scripts and source even though the bootloader exception permits distribution of the generated application. | MAIN EXE |
+| setuptools | 83.0.0 | MIT plus licenses of selected vendored/generated components | Python Packaging Authority and per-vendor contributors | setuptools PYZ root (119 entries in the audited candidate) | https://files.pythonhosted.org/packages/source/s/setuptools/setuptools-83.0.0.tar.gz SHA-256 025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | Collected by the PyInstaller setuptools runtime hook; no project source patch declared | Ship setuptools MIT plus every selected vendor/generated notice below; make MPL-2.0 Source Code Form and generator/schema inputs available. | MAIN EXE |
+| packaging | 26.2 | Apache-2.0 OR BSD-2-Clause | Donald Stufft and packaging contributors | top-level packaging PYZ root | https://github.com/pypa/packaging/tree/26.2; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | Frozen without project source modification | Ship LICENSE, LICENSE.APACHE and LICENSE.BSD; retain exact source/wheel hashes. | MAIN EXE |
+| typing_extensions | 4.16.0 | PSF-2.0 | Python Software Foundation and typing_extensions contributors | typing_extensions PYZ module | https://github.com/python/typing_extensions/tree/4.16.0; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | Frozen without project source modification | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| backports.tarfile (setuptools-vendored) | 1.2.0 | MIT | Jason R. Coombs, Lars Gustäbel, and contributors | setuptools._vendor.backports.tarfile PYZ modules | https://github.com/jaraco/backports.tarfile/tree/v1.2.0 | Vendored by setuptools; no project patch declared | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| jaraco.context / jaraco.functools / jaraco.text (setuptools-vendored) | 6.1.0 / 4.4.0 / 4.0.0 | MIT | Jason R. Coombs and per-project contributors | selected setuptools._vendor.jaraco PYZ modules | https://github.com/jaraco/jaraco.context/tree/v6.1.0; https://github.com/jaraco/jaraco.functools/tree/v4.4.0; https://github.com/jaraco/jaraco.text/tree/v4.0.0 | Vendored by setuptools; no project patch declared | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| more-itertools (setuptools-vendored) | 10.8.0 | MIT | Erik Rose and more-itertools contributors | setuptools._vendor.more_itertools PYZ modules | https://github.com/more-itertools/more-itertools/tree/10.8.0 | Vendored by setuptools; no project patch declared | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| packaging (setuptools-vendored) | 26.0 | Apache-2.0 OR BSD-2-Clause | Donald Stufft and packaging contributors | setuptools._vendor.packaging PYZ modules | https://github.com/pypa/packaging/tree/26.0 | Vendored by setuptools; no project patch declared | Ship LICENSE, LICENSE.APACHE and LICENSE.BSD; retain exact source provenance. | MAIN EXE |
+| tomli (setuptools-vendored) | 2.4.0 | MIT | Taneli Hukkinen and contributors | setuptools._vendor.tomli PYZ modules | https://github.com/hukkin/tomli/tree/2.4.0 | Vendored by setuptools; no project patch declared | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| wheel (setuptools-vendored) | 0.46.3 | MIT | Daniel Holth and wheel contributors | setuptools._vendor.wheel PYZ modules | https://github.com/pypa/wheel/tree/0.46.3 | Vendored by setuptools; no project patch declared | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| validate-pyproject-derived setuptools code | 0.25-derived | MPL-2.0 portions | Anderson Bravalheri and validate-pyproject contributors | setuptools.config._validate_pyproject PYZ modules and generated schemas | https://github.com/abravalheri/validate-pyproject/tree/v0.25 | Vendored/generated by upstream setuptools; no project patch declared | Ship unmodified setuptools notices/MPL-2.0 and make exact covered source plus generator/schema inputs available. | MAIN EXE |
+| fastjsonschema-derived setuptools code | 2.21.2-derived | BSD-3-Clause portions | Peter Tröger and fastjsonschema contributors | generated validation modules under setuptools.config._validate_pyproject | https://github.com/horejsek/python-fastjsonschema/tree/v2.21.2 | Generated/vendored by upstream setuptools; no project patch declared | Reproduce the exact BSD copyright, conditions and disclaimer; retain full setuptools notices and generator provenance. | MAIN EXE |
+| PySide6 | 6.11.1 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | The Qt Company Ltd. and PySide contributors; exact per-file holder list UNRESOLVED | PySide6 PYZ root and selected PySide6 native table paths | pyside-setup-everywhere-src-6.11.1.tar.xz SHA-256 6ffd9835bb0dd2c56f061d62f1616bb1707cfc0202b80e3165d6be087f3965e2; https://pypi.org/project/PySide6/6.11.1/; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; frozen/collected into a one-file executable | Ship prominent LGPL/Qt/PySide notices and complete applicable license and third-party texts; provide exact corresponding source and project build scripts for covered modifications; preserve reverse-engineering rights and a tested DLL replacement/relink procedure. Qualified review must approve it. | MAIN EXE |
+| PySide6-Essentials | 6.11.1 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | The Qt Company Ltd. and PySide contributors; exact per-file holder list UNRESOLVED | QtCore/QtGui/QtWidgets bindings and selected PySide/Qt native paths | pyside-setup-everywhere-src-6.11.1.tar.xz SHA-256 6ffd9835bb0dd2c56f061d62f1616bb1707cfc0202b80e3165d6be087f3965e2; https://pypi.org/project/PySide6-Essentials/6.11.1/; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; selected files frozen/collected | Ship prominent LGPL/Qt/PySide notices and complete applicable license and third-party texts; provide exact corresponding source and project build scripts for covered modifications; preserve reverse-engineering rights and a tested DLL replacement/relink procedure. Qualified review must approve it. | MAIN EXE |
+| PySide6-Addons | 6.11.1 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | The Qt Company Ltd. and PySide contributors; exact per-file holder list UNRESOLVED | Locked build input; optional add-on modules are intended to be excluded; exact PySide/Qt table is authoritative for bytes actually conveyed | https://pypi.org/project/PySide6-Addons/6.11.1/; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; runtime inclusion, if any, is path-inventoried below | Ship prominent LGPL/Qt/PySide notices and complete applicable license and third-party texts; provide exact corresponding source and project build scripts for covered modifications; preserve reverse-engineering rights and a tested DLL replacement/relink procedure. Qualified review must approve it. | LOCKED BUILD INPUT / ADD-ON MODULES NOT INCLUDED |
+| Shiboken6 | 6.11.1 | LGPL-3.0-only OR GPL-2.0-only OR GPL-3.0-only | The Qt Company Ltd. and Shiboken contributors; exact per-file holder list UNRESOLVED | shiboken6 PYZ/native paths and PySide support DLLs | pyside-setup-everywhere-src-6.11.1.tar.xz SHA-256 6ffd9835bb0dd2c56f061d62f1616bb1707cfc0202b80e3165d6be087f3965e2; https://pypi.org/project/shiboken6/6.11.1/; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; frozen/collected into a one-file executable | Ship prominent LGPL/Qt/PySide notices and complete applicable license and third-party texts; provide exact corresponding source and project build scripts for covered modifications; preserve reverse-engineering rights and a tested DLL replacement/relink procedure. Qualified review must approve it. | MAIN EXE |
+| Qt | 6.11.1 | LGPL-3.0-only for selected Qt modules, plus applicable Qt third-party terms; GPL/commercial alternatives are not asserted here | The Qt Company Ltd., Qt contributors, and third-party per-file holders; exact payload-to-attribution closure UNRESOLVED | Selected PySide6/Qt DLLs and four plugins listed byte-for-byte below; no Qt translation catalogs or add-on modules are included | qtbase-everywhere-src-6.11.1.tar.xz SHA-256 d9594a31228aa23ad6b531719a29b45f0f3989fe6c136d45767ea179f233c1ac; https://download.qt.io/official_releases/qt/6.11/6.11.1/submodules/ | No project Qt source patch declared; upstream wheel binaries are repackaged in one-file form | Ship prominent LGPL/Qt/PySide notices and complete applicable license and third-party texts; provide exact corresponding source and project build scripts for covered modifications; preserve reverse-engineering rights and a tested DLL replacement/relink procedure. Qualified review must approve it. | MAIN EXE |
+| yt-dlp | 2026.7.4 | Unlicense | yt-dlp contributors; individual per-file holder list UNRESOLVED | yt_dlp PYZ root | https://github.com/yt-dlp/yt-dlp/tree/2026.07.04; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; Python modules byte-compiled/frozen | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| Pillow | 12.3.0 | MIT-CMU | Secret Labs AB, Fredrik Lundh, and Pillow contributors | Locked dependency and preserved notice text; no PIL code/native path in the audited artifact | https://github.com/python-pillow/Pillow/tree/12.3.0; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | Package code is not frozen; its unmodified license evidence is retained | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | LOCKED INPUT / PACKAGE CODE NOT INCLUDED; NOTICE TEXT INCLUDED |
+| requests | 2.34.2 | Apache-2.0 | Kenneth Reitz and Requests contributors | requests PYZ root | https://github.com/psf/requests/tree/v2.34.2; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; Python modules byte-compiled/frozen | Ship Apache-2.0, retained copyright/NOTICE material, and exact source provenance. | MAIN EXE |
+| certifi | 2026.7.22 | MPL-2.0 | Kenneth Reitz and certifi contributors; Mozilla CA certificate holders are separate | certifi PYZ/data paths | https://github.com/certifi/python-certifi; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; package/data frozen | Ship MPL-2.0 and notices; make the exact Source Code Form for conveyed MPL-covered files and any modifications available, with source provenance retained. | MAIN EXE |
+| charset-normalizer | 3.4.9 | MIT | Ahmed Tahri and charset-normalizer contributors | charset_normalizer PYZ/native paths | https://github.com/jawah/charset_normalizer/tree/3.4.9; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; modules/native wheel content frozen | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| idna | 3.18 | BSD-3-Clause | Kim Davies | idna PYZ root | https://github.com/kjd/idna/tree/v3.18; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; Python modules byte-compiled/frozen | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| urllib3 | 2.7.0 | MIT | Andrey Petrov and urllib3 contributors | urllib3 PYZ root | https://github.com/urllib3/urllib3/tree/2.7.0; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | No project source patch declared; Python modules byte-compiled/frozen | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | MAIN EXE |
+| defusedxml | 0.7.1 | PSF-2.0 | Christian Heimes | Locked transitive dependency and preserved notice text; no defusedxml module in the audited artifact | https://github.com/tiran/defusedxml/tree/v0.7.1; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | Package code is not frozen; its unmodified license evidence is retained | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | LOCKED INPUT / PACKAGE CODE NOT INCLUDED; NOTICE TEXT INCLUDED |
+| youtube-transcript-api | 1.2.4 | MIT | Jonas Depoix and youtube-transcript-api contributors | Locked dependency and preserved notice text; no youtube_transcript_api module in the audited artifact | https://github.com/jdepoix/youtube-transcript-api/tree/v1.2.4; Exact PyPI artifact hashes are in the embedded requirements.lock and the locked-hash table below; source URL/hash retention is governed by uv.lock and docs/DEPENDENCY-SOURCE.md in the corresponding-source set. | Package code is not frozen; its unmodified license evidence is retained | Ship the exact copyright/license text and notices; retain the exact upstream source/archive and build provenance named in the source companion. | LOCKED INPUT / PACKAGE CODE NOT INCLUDED; NOTICE TEXT INCLUDED |
+| Node.js | 22.17.0 | MIT plus bundled third-party licenses/notices | Node.js contributors and bundled third-party holders named in the Node license file | bin/node.exe | https://nodejs.org/download/release/v22.17.0/node-v22.17.0-win-x64.zip; source node-v22.17.0.tar.gz SHA-256 f8bf095ff559033edf04108fb1f14f72e2be337c609d4f83e8af1e299af7f4b4; exact executable SHA-256 is in the native table | Official Windows binary redistributed without declared project modification | Ship the complete Node.js license and its bundled third-party notices; retain the exact source archive and build provenance. | MAIN EXE |
+| FFmpeg / ffprobe (BtbN GPL build) | N-125365-g9a01c1cb6a-20260630 | GPL-3.0-or-later distribution route (configured --enable-gpl --enable-version3); bundled libraries retain their terms | FFmpeg developers plus bundled-library copyright holders; exact native closure UNRESOLVED | bin/ffmpeg.exe and bin/ffprobe.exe | https://github.com/BtbN/FFmpeg-Builds; commit 9a01c1cb6a and build date 20260630; exact executable hashes are in the native table | Upstream BtbN compiled build redistributed without declared project binary modification | Ship GPLv3 and all notices. Convey complete machine-readable Corresponding Source, configuration, patches, and build/install scripts by a GPLv3 section 6 method, or a qualified-review-approved valid written offer where legally applicable. Upstream links alone are not treated as the distributor's source delivery. | MAIN EXE |
+| Microsoft Visual C++ / Universal CRT runtime | api-ms-win-core-console-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-datetime-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-debug-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-errorhandling-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-fibers-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-file-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-file-l1-2-0.dll 10.0.26100.8249; api-ms-win-core-file-l2-1-0.dll 10.0.22000.194; api-ms-win-core-handle-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-heap-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-interlocked-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-libraryloader-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-localization-l1-2-0.dll 10.0.26100.8249; api-ms-win-core-memory-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-namedpipe-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-processenvironment-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-processthreads-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-processthreads-l1-1-1.dll 10.0.26100.8249; api-ms-win-core-profile-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-rtlsupport-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-string-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-synch-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-synch-l1-2-0.dll 10.0.26100.8249; api-ms-win-core-sysinfo-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-timezone-l1-1-0.dll 10.0.26100.8249; api-ms-win-core-util-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-conio-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-convert-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-environment-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-filesystem-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-heap-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-locale-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-math-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-multibyte-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-private-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-process-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-runtime-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-stdio-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-string-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-time-l1-1-0.dll 10.0.26100.8249; api-ms-win-crt-utility-l1-1-0.dll 10.0.26100.8249; PySide6/MSVCP140.dll 14.44.35211.0; PySide6/MSVCP140_1.dll 14.44.35211.0; PySide6/MSVCP140_2.dll 14.44.35211.0; PySide6/VCRUNTIME140.dll 14.44.35211.0; PySide6/VCRUNTIME140_1.dll 14.44.35211.0; shiboken6/MSVCP140.dll 14.44.35211.0; shiboken6/VCRUNTIME140.dll 14.44.35211.0; shiboken6/VCRUNTIME140_1.dll 14.44.35211.0; ucrtbase.dll 10.0.22000.194; VCRUNTIME140.dll 14.42.34438.0; VCRUNTIME140_1.dll 14.42.34438.0 | Microsoft redistributable/proprietary terms | Microsoft Corporation | Microsoft runtime paths in the native-file table | Official Microsoft toolchain/runtime redistribution; exact bytes are identified by path, file version where readable, size, and SHA-256 | Runtime DLLs redistributed without declared project modification | Confirm each exact file is redistributable under the applicable Visual Studio/Windows SDK terms; preserve Microsoft notices and do not imply an open-source source offer. | MAIN EXE |
+| bgutil-ytdlp-pot-provider optional helper | 1.3.1 compatibility target; installed helper version is independently verified | GPL-3.0-only (external package; exact dependency terms remain with that distribution) | Provider contributors; exact external-package copyright chain UNRESOLVED here | The external helper package is NOT PRESENT as such; it is separately installed/versioned only. Any nonzero provider count below is a forbidden legacy payload, not part of this helper row. | https://github.com/Brainicism/bgutil-ytdlp-pot-provider/tree/1.3.1; no provider archive/source hash is asserted as part of this EXE inventory | No helper/provider bytes are modified or conveyed by this main-EXE report | Do not bundle or silently install it. If separately conveyed, audit that package and its npm/native closure independently and satisfy its GPL/source/notice obligations. | EXTERNAL / NOT INCLUDED |
+
+Locked Python source-artifact hashes
+------------------------------------
+
+These are every SHA-256 selector recorded by the embedded requirements.lock for
+the Python components named above. A lock hash is acquisition evidence, not proof
+that the corresponding wheel's every file is present in the frozen PYZ.
+
+| Package | Version | SHA-256 |
+|---|---|---|
+| pyinstaller | 6.21.0 | 327d132389f37912609e01be62810cf96b5aa95b613903e4b8692e0d12fb0eda |
+| pyinstaller | 6.21.0 | 42395ec76df8e8120c36b13339d9db8cab83e316a12839ee303cc00fc941bb74 |
+| pyinstaller | 6.21.0 | 4e3108b3f02384560da70e39b8bf22b0ad597d02bd68a40d76ea91c1cfa00cad |
+| pyinstaller | 6.21.0 | 5fa56746c1e76f93634d018502301378a2d0c382553d37d8c3c34ff436c12dd1 |
+| pyinstaller | 6.21.0 | 605169523a6b5ace39f13dfbff21add9f2bc43df99c7daf9394fefb2c45e8b6f |
+| pyinstaller | 6.21.0 | 697532279f535ad572bda613db4f821540e235c7854ca6da4d3bf0373f4415ee |
+| pyinstaller | 6.21.0 | 6b6374d652107dd4a2eeece903ff82bb4045bb5e1006c5a158a6dcdbefe84bf2 |
+| pyinstaller | 6.21.0 | 7071d4b094d5b40deeef5fa3d3b98a1b846087f7562b49209663d5f9281fe251 |
+| pyinstaller | 6.21.0 | 7fae06c494ce0ebfe6bd3055c0e409def884f63af2e3705d06bd431ad9237fc7 |
+| pyinstaller | 6.21.0 | bb9fab705983e393a2d1cac77d6972513057ad800215fd861dc15ff5272e98fd |
+| pyinstaller | 6.21.0 | c6b28d30d8fd99ce162ff3aab5013ed44dbfb747566b1f01b9bed7964d7c14e9 |
+| pyinstaller | 6.21.0 | f13c95c9c03fb567217135919f93815c305813126780b0ed6e0123cb8acaf025 |
+| setuptools | 83.0.0 | 025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef |
+| setuptools | 83.0.0 | 29b23c360f22f414dc7336bb39178cc7bcbf6021ed2733cde173f09dba19abb3 |
+| packaging | 26.2 | 5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e |
+| packaging | 26.2 | ff452ff5a3e828ce110190feff1178bb1f2ea2281fa2075aadb987c2fb221661 |
+| typing-extensions | 4.16.0 | 481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8 |
+| typing-extensions | 4.16.0 | dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5 |
+| pyside6 | 6.11.1 | 0968877ab1fb4ef3587a284da6fe05e8647ada56a6a3750b6395188e01f4aba6 |
+| pyside6 | 6.11.1 | 537682c3b7530817203e667c1f5a2f00486b37bf52c52eeab438544c7a0917f6 |
+| pyside6 | 6.11.1 | 75f0005c3eb95c07cfb65522ec50d0815ac007a96482c21dc3cb4b4c04895d84 |
+| pyside6 | 6.11.1 | acee467cb5f256cc47ebb9d815a054c1d8416da380c191b247a76d164aa3f805 |
+| pyside6 | 6.11.1 | b1fc521ba2bb5109425ab8add06bddbdd524abcad06cfa012cc39a22a189feb2 |
+| pyside6-essentials | 6.11.1 | 11253ea52aabecefe9febddbbe78b43a824129e3af1cec98431028fba7fa954f |
+| pyside6-essentials | 6.11.1 | 228de53c2bc26b07e5021fbe3614fc44ca08e4dab9999af08c2b389d2c239957 |
+| pyside6-essentials | 6.11.1 | 63311bd48e32c584599ab04b9ef7c324082374cd2c9fa533f978fb893bb47e40 |
+| pyside6-essentials | 6.11.1 | a039b6da68a3a4b9d243217b2b98d475eed3f617159ef6be925badab53c11b0d |
+| pyside6-essentials | 6.11.1 | e3ef7027b41e4e55fadb56e3b3257dc8ee92154b639fe67fc4c8e05e9d976c60 |
+| pyside6-addons | 6.11.1 | 0d13c4dfd671b050a48e4f8d8ddc724b7248f9c0437e7fc47fdf316278572923 |
+| pyside6-addons | 6.11.1 | 3494f480dee92f415be2f2d989c0b3f4755ac332b28045cbf4ba0f5c5a22ba37 |
+| pyside6-addons | 6.11.1 | 54733c77f789bef5f03c6aff4ad3bec8b2eff021f0cfcbc53d5e6c250ded24f9 |
+| pyside6-addons | 6.11.1 | 8e6c65fbd73a512d6f72cda8d8277444a85a34dc99dd1dae9c21d35b8671bb1f |
+| pyside6-addons | 6.11.1 | bf1c6c4e954e5eba3d2a7c661ad4b9689e8f09c7f4a16bdf29713371d11af993 |
+| shiboken6 | 6.11.1 | 1a16867f103ef1c662a5f09dfed03273a9f81688b174555162c58e83650a3f02 |
+| shiboken6 | 6.11.1 | 1bd2f4314414df2d122d9f646e03b731bc6d6b5f77a5f53f99a4fe4e97d84e6f |
+| shiboken6 | 6.11.1 | 7c8d9af17db4495d4fa5b1c393f218311c4855546b9dfa6a0bd21bcd66b55e9d |
+| shiboken6 | 6.11.1 | 9a8bccfafc8805254cabcfa1edfaf55cd52889f4998c91ad0d9a4433fb1bcdbe |
+| shiboken6 | 6.11.1 | c2c6863aa80ec18c0f82cea3417837b279cdc60024ac17123461dc9042577df7 |
+| yt-dlp | 2026.7.4 | b094813404f87a9dd2186f00815231df32e5fd8a5403be0f807b3bb2d21a4432 |
+| yt-dlp | 2026.7.4 | f11f2b11d5a8ac4059f9bdf29fa4407dc7c6bb00c5097e95ca22a7a9db518266 |
+| pillow | 12.3.0 | 00808c5e14ef63ac5161091d242999076604ff74b883423a11e5d7bbb38bf756 |
+| pillow | 12.3.0 | 04f01d28a6aaff387bf842a13be313df23ba0597a44f1a976c9feb3c6ff4711a |
+| pillow | 12.3.0 | 06ff022112bc9cbf83b60f8e028d94ad87b60621706487e65f673de61610ab59 |
+| pillow | 12.3.0 | 0740a512dc522224c77d9aa5a8d70d8b7d73fb91f2c21125d8d025d3b8990e45 |
+| pillow | 12.3.0 | 0847a763afefb695bc912d7c131e7e0632d4edc1d8698f58ddabec8e46b8b6d3 |
+| pillow | 12.3.0 | 0dd2064cbc55aaec028ef5fbb60fa47bb6c3e7918e07ff17935284b227a9d2df |
+| pillow | 12.3.0 | 0feb2e9d6ad6c9e3c06effe9d00f3f1e618a6643273576b016f591e9315a7139 |
+| pillow | 12.3.0 | 10e41f0fbf1eec8cfd234b8fe17a4caac7c9d0db4c204d3c173a8f9f6ef3232b |
+| pillow | 12.3.0 | 1182d52bc2d5e5d7d0949503aa7e36d12f42205dc287e4883f407b1988820d39 |
+| pillow | 12.3.0 | 164b31cd1a0490ab6efae01aa5df49da7061be0af1b30e035b6e9a1bfe34ee6e |
+| pillow | 12.3.0 | 1657923d2d45afb66526e5b933e5b3052e6bdea196c90d3abb2424e18c77dae8 |
+| pillow | 12.3.0 | 186941b6aef820ad110fb01fb06eb925374dc3a21b17e37ec9a53b250c6fe2d1 |
+| pillow | 12.3.0 | 1cca606cd25738df4ed873d5ad46bbdb3d83b5cbca291f6b4ff13a4df6b0bbe8 |
+| pillow | 12.3.0 | 21900ce7ba264168cd50defae43cd75d25c833ad4ad6e73ffc5596d12e25ac89 |
+| pillow | 12.3.0 | 236ff70b9312fb68943c703aa842ca6a758abfa45ac187a5e7c1452e96ef72b5 |
+| pillow | 12.3.0 | 23aceaa007d6172b02c277f0cd359c79492bbb14f7072b4ede9fbcaf20648130 |
+| pillow | 12.3.0 | 23d27a3e0307ec2244cc51e7287b919aa68d097504ebe19df4e76a98a3eea5bd |
+| pillow | 12.3.0 | 24870b09b224f7ae3c39ed07d10e819d06f8720bc551847b1d623832b5b0e28d |
+| pillow | 12.3.0 | 251bf95b67017e27b13d82f5b326234ca62d70f9cf4c2b9032de2358a3b12c7b |
+| pillow | 12.3.0 | 25b9b82bb22e6e2b3cd07b39c68b7b862001226cb3dff7130d1cb914121b39ed |
+| pillow | 12.3.0 | 28ce87c5ab450a9dd970b52e5aca5fe63ed432d18a2eaddd1979a00a1ba24ace |
+| pillow | 12.3.0 | 300557495eb45ebb8aec96c2da9c4be642fbf7cd937278b4013ba894ea8eb0eb |
+| pillow | 12.3.0 | 30f2aa603c41533cc25c05acd0da21636e84a315768feb631c937177db558931 |
+| pillow | 12.3.0 | 331b624368d4f1d069149002f25f44bc61c8919ce8ddb3c45bdad8f6e2d89510 |
+| pillow | 12.3.0 | 37d6d0a00072fd2948eb22bce7e1475f34569d90c87c59f7a2ec59541b77f7a6 |
+| pillow | 12.3.0 | 37dc8f7bbb66efe481bb60defacef820c950c24713fb44962ed6aa2a50966de1 |
+| pillow | 12.3.0 | 3b8182a766685eaa002637e28b4ec8d6b18819a0c71f579bf0dbaa5830297cce |
+| pillow | 12.3.0 | 3edce1d53195db527e0191f84b71d02022de0540bf43a16ed734ed7537b07385 |
+| pillow | 12.3.0 | 446c34dcc4324b084a53b705127dc15717b22c5e140ae0a3c38349d4efec071e |
+| pillow | 12.3.0 | 4998562bf62a445225f22e07c896bb04b35b1b1f2eb6d760584c9c51d7a5f78c |
+| pillow | 12.3.0 | 4b0a7fe987b14c31ebda6083f74f22b561fd3739bc0ac51e019622e3d72668c7 |
+| pillow | 12.3.0 | 4e8c2a84d977f50b9daed6eeaf3baef67d00d5d74d932288f02cb94518ee3ace |
+| pillow | 12.3.0 | 4f883547d4b7f0495ebe7056b0cc2aea76094e7a4abc8e933540f3271df27d9c |
+| pillow | 12.3.0 | 514435a37670e3e5e08f3945b68718b6ed329bb84367777e16f9f4dfe1e61a0f |
+| pillow | 12.3.0 | 53aa02d20d10c3d814d536aa4e5ac9b84ca0ff5a88377963b085ad6822f93e64 |
+| pillow | 12.3.0 | 5594fc43d548a7ed94949d139aa1341b270f1863f11cfd37f5a6c8b778a6b67f |
+| pillow | 12.3.0 | 571b9fcb07b97ef3a492028fb3d2dc0993ca23a06138b0315286566d29ef718a |
+| pillow | 12.3.0 | 57b3d78c95ba9059768b10e28b813002261d3f3dfc55cc48b0c988f625175827 |
+| pillow | 12.3.0 | 5afb51d599ea772b8365ae807ae557f18bccfe46ab261fd1c2a9ed700fc6eb17 |
+| pillow | 12.3.0 | 6b02afb9b97f65fbca5f31db6a2a3ba21aa93030225f150fa3f249717e938fb4 |
+| pillow | 12.3.0 | 6c0016e7b354317c4e9e525b937ac8596c38d2d232b419529b9cd7a1cd46e39a |
+| pillow | 12.3.0 | 71d6097b330eea8fd15097780c8e89cb1a8ce7838669f48c5bacd6f663dd4701 |
+| pillow | 12.3.0 | 756c768d0c9c2955feb7a56c37ea24aea2e369f8d36a88da270b6a9f19e62b5e |
+| pillow | 12.3.0 | 78cb2c6865a35ab8ff8b75fd122f6033b92a62c82801110e48ddd6c936a45d91 |
+| pillow | 12.3.0 | 7a743ff716f746fc19a9557f60dab1600d4613255f8a7aeb3cdde4db7eb15a66 |
+| pillow | 12.3.0 | 85f998ea1848bc6757289e739cfbdda3a04adfd58b02fc018ce54d754a5ce468 |
+| pillow | 12.3.0 | 8728f216dcdb6e6d555cf971cb34076139ad74b31fc2c14da4fafc741c5f6217 |
+| pillow | 12.3.0 | 877c3f311ff35410f690861c4409e7ccbf0cd2f878e50628a28e5a0bb689e658 |
+| pillow | 12.3.0 | 8cd2f7bdda092d99c9fc2fb7391354f306d01443d22785d0cbfafa2e2c8bb418 |
+| pillow | 12.3.0 | 8e95e1385e4998ae9694eeaa4730ba5457ff61185b3a55e2e7bea0880aef452a |
+| pillow | 12.3.0 | 962864dc93511324d51ddbb5b9f8731bf71675b93ca612a07441896f4688fb8c |
+| pillow | 12.3.0 | 9cf95fe4d0f84c82d282745d9bb08ad9f926efa00be4697e767b814ce40d4330 |
+| pillow | 12.3.0 | 9e881fca225083806662a5c43d627d215f258ff43c890f831966c7d7ba9c7402 |
+| pillow | 12.3.0 | a2b55dd6b2a4c4b7d87ffa56bdb33fdc5fdb9a462173861a7bc097f17d91cb09 |
+| pillow | 12.3.0 | a45650e8ce7fafffd731db8550230db6b0d306d181a90b67d3e6bca2f1990930 |
+| pillow | 12.3.0 | a876864214e136f0eb367788dbd7df045f4806801518e2cfe9e13229cfe06d8f |
+| pillow | 12.3.0 | ae26d61dfa7a47befdc7572b521024e8745f3d809bd95ca9505a7bba9ef849ec |
+| pillow | 12.3.0 | af8d94b0db561cf68b88a267c5c44b49e134f525d0dc2cb7ed413a66bc23559a |
+| pillow | 12.3.0 | b343699e8308bdc51978310e1c959c584e7869cc8c40780058c87da7781a1e94 |
+| pillow | 12.3.0 | b3c777e849237620b022f7f297dd67705f9f5cf1685f09f02e46f93e92725468 |
+| pillow | 12.3.0 | b629de27fda84b42cde7edef0d85f13b958b47f6e9bbcbba9b673c562a89bd8b |
+| pillow | 12.3.0 | ba09209fbe443b4acccebe845d8a138b89a8f4fbaeedd44953490b5315d5e965 |
+| pillow | 12.3.0 | ba54cfebe86920a559a7c4d6b9050791c20513650a1952ebe3368c7dc70306f8 |
+| pillow | 12.3.0 | bcb46e2f9feff8d06323983bd83ed00c201fdcab3d74973e7072a889b3979fcd |
+| pillow | 12.3.0 | bcc33feacfaefce60c12fd500a277533bdc02b10a19f7f6d348763d8140bbba7 |
+| pillow | 12.3.0 | bf16ba1b4d0b6b7c8e534936632270cf70eb00dbe09005bc345b2677b726855c |
+| pillow | 12.3.0 | cf1845d02ad822a369a49f2bb9345b1614744267682e7a03527dc3bf6eea1777 |
+| pillow | 12.3.0 | d69141514cc30b774ceea5e3ed3a6635c8d8a96edf664689b890f4089111fb35 |
+| pillow | 12.3.0 | d9c7f76c0673154f044e9d78c8655fb4213f6ca31a836df48b40fe5d187717b9 |
+| pillow | 12.3.0 | dbce0b29841537a2fa4a214c2bbf14de3587c9680caa9b4e217568472490b28f |
+| pillow | 12.3.0 | dc624f6bc473dacdf7ef7eb8678d0d08edf15cd94fad6ae5c7d6cc67a4e4902f |
+| pillow | 12.3.0 | e158cb00350dc278f3b91551101aa7d12415a66ebf2c91d8d5ac14e56ddd3ad0 |
+| pillow | 12.3.0 | e491916b378fba47242221bb9ead245211b70d504f495d105d17b14a24b4907c |
+| pillow | 12.3.0 | e795b7eb908249c4e43c7c99fac7c2c75dab0c43566e37db472a355f63693d71 |
+| pillow | 12.3.0 | e7e480451b9fa137494bccd3a7d69adbe8ac65a87d97be61e11f1b1050a5bac3 |
+| pillow | 12.3.0 | e91206ee562682b51b98ef4b26a6ef48fd84e15fd4c4bc5ec768eb641d206838 |
+| pillow | 12.3.0 | e9871b1ffbfa9656b60aeee92ed5136a5742696006fa322b29ea3d8da0ecc9cf |
+| pillow | 12.3.0 | e9aeb04d6aef139de265b29683e119b638208f88cf73cdd1658aa07221165321 |
+| pillow | 12.3.0 | ebaea975e03d3141d9d3a507df75c9b3ec90fa9d2ffd07567b3a978d9d790b26 |
+| pillow | 12.3.0 | f0606c8bf2cdefea14a43530f7657cbbb7ecf1c4222512492ef4a4434a9501ec |
+| pillow | 12.3.0 | f13c32a3abd6079a66d9526e18dad9b6d280384d49d7c54040cd57b6424041d9 |
+| pillow | 12.3.0 | f7401aebd7f581d7f83a439d87d474999317ee099218e5ad25d125290990ba65 |
+| pillow | 12.3.0 | fa4ecea169a355be7a3ade2c783e2ed12f0e40d2c5621cda8b3297faf7fbb9f5 |
+| pillow | 12.3.0 | fbd139c8447d25dd750ab79ee274cc5e1fe80fc56340ab10b18a195e1b6eca3e |
+| pillow | 12.3.0 | fdafc9cce40277e0f7a0feabce0ee50dd2fa1800f3b38015e51296b5e814048d |
+| pillow | 12.3.0 | fe3cca2e4e8a592be0f269a1ca4835c25199d9f3ce815c8491048f785b0a0198 |
+| pillow | 12.3.0 | ffd0c5368496f41b0944be820fcb7a838aa6e623d250b01acf2643939c3f99d7 |
+| requests | 2.34.2 | 2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0 |
+| requests | 2.34.2 | f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed |
+| certifi | 2026.7.22 | 62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775 |
+| certifi | 2026.7.22 | 741e2c3b351ddf169a738da9f2c048608ff7f2c5cc02f1ebc6b118bb090d5d55 |
+| charset-normalizer | 3.4.9 | 0327fcd59a935777d83410750c50600ee9571af2846f71ce40f25b13da1ef380 |
+| charset-normalizer | 3.4.9 | 03d07803992c6c7bbc976327f34b18b6160327fc81cb82c9d504720ac0be3b62 |
+| charset-normalizer | 3.4.9 | 04ce310cb89c15df659582aee80a0603788732a5e017d5bd5c81158106ce249c |
+| charset-normalizer | 3.4.9 | 0d861473f743244d349b50f850d10eb87aeb22bbdcc8e64f79273c94af5a8226 |
+| charset-normalizer | 3.4.9 | 0e94703ec9684807f20cfb5eed95c70f67f2a8f21ad620146d7b5a13677b93e5 |
+| charset-normalizer | 3.4.9 | 16b65ea0f2465b6fb52aa22de5eca612aa964ddfec00a912e26f4656cbef890b |
+| charset-normalizer | 3.4.9 | 16d10d789dd9bcca1173c95af82c58433122564b7bc39385124be735a35cbe99 |
+| charset-normalizer | 3.4.9 | 19ac87f93086ce37b86e098888555c4b4bc48102279bae3350098c0ed664b501 |
+| charset-normalizer | 3.4.9 | 1d22856ffbe153a602df38e4a5464f0b748a54002e0d69ac6d2ad0a197cc99ec |
+| charset-normalizer | 3.4.9 | 21e764fd1e70b6a3e205a0e46f3051701f98a8cb3fad66eeb80e48bb502f8698 |
+| charset-normalizer | 3.4.9 | 280081916dc341820640489a66e4696049401ef1cf6dd672f672e70ad915aca3 |
+| charset-normalizer | 3.4.9 | 2a441ea71902098ffe78c5abe6c494f44160b4af614ed16c3d9a3b1d17fd8ee2 |
+| charset-normalizer | 3.4.9 | 304b13570067b2547562e308af560b3963857b1fa90bd6afd978130130fe2d6a |
+| charset-normalizer | 3.4.9 | 32286a2c8d167e897177b673176c1e3e00d4057caf5d2b64eef9a3666b03018e |
+| charset-normalizer | 3.4.9 | 33bdcc2a32c0a0e861f60841a512c8acc658c87c2ac59d89e3a46dacf7d866e4 |
+| charset-normalizer | 3.4.9 | 375b83ed0aecfce76c16d198fbc21f3b11b337d68662bea0a995046682a11419 |
+| charset-normalizer | 3.4.9 | 3d92613ec25e43b05f042302531ec0f00b8445190e43325880cbd6ab7c2581da |
+| charset-normalizer | 3.4.9 | 40a126142a56b2dfc0aacbad1de8310cbf60da7656db0e6b16eebd48e3e93519 |
+| charset-normalizer | 3.4.9 | 416c229f77e5ea25b3dfd4b582f8d73d7e43c22320302b9ab128a2d3a0b38efe |
+| charset-normalizer | 3.4.9 | 432786d3561e69aeeae6c7e8648964ce0ad05736120135601f87ac26b9c83381 |
+| charset-normalizer | 3.4.9 | 440eede837960000d74978f0eba527be106b5b9aee0daf779d395276ed0b0614 |
+| charset-normalizer | 3.4.9 | 45b0cc4e3556cd875e09102988d1ab8356c998b596c9fced84547c8138b487a0 |
+| charset-normalizer | 3.4.9 | 4773092f8019072343a7447203308b176e10199920eb02d6195e81bbb3274c29 |
+| charset-normalizer | 3.4.9 | 4b3dac63058cc36820b0dd072f89898604e2d39686fe05321729d00d8ac185a0 |
+| charset-normalizer | 3.4.9 | 4d1c96a7a18b9690a4d46df09e3e3382406ae3213727cd1019ebade1c4a81917 |
+| charset-normalizer | 3.4.9 | 51307f5c71007673a2bf8232ad973483d281e74cb99c8c5a990af1eefa6277d9 |
+| charset-normalizer | 3.4.9 | 51447e9aa2684679af07ca5021c3db526e0284347ebf4ffcec1154c3350cfe32 |
+| charset-normalizer | 3.4.9 | 5b10cd92fc5c498b35a8635df6d5a100207f88b63a4dc1de7ef9a548e1e2cd63 |
+| charset-normalizer | 3.4.9 | 5e226f6218febc71f6c1fc2fafb91c226f75bdc1d8fb12d66823716e891608fd |
+| charset-normalizer | 3.4.9 | 609b3ba8fcc0fb5ab7af00719d0fb6ad0cb518e48e7712d12fd68f1327951198 |
+| charset-normalizer | 3.4.9 | 60f44ade2cf573dad7a277e6f8ca9a51a21dda572b13bd7d8539bb3cd5dbedde |
+| charset-normalizer | 3.4.9 | 611057cc5d5c0afc743ba8be6bd828c17e0aaa8643f9d0a9b9bb7dea80eb8012 |
+| charset-normalizer | 3.4.9 | 6366a16e1a25018694d6a5d784d09b046edc9eac40ea2b54065c3052672516a1 |
+| charset-normalizer | 3.4.9 | 65a7ff3f705e57d392f7261b6d0550fe137c3019477431f1c355e0db0a7d3e15 |
+| charset-normalizer | 3.4.9 | 673611bbd43f0810bec0b0f028ddeaaa501190339cac411f347ac76917c3ae7b |
+| charset-normalizer | 3.4.9 | 67830fc78e67501f47bb950471b2dcb9b35b140084429318e862895a8e89c993 |
+| charset-normalizer | 3.4.9 | 68e5f26a1ad57ded6d1cfb85331d1c1a195314756471d97758c48498bb4dcdf5 |
+| charset-normalizer | 3.4.9 | 69b157c5d3292bcd443faca052f3096f637f1e074b98212a933c074ae23dc3b8 |
+| charset-normalizer | 3.4.9 | 75286256590a6320cf106a0d28970d3560aad9ee09aa7b34fb40524792436d35 |
+| charset-normalizer | 3.4.9 | 78841cccf1af7b40f6f716338d50c0902dbe88d9f800b3c973b7a9a0a693a642 |
+| charset-normalizer | 3.4.9 | 78fa18e436a1a0e58dbd7e02fc4473f3f32cceb12df9dfca542d075961c307d2 |
+| charset-normalizer | 3.4.9 | 79580094b00d1789d1f93ea55bc43cb2f611910c72235b7657f3482ddcc1b22d |
+| charset-normalizer | 3.4.9 | 7b86a2b16095d250c6f58b3d9b2eee6f4147754344f3dab0922f7c9bf7d226c9 |
+| charset-normalizer | 3.4.9 | 83aed2c10721ddd90f68140685391b50811a880af20654c59af6b6c66c40513c |
+| charset-normalizer | 3.4.9 | 84fd18bcc17526fc2b3c1af7d2b9217d32c9c04448c16ec693b9b4f1985c3d33 |
+| charset-normalizer | 3.4.9 | 871ff67ea1aad4dfd91736464934d56b32dac49f9fbe16cddba36198a7b3a0db |
+| charset-normalizer | 3.4.9 | 898f0e9068ca27d37f8e83a5b962821df851532e6c4a7d615c1c033f9da6eedf |
+| charset-normalizer | 3.4.9 | 8a79d9f4d8001473a30c163556b3c3bfebec837495a412dde78b51672f6134f9 |
+| charset-normalizer | 3.4.9 | 8c041122946b7ba21bb32c45b1aa57b1be35527690aeb3c5c234521085632eee |
+| charset-normalizer | 3.4.9 | 90c44bc373b7687f6948b693cceaea1348ae0975d7474746559494468e3c1d84 |
+| charset-normalizer | 3.4.9 | 9104ed0bd76a429d46f9ec0dbc9b08ad1d2dcdf2b00a5a0daa1c145329b35b44 |
+| charset-normalizer | 3.4.9 | 9b2aff1c7b3884512b9512c3eaadd9bab39fb45042ffaaa1dd08ff2b9f8109d9 |
+| charset-normalizer | 3.4.9 | 9b8e0f3107e2200b76f6054de99016eac3ee6762713587b36baaa7e4bd2ae177 |
+| charset-normalizer | 3.4.9 | 9bb41182d93ea91f60b4bc8fbf4c820c69ef8a12ab2d917f3f1834f1acad07e8 |
+| charset-normalizer | 3.4.9 | 9cdef90ae47919cae358d8ab15797a800ed41da7aba5d72419fb510729e2ed4b |
+| charset-normalizer | 3.4.9 | a1786910334ed46ab1dd73222f2cd1e05c2c3bb39f6dddb4f8b36fc382058a39 |
+| charset-normalizer | 3.4.9 | a4cfde78a9f2880208d16a93b795726a3017d5977e08d1e162a7a31322479c41 |
+| charset-normalizer | 3.4.9 | a4fbdde9dd4a9ce5fd52c2b3a347bb50cc89483ef783f1cb00d408c13f7a96c0 |
+| charset-normalizer | 3.4.9 | aa99adc8f081b475a12843953db36831eaf83ec33eb46a90629ca6a5de45a616 |
+| charset-normalizer | 3.4.9 | ac351b3b8014eead140e77e9717e2992c6bbe30b63bc3422422eb84865412e3d |
+| charset-normalizer | 3.4.9 | b5314963fce9b0b12743891de876e724997864ee22aa496f903f426c7e2fa5b2 |
+| charset-normalizer | 3.4.9 | bcf74c1df76758a395bf0af608c04c82257523f55c9868b334f06270d0f2112b |
+| charset-normalizer | 3.4.9 | bd47ba7fc3ca94896759ea0109775132d3e7ab921fbf54038e1bab2e46c313c9 |
+| charset-normalizer | 3.4.9 | c0323c9daef75ef2e5083624b4585018a0c9d5e3b40f607eed81a311270b934b |
+| charset-normalizer | 3.4.9 | c1225416b463483160e4af85d5fc3a9690ccb53fd4b1865a6437825f5ede3209 |
+| charset-normalizer | 3.4.9 | c1c948747b03be832dceed96ca815cef7360de9aa19d37c730f8e3f6101aca48 |
+| charset-normalizer | 3.4.9 | c25fe15c70c59eb7c5ce8c06a1f3fa1da0ecc5ea1e7a5922c40fd2fa9b0d5046 |
+| charset-normalizer | 3.4.9 | cc1b0fff8ead343dae06305f954eb8468ba0ec1a97881f42489d198e4ce3c632 |
+| charset-normalizer | 3.4.9 | cd6280cf040f233bd7d3407b743b4b4c74f70e8e1c4199cb112a62c941c0772a |
+| charset-normalizer | 3.4.9 | cd6c3d4b783c556fa00bf540854e42f135e2f256abd29669fcd0da0f2dec79c2 |
+| charset-normalizer | 3.4.9 | d4d6fcde76f94f5cb9e43e9e9a61f16dacefd228cbbf6f1a09bd9b219a92f1a1 |
+| charset-normalizer | 3.4.9 | df115d4d83168fdf2cae48ef1ff6d1cb4c466364e30861b37121de0f3bf1b990 |
+| charset-normalizer | 3.4.9 | e4fd89cc178bced6ad29cb3e6dd4aa63fa5017c3524dbd0b25998fb64a87cc8b |
+| charset-normalizer | 3.4.9 | e9701d0049d92c16703a42771b98d560b95248949f23f8cf7b4eddd201814fb9 |
+| charset-normalizer | 3.4.9 | ee2f2a527e3c1a6e6411eb4209642e138b544a2d72fe5d0d76daf77b24063534 |
+| charset-normalizer | 3.4.9 | f7fb7d750cfa0a070d2c24e831fd3481019a60dd317ea2b39acbcebc08b6ed81 |
+| charset-normalizer | 3.4.9 | f840ed6d8ecba8255df8c42b87fadeda98ddfc6eeec05e2dc66e26d46dd6f58a |
+| charset-normalizer | 3.4.9 | f86c6358749bd4fda175388691e3ba8c46e24c5347d0afd20f9b7edfc9faf07d |
+| charset-normalizer | 3.4.9 | fa36ec09ef71d158186bc79e359ff5fdd6e7996fe8ab638f00d6b93139ba4fcf |
+| charset-normalizer | 3.4.9 | fe2c7201c642b7c308f1675355ad7ff7b66acfe3541625efe5a3ad38f29d6115 |
+| idna | 3.18 | 7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2 |
+| idna | 3.18 | ffb385a7e039654cef1ab9ef32c6fafe283c0c0467bba1d9029738ce4a14a848 |
+| urllib3 | 2.7.0 | 231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c |
+| urllib3 | 2.7.0 | 9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897 |
+| defusedxml | 0.7.1 | 1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69 |
+| defusedxml | 0.7.1 | a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61 |
+| youtube-transcript-api | 1.2.4 | 03878759356da5caf5edac77431780b91448fb3d8c21d4496015bdc8a7bc43ff |
+| youtube-transcript-api | 1.2.4 | b72d0e96a335df599d67cee51d49e143cff4f45b84bcafc202ff51291603ddcd |
+
+Distribution-boundary zero counts and libffi singleton
+--------------------------------------------------------
+
+| Forbidden class | CArchive | PYZ | Total |
+|---|---|---|---|
+| PyQt code/binary/module | 0 | 0 | 0 |
+| bgutil/getpot/yt_dlp_plugins provider code/module | 0 | 0 | 0 |
+| Raw JavaScript/TypeScript payload | 0 | 0 | 0 |
+| canvas native/module payload | 0 | 0 | 0 |
+
+libffi DLL count: 1
+Root libffi-8.dll count: 1
+Root libffi-8.dll SHA-256: d1682615247e165ba8aa0cff59e090a0b1b6b90793e48733f441dff8d8e6328e
+Expected CPython libffi 3.4.2 SHA-256: d1682615247e165ba8aa0cff59e090a0b1b6b90793e48733f441dff8d8e6328e
+Root hash matches expected CPython runtime: YES
+
+| libffi archive path | Size | SHA-256 | Component |
+|---|---|---|---|
+| libffi-8.dll | 27648 | d1682615247e165ba8aa0cff59e090a0b1b6b90793e48733f441dff8d8e6328e | libffi 3.4.2 |
+
+Required packaged compliance paths
+----------------------------------
+
+Embedded compliance rows are intentionally marked FINAL-BUILD-DEPENDENT;
+the report and SOURCE-HASHES rows are additionally SELF-REFERENTIAL because
+embedding the report changes both files. The final post-build sidecar records
+all exact compliance sizes and SHA-256 values.
+
+| Path | Present | Size | SHA-256 |
+|---|---|---|---|
+| LICENSE | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| THIRD_PARTY_LICENSES.txt | YES | SELF-REFERENTIAL | SEE POST-BUILD SIDECAR |
+| THIRD_PARTY_NOTICES.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| docs/DEPENDENCY-SOURCE.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| docs/BUILD-REPRODUCIBILITY.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| docs/LGPL-COMPLIANCE.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| docs/OPTIONAL-PO-PROVIDER.md | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| requirements.lock | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+| SOURCE-HASHES.sha256 | YES | SELF-REFERENTIAL | SEE POST-BUILD SIDECAR |
+| licenses/RELEASE-LICENSE-MANIFEST.sha256 | YES | FINAL-BUILD-DEPENDENT | SEE POST-BUILD SIDECAR |
+
+CArchive entry-type counts
+--------------------------
+
+| PyInstaller type code | Count |
+|---|---|
+| b | 323 |
+| m | 5 |
+| s | 7 |
+| z | 1 |
+
+Embedded PYZ top-level module roots
+-----------------------------------
+
+| Top-level root | PYZ entry count |
+|---|---|
+| __future__ | 1 |
+| _aix_support | 1 |
+| _compat_pickle | 1 |
+| _compression | 1 |
+| _distutils_hack | 2 |
+| _markupbase | 1 |
+| _py_abc | 1 |
+| _pydatetime | 1 |
+| _pydecimal | 1 |
+| _pyi_rth_utils | 2 |
+| _sitebuiltins | 1 |
+| _strptime | 1 |
+| _threading_local | 1 |
+| argparse | 1 |
+| ast | 1 |
+| asyncio | 32 |
+| base64 | 1 |
+| bisect | 1 |
+| bz2 | 1 |
+| calendar | 1 |
+| certifi | 2 |
+| charset_normalizer | 7 |
+| code | 1 |
+| codeop | 1 |
+| concurrent | 5 |
+| configparser | 1 |
+| contextlib | 1 |
+| contextvars | 1 |
+| copy | 1 |
+| csv | 1 |
+| ctypes | 3 |
+| dataclasses | 1 |
+| datetime | 1 |
+| decimal | 1 |
+| difflib | 1 |
+| dis | 1 |
+| email | 20 |
+| fileinput | 1 |
+| fnmatch | 1 |
+| fractions | 1 |
+| ftplib | 1 |
+| getopt | 1 |
+| getpass | 1 |
+| gettext | 1 |
+| glob | 1 |
+| gzip | 1 |
+| hashlib | 1 |
+| hmac | 1 |
+| html | 3 |
+| http | 5 |
+| idna | 6 |
+| importlib | 22 |
+| inspect | 1 |
+| ipaddress | 1 |
+| json | 4 |
+| logging | 1 |
+| lzma | 1 |
+| mimetypes | 1 |
+| multiprocessing | 23 |
+| netrc | 1 |
+| neural_extractor_v3 | 28 |
+| nturl2path | 1 |
+| numbers | 1 |
+| opcode | 1 |
+| optparse | 1 |
+| packaging | 14 |
+| pathlib | 1 |
+| pickle | 1 |
+| pkgutil | 1 |
+| platform | 1 |
+| pprint | 1 |
+| pty | 1 |
+| py_compile | 1 |
+| pydoc | 1 |
+| pydoc_data | 2 |
+| PySide6 | 3 |
+| queue | 1 |
+| quopri | 1 |
+| random | 1 |
+| requests | 19 |
+| rlcompleter | 1 |
+| runpy | 1 |
+| secrets | 1 |
+| selectors | 1 |
+| setuptools | 119 |
+| shiboken6 | 1 |
+| shlex | 1 |
+| shutil | 1 |
+| signal | 1 |
+| site | 1 |
+| socket | 1 |
+| socketserver | 1 |
+| sqlite3 | 4 |
+| ssl | 1 |
+| statistics | 1 |
+| string | 1 |
+| stringprep | 1 |
+| subprocess | 1 |
+| sysconfig | 1 |
+| tarfile | 1 |
+| tempfile | 1 |
+| textwrap | 1 |
+| threading | 1 |
+| token | 1 |
+| tokenize | 1 |
+| tomllib | 4 |
+| tracemalloc | 1 |
+| tty | 1 |
+| typing | 1 |
+| typing_extensions | 1 |
+| unittest | 12 |
+| urllib | 5 |
+| urllib3 | 36 |
+| uuid | 1 |
+| webbrowser | 1 |
+| xml | 14 |
+| xmlrpc | 2 |
+| yt_dlp | 1043 |
+| zipfile | 3 |
+| zipimport | 1 |
+
+Exact PySide/Qt DLL, PYD, plugin, and translation paths
+------------------------------------------------------
+
+Path count: 22
+
+| Archive path | Size | SHA-256 | Component | PE file version |
+|---|---|---|---|---|
+| PySide6/MSVCP140.dll | 549176 | 708dd7bbc7bd23bce9e93f7837a70c2dd7ad55cff43801e92c0f7fcd7dda47cd | Microsoft runtime | 14.44.35211.0 |
+| PySide6/MSVCP140_1.dll | 27448 | b2113956aa3fcb9decfe65be1ee7829f8e3ae0899633ae89fe04888ada201594 | Microsoft runtime | 14.44.35211.0 |
+| PySide6/MSVCP140_2.dll | 271672 | 1b806b427ffb573deff8478cf6fe336465fe2c67e0919bb95f452b6f31d25736 | Microsoft runtime | 14.44.35211.0 |
+| PySide6/opengl32sw.dll | 20639544 | 4a7d90f91fdecb5df7b426bc2d05974b8d7ffa450af2d1f93f3eca05800718da | Qt 6.11.1 | n/a |
+| PySide6/plugins/imageformats/qico.dll | 45880 | f81378dd51392ff0d3ae094d5e59dfc4fa664a0ef4d756d6ed40584f90af2758 | Qt 6.11.1 | n/a |
+| PySide6/plugins/platforms/qoffscreen.dll | 113976 | 426266e8ba0ea07c416616ad9973702fe126d4559cb2ee11e1c9bdbae85ba755 | Qt 6.11.1 | n/a |
+| PySide6/plugins/platforms/qwindows.dll | 1006904 | 54d736de022f707e9f7f555e4c9f9e993253cd5b0ee2364e6a9458c180828c42 | Qt 6.11.1 | n/a |
+| PySide6/plugins/styles/qmodernwindowsstyle.dll | 230712 | 9af96b09ebaf7ff13e22c70bf69b9c3f226f069375d1a9f9efd63e944e43f5fb | Qt 6.11.1 | n/a |
+| PySide6/pyside6.abi3.dll | 248632 | d4072be872b31f3748de5e6c28cb2976dafbf063d3ccfa38e5dabda29babcdaf | PySide6 / Essentials 6.11.1 | n/a |
+| PySide6/Qt6Core.dll | 10480440 | 65fe6224b6c47a15b058738031d31dce9928c4d7a58e1b8db6434f6f5cddd702 | Qt 6.11.1 | n/a |
+| PySide6/Qt6Gui.dll | 9589560 | cd071161ad325ff2de92b0e33d71334ef20712544796949623ce92dfb3957e90 | Qt 6.11.1 | n/a |
+| PySide6/Qt6Widgets.dll | 6594360 | 5a9f37dedd3dc5bcc1a4bb8ea919c49fc62df751a1450accc34379eb6710eab6 | Qt 6.11.1 | n/a |
+| PySide6/QtCore.pyd | 3330360 | be52341a5df1f76ecca2fb1e94eb429dfa46f0b659ed6536f25119b565b21ea8 | PySide6 / Essentials 6.11.1 | n/a |
+| PySide6/QtGui.pyd | 3896632 | f0549716b10a8b4fbd5c6c041f36af215223809f919f4c4722d44cc199d5c593 | PySide6 / Essentials 6.11.1 | n/a |
+| PySide6/QtWidgets.pyd | 4856120 | 85cb6c2181b4b09887a7d8507dd950844d1b8f74a9c4002c7b71169f75bf6fda | PySide6 / Essentials 6.11.1 | n/a |
+| PySide6/VCRUNTIME140.dll | 116024 | c6e841078cd352299a58925991e2552f7251b046253ba895b3ad50cd5cd32ec6 | Microsoft runtime | 14.44.35211.0 |
+| PySide6/VCRUNTIME140_1.dll | 41272 | b322e382ea249b50009f14a9a71ad16729eb6e4b58a8d3b3be6ac66ea6342a22 | Microsoft runtime | 14.44.35211.0 |
+| shiboken6/MSVCP140.dll | 549176 | 005f2324c7ff79bbe9a44992b0708abb4c871bd24bcc7a34aca5eab4439c1f4a | Microsoft runtime | 14.44.35211.0 |
+| shiboken6/Shiboken.pyd | 33080 | 0e2c5318c5ac60a016a12230bbb1f6a9d990c45cbf4a7c4af24aefb5ab7dc40a | Shiboken6 6.11.1 | n/a |
+| shiboken6/shiboken6.abi3.dll | 384824 | 47f4f9b44c95037565dd14f4be04f350f20c53c05483b750e0be867c39a7441e | Shiboken6 6.11.1 | n/a |
+| shiboken6/VCRUNTIME140.dll | 116024 | 8d9c679c825c5fff298d66c41af30f35c289fc101868dfc9635547bada0daba6 | Microsoft runtime | 14.44.35211.0 |
+| shiboken6/VCRUNTIME140_1.dll | 41272 | e4d7ea5f4f4ff6d0c208e693853617cdef0ad71cfe5dd5c3ae16c8a6b64c18ea | Microsoft runtime | 14.44.35211.0 |
+
+Exact remaining native DLL, PYD, and EXE paths
+------------------------------------------------
+
+Path count: 74
+
+| Archive path | Size | SHA-256 | Component | PE file version |
+|---|---|---|---|---|
+| _asyncio.pyd | 59392 | 50bd131291858692d51935caa3fdd3849931cd794e84850dc5d017855766143e | CPython 3.12.9 | n/a |
+| _bz2.pyd | 73216 | c464b6c94e123e3ec32b893093d162ef4edc3ee1dcecdb28e73c84b5a30c9d7d | CPython 3.12.9 + bzip2 1.0.8 | n/a |
+| _ctypes.pyd | 116224 | 6968228b18fc86b0b02f3dbf2c879c2c6f689a66130a72f35a3f0b2755d99e41 | CPython 3.12.9 | n/a |
+| _decimal.pyd | 244736 | 3f5057579bc3c859bd07d237c2f86248092cfda3eb044b4ba2625530146def2a | CPython 3.12.9 + mpdecimal 2.5.1 | n/a |
+| _elementtree.pyd | 121856 | cd0d716a10545c22b0fc4757ca6bbe1fb3d9a916d9b7a23b61727d0286c7dde7 | CPython 3.12.9 | n/a |
+| _hashlib.pyd | 54272 | 20286c64126a874a57968c8cfd483bedd907b9133bac56d9c64fa2407892c2df | CPython 3.12.9 + OpenSSL 3.0.16 | n/a |
+| _lzma.pyd | 147968 | e335d7f6c588524dd92069c9d2554ae45cb0e6da5f1a0458c6f42bd7a0c44dfc | CPython 3.12.9 + XZ Utils/liblzma 5.2.12 | n/a |
+| _multiprocessing.pyd | 24064 | 5aedf510e8a5dd3756e09407eecf801e6ea1d454a51a9ad3b0af18e44ffa7fe4 | CPython 3.12.9 | n/a |
+| _overlapped.pyd | 44032 | 475577388258fd9e96b7c7da0176785e69a06bcabd1ae198b9ab684da57e4865 | CPython 3.12.9 | n/a |
+| _queue.pyd | 20992 | ae122b8a31257116e2fe93a7e8f21b5b7a68fa66e7a5620abf0ec27669f4ee6d | CPython 3.12.9 | n/a |
+| _socket.pyd | 71680 | a4fe6b67451a47d65333060bf24654a2371819cff0c558b99dad95a9ed33d4b8 | CPython 3.12.9 | n/a |
+| _sqlite3.pyd | 112128 | a15942f2af97b987b6b64de80828362b27344648d2a53a4739e1baf6f20e3df9 | CPython 3.12.9 + SQLite 3.47.1 | n/a |
+| _ssl.pyd | 166400 | f6ccf5deb18e5046f553fb167281e509f536faa5c6b019c7d4019ef0514358c3 | CPython 3.12.9 + OpenSSL 3.0.16 | n/a |
+| _uuid.pyd | 13824 | c219a8ccfefc5b3ccf402c1d6800c2cf46203e97bf744602f3bf57684fa1858c | CPython 3.12.9 | n/a |
+| _wmi.pyd | 26112 | 7e6da91e0445ee7f2c98bbc5a2aec4b9ad568231f07381e49e5ea87ff26d3919 | CPython 3.12.9 | n/a |
+| ada92cb5d92a588d1b93__mypyc.cp312-win_amd64.pyd | 227328 | df5ea1b515f4e6677196f3d8c2f40a00b008d8e09152d08425f794e1b55f890d | charset-normalizer 3.4.9 | n/a |
+| api-ms-win-core-console-l1-1-0.dll | 22952 | 56a3c8ec50eedef1f5024696ef928cb2a0f5d8b40c8a122cba412944dae81c46 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-datetime-l1-1-0.dll | 22968 | e91b155e01b98aa4466b94da39e04c379f2fd392c154e7b6d80c05e0476f0552 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-debug-l1-1-0.dll | 22968 | 2117e4953f5ec36adff21a416db5ff5f9ff27ea5f70b71b2e7d87897979b34e1 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-errorhandling-l1-1-0.dll | 22968 | ce83855b81333be8ca07a70700bff553dfb94869637dfe529bc8ef64094032be | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-fibers-l1-1-0.dll | 22992 | 5fae6d3fa0df3ac9a0171654062b6518b56bc586ab03d8a05e9cd4a112628934 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-file-l1-1-0.dll | 27048 | be54476a0d4394d8ca6a5943b6425569403a1a7e939cf9b4948319b450022b45 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-file-l1-2-0.dll | 22968 | 87cd5dac0ad2c7f6d64a51c58bc6fb9f2b207fe4966dcf47dd83728b0e439a75 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-file-l2-1-0.dll | 20960 | f957a4c261506484b53534a9be8931c02ec1a349b3f431a858f8215cecfec3f7 | Microsoft runtime | 10.0.22000.194 |
+| api-ms-win-core-handle-l1-1-0.dll | 22968 | 5ae3a6e15f6a47f78b59f8a24334ffc88e8de05664c4c04d6243921ecba16325 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-heap-l1-1-0.dll | 22952 | 5f8dca9ec0204453ad8e31b8f36226fef8342c36d3a07b15bcece301bc7f24cd | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-interlocked-l1-1-0.dll | 22984 | bdad0c627f722de797917a9ebbb02acc0669c44326f64ba5fc1f8d6c2d978128 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-libraryloader-l1-1-0.dll | 22952 | b17a00e4640a1d5a91c1b1ddf0465ba04ffc2ac5404e37d02b56ba7d2fabbced | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-localization-l1-2-0.dll | 22968 | 4b5c4d32550d6ec0715c6cf651e9c1bbccb01bffa72e082a0ae04251800d43a1 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-memory-l1-1-0.dll | 22968 | 47817a21044295a18907f13cd9f2705f9a21579f80fa6d3f7bf22e00607189fe | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-namedpipe-l1-1-0.dll | 22976 | 64896c2ca9b8da6c6c327602000f1f6d95e49e6f8df06929176a319cc2aa985e | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-processenvironment-l1-1-0.dll | 22984 | 8df2ab621406d2905a330df3955db715965c2c097061345ad94dafab1b04ef00 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-processthreads-l1-1-0.dll | 22976 | a0299f1564ea8aeeff67226b6d2f9b9802aab877c9b89c82d50377ca2a12dba9 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-processthreads-l1-1-1.dll | 22976 | fe33f48a34243481782742168b24f344485527327534f7e05c60ba5420715387 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-profile-l1-1-0.dll | 22952 | 2f506ccb47a0513d16b3dece9ed1a0459b796fdb96e40d8967dc84e7d4e36954 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-rtlsupport-l1-1-0.dll | 22992 | 4335d1e4051cc16aee5745b1ae9027e1e710f41972faefc57c065f2166209853 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-string-l1-1-0.dll | 22984 | 4c8b4993badf3d843f57638b5f82e98769d3c7e0bd524d999ec2c720013a2fdf | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-synch-l1-1-0.dll | 22976 | a7e2c7177f10d6d35ed2cc79ce71eb979ba69a348f19237121ddac7d61103ebe | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-synch-l1-2-0.dll | 22968 | 6ff6a5b89c6ccc33a8f99fef4abb83b760c3d6e5be20d4805d95720f67b86876 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-sysinfo-l1-1-0.dll | 22952 | 881b7e57388edbf8a167bc7e7714286e9fed54b981479fa540c218aab049a81e | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-timezone-l1-1-0.dll | 22968 | c886fd30abe580e0bdb29b9e3cb50872159d1c62bcf03355b28850176f1258aa | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-core-util-l1-1-0.dll | 22992 | 26a32ca4e6a5f853a371f1fff7c4b7cd90288f4364921fbd4b11cbff697767a2 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-conio-l1-1-0.dll | 22984 | 988e14fa33743956ca182c1ef033c09427d60f2b0132803b8548e28ca0378b7c | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-convert-l1-1-0.dll | 27088 | fa445d728c70db47340907cf12dff8893fd249b738594a1825248211b8ec0dca | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-environment-l1-1-0.dll | 22984 | e2e562ec0ab4be342962e7e885cba380c3143bcbf83fcaff9269f26b2b448e24 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-filesystem-l1-1-0.dll | 22952 | f4a1f0ad4fde3752cf7dc6f3058e4c502546aad9029c8bd78ae1ee4cbe37922a | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-heap-l1-1-0.dll | 22952 | 998294783016c09345cb2dd0f18163fb9bf469edb4954b1408e99f673c60d9f7 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-locale-l1-1-0.dll | 22976 | 2376c1ef50f84a2b0e49e66c0e4c2b24e0c48a4d85450fc74ce77ff02f58fea5 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-math-l1-1-0.dll | 31168 | 9e1441afa2e6b3cb88c234fd43755fb2716d7266944239e93a8b3722f44ba792 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-multibyte-l1-1-0.dll | 31160 | f3a64a3e24775d0e9408fd85289b413d780fe5835685fe6736c54221aca0cb4d | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-private-l1-1-0.dll | 76216 | 98f7d945c15e261c940219f8261a8e2f85fa83b3740ed08a5afe9e54fe894802 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-process-l1-1-0.dll | 22976 | df4a913f1708ccc03b9f41f69cf563a9c57bebaba18262fbc377584a2c2bbb9c | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-runtime-l1-1-0.dll | 27048 | 3e95f9a63c2c742c43138b731966d4cfa6c922bdcff3e2958fe24e4bdf6e5461 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-stdio-l1-1-0.dll | 27064 | 21a5efa2bdf4a89e06b7dad84aa990412e054bac9befd198c05dd6add93b8430 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-string-l1-1-0.dll | 27048 | 05a910f254a8eae65c0f032ec7740afacb8439f87a64d53f9b8ebd66304b3b68 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-time-l1-1-0.dll | 22976 | 4a90e5b2f3fb45b6a92581a39d3b62948a588a360d449554d8cae1a40b009114 | Microsoft runtime | 10.0.26100.8249 |
+| api-ms-win-crt-utility-l1-1-0.dll | 22952 | 88ce66919d551efa7a0430f1188b558c41532c363258c1f07a05e2b67d603208 | Microsoft runtime | 10.0.26100.8249 |
+| bin/ffmpeg.exe | 143314944 | 6ed7e5c931d3cbc72931ee7e97efc4b7d8a1287f03c60585fab81a6a293b2e0e | FFmpeg GPL build N-125365-g9a01c1cb6a-20260630 | n/a |
+| bin/ffprobe.exe | 143109120 | 55a3d20229c2373dade4362215c9bd5a04b59d4e734d0bbb882afd9cea4fb046 | FFmpeg GPL build N-125365-g9a01c1cb6a-20260630 | n/a |
+| bin/node.exe | 85219968 | 39d45b5933f339d3ebdebd76474893dab5d7da1038920f65cf5bbcf0f20f3636 | Node.js 22.17.0 | n/a |
+| charset_normalizer/cd.cp312-win_amd64.pyd | 10752 | be1d8801c9785a52e5bc1b0c77ceca2c88041a5d9b9bac7162d767f712ea10e3 | charset-normalizer 3.4.9 | n/a |
+| charset_normalizer/md.cp312-win_amd64.pyd | 10752 | a3d9c05de6a69b7adc024de7b3ffe823e8c72f080e4a89d1aac4b24173945815 | charset-normalizer 3.4.9 | n/a |
+| libcrypto-3-x64.dll | 5932032 | 1d54af6f7434a9e3be42acc1f192b0c66926582fb07ef7bb6b41226df7e73acd | OpenSSL 3.0.16 (CPython standalone runtime) | n/a |
+| libffi-8.dll | 27648 | d1682615247e165ba8aa0cff59e090a0b1b6b90793e48733f441dff8d8e6328e | libffi 3.4.2 | n/a |
+| libssl-3-x64.dll | 936448 | 4cde268f01a6f81c989de12f2b20b3548deee452674123ad00da0aa0e31ecbd0 | OpenSSL 3.0.16 (CPython standalone runtime) | n/a |
+| pyexpat.pyd | 190464 | 9d09acbd76537a9842b4f10acdd897fcdeb333505d4f104a8180fa74963a588a | CPython 3.12.9 + Expat 2.6.4 | n/a |
+| python3.dll | 56320 | 37b361cee2f40e922801986d7f750169b5ae95c9a2cf37ad899a690b4788754d | CPython 3.12.9 | n/a |
+| python312.dll | 6954496 | 3cad6885f126d08ce38b2999fb127292a0399a3fa69bba65ca0bc2964c6c6168 | CPython 3.12.9 + zlib/HACL*/BLAKE2 runtime code | n/a |
+| select.pyd | 18944 | 5a28b7d60be8f64f7b8af6e68d6d465671a3f9fc4a672ebb5809d57766566fe0 | CPython 3.12.9 | n/a |
+| sqlite3.dll | 1558528 | f62eb83c9dfcfb17fc2e58534fcc0b7536affb40b269ab46d6cb5cd67c6ba9f5 | SQLite 3.47.1 (CPython standalone runtime) | n/a |
+| ucrtbase.dll | 1122768 | c04daeba7e7c4b711d33993ab4c51a2e087f98f4211aea0dcb3a216656ba0ab7 | Microsoft runtime | 10.0.22000.194 |
+| unicodedata.pyd | 1126400 | f96337dd3f56a0ab4f904e31452a5c05fb0119632463f107fe57d4867f620067 | CPython 3.12.9 | n/a |
+| VCRUNTIME140.dll | 99840 | 1a130e77ef1995a593e7e621fa384c8404dcfa90ba705fb12ac8ad47b2812edb | Microsoft runtime | 14.42.34438.0 |
+| VCRUNTIME140_1.dll | 29184 | bd7fcd1973d05e358329c06c56435396f7e9c50fb6fe6a3b4d33eb7489a73e69 | Microsoft runtime | 14.42.34438.0 |
+
+Inventory closure notes
+-----------------------
+
+All native .dll/.pyd/.exe paths: 96
+PySide/Qt table native/resource paths: 22
+Remaining native paths: 74
+Native paths with UNRESOLVED component mapping: 0
+The PySide/Qt table and remaining-native table partition every native DLL/PYD/EXE
+path; the former can additionally contain non-native plugin/translation resources.
+Standard-library module roots are covered by the CPython component row. Every other
+PYZ root is disclosed above; a root is not by itself proof of a separately licensed
+distribution. Any unmapped or unexpected root/native path remains a HOLD item.
+The optional bgutil-ytdlp-pot-provider helper is external and not included. Its own
+Python, JavaScript, npm, canvas, and native dependencies are outside this EXE report
+and require a separate inventory if that helper is ever conveyed.
+Because an embedded report cannot contain a fixed-point hash of the outer EXE that
+contains it, this post-build report is the artifact companion of the identified EXE.
+If the report is changed and then embedded by rebuilding, regenerate a new companion
+for that new artifact and never claim the prior artifact hash applies to the rebuild.
+
+Open audit blockers (7)
+-----------------------
+
+1. Application copyright owner(s) and applicable year(s) are not authorized.
+2. The one-file LGPL replacement/relink procedure is not yet independently tested.
+3. Complete FFmpeg Corresponding Source and a distributor-controlled delivery method are absent.
+4. The CPython/python-build-standalone transitive source and recipe closure needs final review.
+5. Microsoft runtime redistribution coverage for every inventoried DLL is unconfirmed.
+6. Qt/PySide notice, attribution, source, and software-render fallback closure needs final review.
+7. Qualified legal review has not approved the distribution or external-helper classification.
+
+Final verdict: HOLD FOR PUBLIC DISTRIBUTION.
+This status must not be changed merely because zero-count or hash checks pass. It
+requires complete source/notice/relink closure, reproducibility evidence, approved
+application copyright ownership/year, and qualified legal review.

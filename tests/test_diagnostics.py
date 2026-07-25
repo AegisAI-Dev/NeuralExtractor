@@ -1,4 +1,5 @@
 import subprocess
+from types import SimpleNamespace
 
 from neural_extractor_v3.core import diagnostics
 from neural_extractor_v3.core.auth import AuthResolution, AuthStrategy, CookieFileStatus
@@ -47,14 +48,22 @@ def test_format_probe_is_safe_and_uses_js_runtime(tmp_path, monkeypatch):
 
     class FakeDownloadEngine:
         def __init__(self, options):
-            self.js_runtime_status = JavaScriptRuntimeStatus(
-                True, "node", node_path, "v22.17.0"
-            )
+            self.js_runtime_status = JavaScriptRuntimeStatus(True, "node", node_path, "v22.17.0")
 
         def _run_yt_dlp(self, url, options, *, discover_only=False):
             assert discover_only
             captured_opts.update(options)
-            return YtdlpRunResult(formats=[{"format_id": "18"}])
+            return YtdlpRunResult(
+                formats=[
+                    {
+                        "format_id": "18",
+                        "ext": "mp4",
+                        "vcodec": "avc1",
+                        "acodec": "mp4a",
+                        "protocol": "https",
+                    }
+                ]
+            )
 
     def fake_run_command(args: list[str], *, timeout: int):
         if args and args[0] == "tasklist":
@@ -95,5 +104,36 @@ def test_format_probe_is_safe_and_uses_js_runtime(tmp_path, monkeypatch):
     assert captured_opts["noplaylist"] is True
     assert captured_opts["js_runtimes"] == {"node": {"path": str(node_path)}}
     assert captured_opts["remote_components"] == ["ejs:github"]
-    assert "[PASS] EJS GitHub remote component: --remote-components ejs:github enabled" in report.text()
+    assert captured_opts["extractor_args"]["youtube"] == {
+        "player_client": ["default"],
+        "fetch_pot": ["never"],
+        "pot_trace": ["false"],
+    }
+    assert (
+        "[PASS] EJS GitHub remote component: --remote-components ejs:github enabled"
+        in report.text()
+    )
     assert "[PASS] Safe yt-dlp format probe: 1 formats" in report.text()
+
+
+def test_provider_diagnostic_redacts_token_and_binding_material(monkeypatch):
+    secret = "opaque-provider-secret-123456"
+    provider = SimpleNamespace(
+        status=SimpleNamespace(
+            available=False,
+            bundled=False,
+            diagnostic=(
+                f"PoTokenResponse(po_token={secret}, visitor_data={secret}); "
+                f"request=https://provider.invalid/pot/{secret}?pot={secret}"
+            ),
+        )
+    )
+    monkeypatch.setattr(diagnostics, "get_po_token_provider", lambda: provider)
+    items = []
+
+    diagnostics._add_po_token_provider(items)
+
+    assert len(items) == 1
+    assert items[0].name == "Optional external PO Token helper"
+    assert secret not in items[0].detail
+    assert "<redacted>" in items[0].detail

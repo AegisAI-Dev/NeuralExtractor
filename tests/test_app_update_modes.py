@@ -26,6 +26,29 @@ def test_apply_update_mode_dispatches_before_gui_initialization(monkeypatch, tmp
     assert calls == [transaction]
 
 
+def test_apply_directory_update_mode_dispatches_before_gui_initialization(
+    monkeypatch, tmp_path
+):
+    transaction = tmp_path / "directory-transaction.json"
+    calls = []
+
+    monkeypatch.setattr(
+        app_module,
+        "run_directory_update_helper",
+        lambda path: calls.append(Path(path)) or 21,
+    )
+    monkeypatch.setattr(
+        app_module,
+        "run_gui",
+        lambda *_args, **_kwargs: (_ for _ in ()).throw(
+            AssertionError("GUI must not initialize in updater-helper mode")
+        ),
+    )
+
+    assert app_module.main(["--apply-directory-update", str(transaction)]) == 21
+    assert calls == [transaction]
+
+
 def test_post_update_confirmation_arguments_must_be_complete(tmp_path):
     marker = tmp_path / "marker.json"
 
@@ -52,6 +75,7 @@ def test_private_update_arguments_are_hidden_from_help(capsys):
     help_text = capsys.readouterr().out
 
     assert "--apply-update" not in help_text
+    assert "--apply-directory-update" not in help_text
     assert "--post-update-token" not in help_text
     assert "--post-update-marker" not in help_text
     assert "--post-update-transaction" not in help_text

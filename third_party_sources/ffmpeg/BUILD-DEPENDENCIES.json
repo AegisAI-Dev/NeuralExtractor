@@ -1,0 +1,1193 @@
+{
+  "schema_version": 1,
+  "status": "HOLD",
+  "build_graph_repository_record_count": 118,
+  "literal_revision_count": 118,
+  "immutable_revision_locator_count": 114,
+  "tag_or_other_literal_count": 4,
+  "missing_or_dynamic_revision_count": 0,
+  "retained_linked_source_archive_count": 0,
+  "records": [
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/10-mingw-std-threads.sh",
+      "repository": "https://github.com/meganz/mingw-std-threads.git",
+      "revision": "c931bac289dd431f1dd30fc4a5d1a7be36668073",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/10-mingw.sh",
+      "repository": "https://git.code.sf.net/p/mingw-w64/mingw-w64.git",
+      "revision": "734e01d475c1caec5019d8b8eecd528524ff962a",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/10-xorg-macros.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/util/macros.git",
+      "revision": "a9d71e3fd8e6758b70be31c586921bbbcd2a8449",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/20-libiconv.sh",
+      "repository": "https://git.savannah.gnu.org/git/libiconv.git",
+      "revision": "9d19c66d0a1768cffcf497b2db70bf4018b578d7",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/20-libiconv.sh",
+      "repository": "https://git.savannah.gnu.org/git/gnulib.git",
+      "revision": "3104b047495f948f2e16f85bbfc2f82b9e3f4b7b",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/20-zlib.sh",
+      "repository": "https://github.com/madler/zlib.git",
+      "revision": "f9dd6009be3ed32415edf1e89d1bc38380ecb95d",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-fftw3.sh",
+      "repository": "https://github.com/FFTW/fftw3.git",
+      "revision": "5d0f4db2fc157867b7dc972b40418f171d77a6bc",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-fribidi.sh",
+      "repository": "https://github.com/fribidi/fribidi.git",
+      "revision": "5c85a174650ab8ef106ce85f13bcf2950d3fc65f",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-gmp.sh",
+      "repository": "https://github.com/BtbN/gmplib.git",
+      "revision": "9994908f090c694f8a152d660dc6852e0c48557a",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-libogg.sh",
+      "repository": "https://github.com/xiph/ogg.git",
+      "revision": "06a5e0262cdc28aa4ae6797627a783b5010440f0",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-libxml2.sh",
+      "repository": "https://github.com/GNOME/libxml2.git",
+      "revision": "c71154dad39f65ead334bd9aec4092392b1c63a7",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-openssl.sh",
+      "repository": "https://github.com/openssl/openssl.git",
+      "revision": "openssl-3.6.3",
+      "revision_kind": "tag or other literal",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": false,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/25-xz.sh",
+      "repository": "https://github.com/tukaani-project/xz.git",
+      "revision": "ebb0e6789cefe3be71756881aa8f2009fda9938c",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-fonts/25-freetype.sh",
+      "repository": "https://gitlab.freedesktop.org/freetype/freetype.git",
+      "revision": "7e0e56f84fd53cf38378d33c8fc8f92d12ab9ac6",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-fonts/35-fontconfig.sh",
+      "repository": "https://gitlab.freedesktop.org/fontconfig/fontconfig.git",
+      "revision": "2c6cf188fb66092edc96b2f84528c5de7514f82a",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-fonts/45-harfbuzz.sh",
+      "repository": "https://github.com/harfbuzz/harfbuzz.git",
+      "revision": "22ea52f42fa4fc168be91ef4e56aee3affda6e28",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-fonts/50-freetype.sh",
+      "repository": "https://gitlab.freedesktop.org/freetype/freetype.git",
+      "revision": "7e0e56f84fd53cf38378d33c8fc8f92d12ab9ac6",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-libsamplerate.sh",
+      "repository": "https://github.com/libsndfile/libsamplerate.git",
+      "revision": "2ccde9568cca73c7b32c97fefca2e418c16ae5e3",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-libudfread.sh",
+      "repository": "https://code.videolan.org/videolan/libudfread.git",
+      "revision": "139a2194525f2745b98a98e4d8fa627d07440176",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-libunibreak.sh",
+      "repository": "https://github.com/adah1972/libunibreak.git",
+      "revision": "3ce4bfa3129ff3738046a44a6db533d2ce25af2b",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-libvorbis.sh",
+      "repository": "https://github.com/xiph/vorbis.git",
+      "revision": "1c5f57a2c42ddac91e5c5bb70eb4c56099d442a9",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-opencl.sh",
+      "repository": "https://github.com/KhronosGroup/OpenCL-Headers.git",
+      "revision": "6fe718c31a45fe25151362a72ef041c3a1047cbd",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-opencl.sh",
+      "repository": "https://github.com/KhronosGroup/OpenCL-ICD-Loader.git",
+      "revision": "b7bd2803acc779c03d96588e9ca9e9568a18698a",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-pulseaudio.sh",
+      "repository": "https://gitlab.freedesktop.org/pulseaudio/pulseaudio.git",
+      "revision": "b096704c0d42c5e784deb781a07b23cfb5286a82",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-vmaf.sh",
+      "repository": "https://github.com/Netflix/vmaf.git",
+      "revision": "32780bd9b635532f3dd63a7eb202b8cc54574fc6",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/10-xcbproto.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/proto/xcbproto.git",
+      "revision": "cf7e2581b613802f2f8ec2a4b50a6a20aad4bf52",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/10-xproto.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/proto/xorgproto.git",
+      "revision": "fcb7e9a1a0b593a44740d83b0babddd331fea830",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/10-xtrans.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxtrans.git",
+      "revision": "693d28a76024a2a0a28eef25037bcb7558b8bbfa",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/20-libxau.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxau.git",
+      "revision": "03d51d05a093327e2889b8df2c32a58a4b381133",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/30-libxcb.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxcb.git",
+      "revision": "4d6e1c8fffaf811cf4d0e68ff3bc6f50e62c32c7",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/40-libx11.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libx11.git",
+      "revision": "b10abf6b99d5acf846c26f305f1a14a86360a96c",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxext.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxext.git",
+      "revision": "2a694ba264ccdb205909909abfe8b136f9156ebe",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxfixes.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxfixes.git",
+      "revision": "55bb2d1d57d43e0595ce45393f26eb433d75a7cc",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxi.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxi.git",
+      "revision": "f00f7e9140b4707775331950dd67851e55058c40",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxinerama.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxinerama.git",
+      "revision": "d7162b962710bc724b41cabab4e7cea303c4b541",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxrender.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxrender.git",
+      "revision": "f32afe9f877ae032c6bc9c27b17b7978b1b4c856",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxscrnsaver.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxscrnsaver.git",
+      "revision": "3f753e7a4050db083474444ae91cc17a849eaa4d",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/50-libxxf86vm.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxxf86vm.git",
+      "revision": "c76fde6bffcc87e5dd98d8196bb01a299bdc3236",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/60-libglvnd.sh",
+      "repository": "https://gitlab.freedesktop.org/glvnd/libglvnd.git",
+      "revision": "c046a760d845416e98ac4128757b2b356c47fdaa",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/60-libxcursor.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxcursor.git",
+      "revision": "15efad7ccd035f5d1ddc8d437e047569d1775fa7",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/60-libxrandr.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxrandr.git",
+      "revision": "8a4ba1974bcf07057cf891128d86ae1ab5303574",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/45-x11/60-libxv.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libxv.git",
+      "revision": "f315ec50fcad9bdbaed46c3e78dc5e7fe209f933",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/40-vulkan-headers.sh",
+      "repository": "https://github.com/KhronosGroup/Vulkan-Headers.git",
+      "revision": "v1.4.352",
+      "revision_kind": "tag or other literal",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": false,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/45-vulkan-loader.sh",
+      "repository": "https://github.com/BtbN/Vulkan-Shim-Loader.git",
+      "revision": "65b3936528cd92eb4ea3de485d03f858a3850484",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/45-vulkan-loader.sh",
+      "repository": "https://github.com/KhronosGroup/Vulkan-Headers.git",
+      "revision": "v1.4.352",
+      "revision_kind": "tag or other literal",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": false,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/50-shaderc.sh",
+      "repository": "https://github.com/google/shaderc.git",
+      "revision": "b16fb67935326f7ea1ead8bd2b131608b4148230",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/55-spirv-cross.sh",
+      "repository": "https://github.com/KhronosGroup/SPIRV-Cross.git",
+      "revision": "38681a30e09679191cc3957719eeee76024f6daf",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/47-vulkan/60-spirv-headers.sh",
+      "repository": "https://github.com/KhronosGroup/SPIRV-Headers.git",
+      "revision": "8c5559c134abcf432ec59db842404087b9906c1a",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-amf.sh",
+      "repository": "https://github.com/GPUOpen-LibrariesAndSDKs/AMF.git",
+      "revision": "eadd00804d5f7e5cd8c85d540073198312870776",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-aom.sh",
+      "repository": "https://aomedia.googlesource.com/aom",
+      "revision": "129a2ed2cbb3a4ecbad067b52d78df1cef93fc74",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-aribb24/25-libpng.sh",
+      "repository": "https://github.com/glennrp/libpng.git",
+      "revision": "92c853c34e41570504baa48b8a8169e53b188324",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-aribb24/50-libaribb24.sh",
+      "repository": "https://github.com/nkoriyama/aribb24.git",
+      "revision": "5e9be272f96e00f15a2f3c5f8ba7e124862aec38",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-avisynth.sh",
+      "repository": "https://github.com/AviSynth/AviSynthPlus.git",
+      "revision": "f72f22620f2fbd4423aa4cbb51d5e400bf2ee08f",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-chromaprint.sh",
+      "repository": "https://github.com/acoustid/chromaprint.git",
+      "revision": "6b13ce3a81ae931e7477c4856a86bece99157cd8",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-dav1d.sh",
+      "repository": "https://code.videolan.org/videolan/dav1d.git",
+      "revision": "1718ff9aded99f0a89f5c7940d6afb8948301e33",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-davs2.sh",
+      "repository": "https://github.com/pkuvcl/davs2.git",
+      "revision": "b41cf117452e2d73d827f02d3e30aa20f1c721ac",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-dvd/30-libdvdcss.sh",
+      "repository": "https://code.videolan.org/videolan/libdvdcss.git",
+      "revision": "2682a4a7ed782e700a5b920f6f85c4f9736921c3",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-dvd/40-libdvdread.sh",
+      "repository": "https://code.videolan.org/videolan/libdvdread.git",
+      "revision": "e4d9a039d300069e61918b5ec58322c1b5ba8663",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-dvd/50-libdvdnav.sh",
+      "repository": "https://code.videolan.org/videolan/libdvdnav.git",
+      "revision": "cf112772bf626f76a913efca5b883a381e4c123a",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-fdk-aac.sh",
+      "repository": "https://github.com/mstorsjo/fdk-aac.git",
+      "revision": "d8e6b1a3aa606c450241632b64b703f21ea31ce3",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-ffnvcodec.sh",
+      "repository": "https://github.com/FFmpeg/nv-codec-headers.git",
+      "revision": "1b5a81ada8874efb2af0534ffe74049c557e212d",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-ffnvcodec.sh",
+      "repository": "https://github.com/FFmpeg/nv-codec-headers.git",
+      "revision": "33a9ede8d9914299d9262539c576a15bd0a19621",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-ffnvcodec.sh",
+      "repository": "https://github.com/FFmpeg/nv-codec-headers.git",
+      "revision": "afae1834257b919848c5deb21a17c7355616b1ee",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-frei0r.sh",
+      "repository": "https://github.com/dyne/frei0r.git",
+      "revision": "dfc89ab1f40fc32d5609218ebc3dd0b3cc545dd8",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-gme.sh",
+      "repository": "https://github.com/libgme/game-music-emu.git",
+      "revision": "dd3182a8bdae3ff761438632aace418fbcaed439",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-kvazaar.sh",
+      "repository": "https://github.com/ultravideo/kvazaar.git",
+      "revision": "d6815293f34a094e26ba6c50b8644660ddc13e09",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lcevcdec.sh",
+      "repository": "https://github.com/v-novaltd/LCEVCdec.git",
+      "revision": "b033a6d1f68a80ac1d972f34cf1740000b544571",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libaribcaption.sh",
+      "repository": "https://github.com/xqq/libaribcaption.git",
+      "revision": "f9d8c50fe5e51c98d101f69d74591295cb568036",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libass.sh",
+      "repository": "https://github.com/libass/libass.git",
+      "revision": "c425f6d7ec9ca7e5dfa3f8bbed29a6ddbf39a596",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libbluray.sh",
+      "repository": "https://code.videolan.org/videolan/libbluray.git",
+      "revision": "4dfb9b0123b006ce5d66592dc8058f61e5c0cdc8",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libcurl.sh",
+      "repository": "https://github.com/curl/curl.git",
+      "revision": "7806fb36c530027d7367e22e9299d0dde6ae5bb0",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libjxl/45-brotli.sh",
+      "repository": "https://github.com/google/brotli.git",
+      "revision": "6312ee24cebbe329cee30fe12087469e3014442b",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libjxl/45-lcms2.sh",
+      "repository": "https://github.com/mm2/Little-CMS.git",
+      "revision": "19e786a7feb79ea9387a1afe7cb11e72ee644d36",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libjxl/50-libjxl.sh",
+      "repository": "https://github.com/libjxl/libjxl.git",
+      "revision": "af2970e27fc61fd0b3ca7af3c7de32236a9e4fdf",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libmp3lame.sh",
+      "repository": "https://svn.code.sf.net/p/lame/svn/trunk/lame",
+      "revision": "6531",
+      "revision_kind": "numeric SVN revision",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libopus.sh",
+      "repository": "https://github.com/xiph/opus.git",
+      "revision": "f8f99516092f4311a9b0784f190ff982df8eb2e6",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libplacebo.sh",
+      "repository": "https://code.videolan.org/videolan/libplacebo.git",
+      "revision": "464d6eab8900c87a539943d0cd8575fffe566f72",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-librist/40-mbedtls.sh",
+      "repository": "https://github.com/ARMmbed/mbedtls.git",
+      "revision": "v4.1.0",
+      "revision_kind": "tag or other literal",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": false,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-librist/50-librist.sh",
+      "repository": "https://code.videolan.org/rist/librist.git",
+      "revision": "88467c0e4e3c9498e9a86d0df6da115848482c96",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libssh.sh",
+      "repository": "https://gitlab.com/libssh/libssh-mirror.git",
+      "revision": "d94a96bf23a982e6047cf5c128804b014e1f92eb",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libtheora.sh",
+      "repository": "https://github.com/xiph/theora.git",
+      "revision": "28fd5ec77f0ad0e07a371cef1047828116f6bd8a",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libvpx.sh",
+      "repository": "https://chromium.googlesource.com/webm/libvpx",
+      "revision": "1963b530e4b09d1edf1339d3ad26a3aa5a5a7ac6",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libwebp.sh",
+      "repository": "https://chromium.googlesource.com/webm/libwebp",
+      "revision": "6178b1db7e5564da10c1ad41ea3a52706fd9dcd1",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-libzmq.sh",
+      "repository": "https://github.com/zeromq/libzmq.git",
+      "revision": "b946c18f676760387276cd095bbdd8c0e18c09bf",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/96-lv2.sh",
+      "repository": "https://github.com/lv2/lv2.git",
+      "revision": "3c57dae600a5ad8d05acd53ee3490f7d91cb7be6",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/96-serd.sh",
+      "repository": "https://github.com/drobilla/serd.git",
+      "revision": "0317806d56f9288294183b41074a6fd50a924f5a",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/96-zix.sh",
+      "repository": "https://github.com/drobilla/zix.git",
+      "revision": "a4fab097251f8b8218d3838b40cce5ef39e56aaf",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/97-sord.sh",
+      "repository": "https://github.com/drobilla/sord.git",
+      "revision": "c9b049b3ac758cafe354cdf019422febd99abe45",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/98-sratom.sh",
+      "repository": "https://github.com/lv2/sratom.git",
+      "revision": "9e8ee84eed502e6030ce8bb49694fd28542b08fc",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-lilv/99-lilv.sh",
+      "repository": "https://github.com/lv2/lilv.git",
+      "revision": "5318c9e495c5404d7f0a623aeba2a8f617a26a9d",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-onevpl.sh",
+      "repository": "https://github.com/intel/libvpl.git",
+      "revision": "778a66d6c6537f08eabb91955dbbf1bce3812894",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openal.sh",
+      "repository": "https://github.com/kcat/openal-soft.git",
+      "revision": "83ea7236c6f23fc98e2b62eb9c5b3abfd4b2be86",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openapv.sh",
+      "repository": "https://github.com/AcademySoftwareFoundation/openapv.git",
+      "revision": "dd4f9d5dc0fc522abd2c8dcab8bdfe9a832d6baf",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-opencore-amr.sh",
+      "repository": "https://git.code.sf.net/p/opencore-amr/code",
+      "revision": "7dba8c32238418ce0b316a852b2224df586ca896",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openh264.sh",
+      "repository": "https://github.com/cisco/openh264.git",
+      "revision": "e3f5b10438e2bacc155cf54578222bd4236c9f06",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openjpeg.sh",
+      "repository": "https://github.com/uclouvain/openjpeg.git",
+      "revision": "21b70b0d62807e270994f94302e323da4f0d776b",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-openmpt.sh",
+      "repository": "https://github.com/OpenMPT/openmpt.git",
+      "revision": "0877aa7537e831e546770db5317f7748544c7d7e",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-rav1e.sh",
+      "repository": "https://github.com/xiph/rav1e.git",
+      "revision": "564ae3b0007ae2b06893fd7166bf88c5a84c5b63",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-rubberband.sh",
+      "repository": "https://github.com/breakfastquay/rubberband.git",
+      "revision": "e4296ac80b1170018a110bc326fd0d45a0eb27d6",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-sdl.sh",
+      "repository": "https://github.com/libsdl-org/SDL.git",
+      "revision": "1df9ae4338c43ad9dce4b27a77f807aa8d2b073b",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-snappy.sh",
+      "repository": "https://github.com/google/snappy.git",
+      "revision": "27ab5f7f518430a021239bc26a5b2fd64affbc7b",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-soxr.sh",
+      "repository": "https://git.code.sf.net/p/soxr/code",
+      "revision": "945b592b70470e29f917f4de89b4281fbbd540c0",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-srt.sh",
+      "repository": "https://github.com/Haivision/srt.git",
+      "revision": "2e2ab20ee0f2eb43cf0fe974695aafec9767654f",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-svtav1.sh",
+      "repository": "https://gitlab.com/AOMediaCodec/SVT-AV1.git",
+      "revision": "f4872c656727e9da5aac12b733a203e1f468cbad",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-twolame.sh",
+      "repository": "https://github.com/njh/twolame.git",
+      "revision": "6fced852d4d5cfad58cf9dbe3ea619b08e87d398",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-uavs3d.sh",
+      "repository": "https://github.com/uavs3/uavs3d.git",
+      "revision": "0e20d2c291853f196c68922a264bcd8471d75b68",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vaapi/30-libpciaccess.sh",
+      "repository": "https://gitlab.freedesktop.org/xorg/lib/libpciaccess.git",
+      "revision": "38e6f15f839fba2c49982e7ad61cde681fd5d4d6",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vaapi/40-libdrm.sh",
+      "repository": "https://gitlab.freedesktop.org/mesa/drm.git",
+      "revision": "b8b7c57c00954b22ac182543602bd8f654ea1c30",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vaapi/50-libva.sh",
+      "repository": "https://github.com/intel/libva.git",
+      "revision": "ad64eb9b616d1b66afaf4cb9f0ea0b8e0ec1169c",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vidstab.sh",
+      "repository": "https://github.com/georgmartius/vid.stab.git",
+      "revision": "92bc0b0f369f2a88aaacf25eac3a10f8415308fc",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-vvenc.sh",
+      "repository": "https://github.com/fraunhoferhhi/vvenc.git",
+      "revision": "182ad990a15c5300702202f184b332b7d146a841",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-whisper.sh",
+      "repository": "https://github.com/ggml-org/whisper.cpp.git",
+      "revision": "8443cf05e3fa8ce1b32348e1bcbcf8fc31f7f3ae",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-x264.sh",
+      "repository": "https://code.videolan.org/videolan/x264.git",
+      "revision": "0480cb05fa188d37ae87e8f4fd8f1aea3711f7ee",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-x265.sh",
+      "repository": "https://bitbucket.org/multicoreware/x265_git.git",
+      "revision": "7b3d1f515318f73056abd9e99944e9f79db090bd",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-xavs2.sh",
+      "repository": "https://github.com/pkuvcl/xavs2.git",
+      "revision": "eae1e8b9d12468059bdd7dee893508e470fa83d8",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-xvid.sh",
+      "repository": "https://svn.xvid.org/trunk/xvidcore",
+      "revision": "2202",
+      "revision_kind": "numeric SVN revision",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-zimg.sh",
+      "repository": "https://github.com/sekrit-twc/zimg.git",
+      "revision": "fa52dee9ebd2d5bedb5a4068f72a4311ae88a419",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    },
+    {
+      "build_script": "third_party_sources/ffmpeg/build-scripts/scripts.d/50-zvbi.sh",
+      "repository": "https://github.com/zapping-vbi/zvbi",
+      "revision": "41477c97c8edf7a01f1594b2a95b94f0117eed21",
+      "revision_kind": "full Git commit",
+      "revision_is_literal": true,
+      "revision_is_immutable_locator": true,
+      "source_archive_retained": false,
+      "status": "HOLD - exact linked source archive/submodule closure is not retained"
+    }
+  ],
+  "note": "This is the BtbN build-graph source superset. The exact FFmpeg configure command in BINARY-INVENTORY.json identifies enabled libraries. Disabled scripts can still appear here."
+}

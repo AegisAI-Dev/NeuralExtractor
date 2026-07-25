@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "status": "HOLD",
+  "byte_provenance_status": "MATCH",
+  "runtime_asset": "third_party_sources/python-runtime/archives/cpython-3.12.9+20250317-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+  "runtime_asset_sha256": "ee338839315bdd8af5fc935f9595eca20ebebdd250726c5816b2d0cf94d1e661",
+  "compared_file_count": 26,
+  "all_selected_runtime_bytes_match_exact_asset": true,
+  "records": [
+    {
+      "final_path": "_asyncio.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 59392,
+      "final_sha256": "50bd131291858692d51935caa3fdd3849931cd794e84850dc5d017855766143e",
+      "runtime_asset_member": "python/DLLs/_asyncio.pyd",
+      "runtime_asset_member_size": 59392,
+      "runtime_asset_member_sha256": "50bd131291858692d51935caa3fdd3849931cd794e84850dc5d017855766143e",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_bz2.pyd",
+      "component": "CPython 3.12.9 + bzip2 1.0.8",
+      "final_size": 73216,
+      "final_sha256": "c464b6c94e123e3ec32b893093d162ef4edc3ee1dcecdb28e73c84b5a30c9d7d",
+      "runtime_asset_member": "python/DLLs/_bz2.pyd",
+      "runtime_asset_member_size": 73216,
+      "runtime_asset_member_sha256": "c464b6c94e123e3ec32b893093d162ef4edc3ee1dcecdb28e73c84b5a30c9d7d",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_ctypes.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 116224,
+      "final_sha256": "6968228b18fc86b0b02f3dbf2c879c2c6f689a66130a72f35a3f0b2755d99e41",
+      "runtime_asset_member": "python/DLLs/_ctypes.pyd",
+      "runtime_asset_member_size": 116224,
+      "runtime_asset_member_sha256": "6968228b18fc86b0b02f3dbf2c879c2c6f689a66130a72f35a3f0b2755d99e41",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_decimal.pyd",
+      "component": "CPython 3.12.9 + mpdecimal 2.5.1",
+      "final_size": 244736,
+      "final_sha256": "3f5057579bc3c859bd07d237c2f86248092cfda3eb044b4ba2625530146def2a",
+      "runtime_asset_member": "python/DLLs/_decimal.pyd",
+      "runtime_asset_member_size": 244736,
+      "runtime_asset_member_sha256": "3f5057579bc3c859bd07d237c2f86248092cfda3eb044b4ba2625530146def2a",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_elementtree.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 121856,
+      "final_sha256": "cd0d716a10545c22b0fc4757ca6bbe1fb3d9a916d9b7a23b61727d0286c7dde7",
+      "runtime_asset_member": "python/DLLs/_elementtree.pyd",
+      "runtime_asset_member_size": 121856,
+      "runtime_asset_member_sha256": "cd0d716a10545c22b0fc4757ca6bbe1fb3d9a916d9b7a23b61727d0286c7dde7",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_hashlib.pyd",
+      "component": "CPython 3.12.9 + OpenSSL 3.0.16",
+      "final_size": 54272,
+      "final_sha256": "20286c64126a874a57968c8cfd483bedd907b9133bac56d9c64fa2407892c2df",
+      "runtime_asset_member": "python/DLLs/_hashlib.pyd",
+      "runtime_asset_member_size": 54272,
+      "runtime_asset_member_sha256": "20286c64126a874a57968c8cfd483bedd907b9133bac56d9c64fa2407892c2df",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_lzma.pyd",
+      "component": "CPython 3.12.9 + XZ Utils/liblzma 5.2.12",
+      "final_size": 147968,
+      "final_sha256": "e335d7f6c588524dd92069c9d2554ae45cb0e6da5f1a0458c6f42bd7a0c44dfc",
+      "runtime_asset_member": "python/DLLs/_lzma.pyd",
+      "runtime_asset_member_size": 147968,
+      "runtime_asset_member_sha256": "e335d7f6c588524dd92069c9d2554ae45cb0e6da5f1a0458c6f42bd7a0c44dfc",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_multiprocessing.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 24064,
+      "final_sha256": "5aedf510e8a5dd3756e09407eecf801e6ea1d454a51a9ad3b0af18e44ffa7fe4",
+      "runtime_asset_member": "python/DLLs/_multiprocessing.pyd",
+      "runtime_asset_member_size": 24064,
+      "runtime_asset_member_sha256": "5aedf510e8a5dd3756e09407eecf801e6ea1d454a51a9ad3b0af18e44ffa7fe4",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_overlapped.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 44032,
+      "final_sha256": "475577388258fd9e96b7c7da0176785e69a06bcabd1ae198b9ab684da57e4865",
+      "runtime_asset_member": "python/DLLs/_overlapped.pyd",
+      "runtime_asset_member_size": 44032,
+      "runtime_asset_member_sha256": "475577388258fd9e96b7c7da0176785e69a06bcabd1ae198b9ab684da57e4865",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_queue.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 20992,
+      "final_sha256": "ae122b8a31257116e2fe93a7e8f21b5b7a68fa66e7a5620abf0ec27669f4ee6d",
+      "runtime_asset_member": "python/DLLs/_queue.pyd",
+      "runtime_asset_member_size": 20992,
+      "runtime_asset_member_sha256": "ae122b8a31257116e2fe93a7e8f21b5b7a68fa66e7a5620abf0ec27669f4ee6d",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_socket.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 71680,
+      "final_sha256": "a4fe6b67451a47d65333060bf24654a2371819cff0c558b99dad95a9ed33d4b8",
+      "runtime_asset_member": "python/DLLs/_socket.pyd",
+      "runtime_asset_member_size": 71680,
+      "runtime_asset_member_sha256": "a4fe6b67451a47d65333060bf24654a2371819cff0c558b99dad95a9ed33d4b8",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_sqlite3.pyd",
+      "component": "CPython 3.12.9 + SQLite 3.47.1",
+      "final_size": 112128,
+      "final_sha256": "a15942f2af97b987b6b64de80828362b27344648d2a53a4739e1baf6f20e3df9",
+      "runtime_asset_member": "python/DLLs/_sqlite3.pyd",
+      "runtime_asset_member_size": 112128,
+      "runtime_asset_member_sha256": "a15942f2af97b987b6b64de80828362b27344648d2a53a4739e1baf6f20e3df9",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_ssl.pyd",
+      "component": "CPython 3.12.9 + OpenSSL 3.0.16",
+      "final_size": 166400,
+      "final_sha256": "f6ccf5deb18e5046f553fb167281e509f536faa5c6b019c7d4019ef0514358c3",
+      "runtime_asset_member": "python/DLLs/_ssl.pyd",
+      "runtime_asset_member_size": 166400,
+      "runtime_asset_member_sha256": "f6ccf5deb18e5046f553fb167281e509f536faa5c6b019c7d4019ef0514358c3",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_uuid.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 13824,
+      "final_sha256": "c219a8ccfefc5b3ccf402c1d6800c2cf46203e97bf744602f3bf57684fa1858c",
+      "runtime_asset_member": "python/DLLs/_uuid.pyd",
+      "runtime_asset_member_size": 13824,
+      "runtime_asset_member_sha256": "c219a8ccfefc5b3ccf402c1d6800c2cf46203e97bf744602f3bf57684fa1858c",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "_wmi.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 26112,
+      "final_sha256": "7e6da91e0445ee7f2c98bbc5a2aec4b9ad568231f07381e49e5ea87ff26d3919",
+      "runtime_asset_member": "python/DLLs/_wmi.pyd",
+      "runtime_asset_member_size": 26112,
+      "runtime_asset_member_sha256": "7e6da91e0445ee7f2c98bbc5a2aec4b9ad568231f07381e49e5ea87ff26d3919",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "libcrypto-3-x64.dll",
+      "component": "OpenSSL 3.0.16 (CPython standalone runtime)",
+      "final_size": 5932032,
+      "final_sha256": "1d54af6f7434a9e3be42acc1f192b0c66926582fb07ef7bb6b41226df7e73acd",
+      "runtime_asset_member": "python/DLLs/libcrypto-3-x64.dll",
+      "runtime_asset_member_size": 5932032,
+      "runtime_asset_member_sha256": "1d54af6f7434a9e3be42acc1f192b0c66926582fb07ef7bb6b41226df7e73acd",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "libffi-8.dll",
+      "component": "libffi 3.4.2",
+      "final_size": 27648,
+      "final_sha256": "d1682615247e165ba8aa0cff59e090a0b1b6b90793e48733f441dff8d8e6328e",
+      "runtime_asset_member": "python/DLLs/libffi-8.dll",
+      "runtime_asset_member_size": 27648,
+      "runtime_asset_member_sha256": "d1682615247e165ba8aa0cff59e090a0b1b6b90793e48733f441dff8d8e6328e",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "libssl-3-x64.dll",
+      "component": "OpenSSL 3.0.16 (CPython standalone runtime)",
+      "final_size": 936448,
+      "final_sha256": "4cde268f01a6f81c989de12f2b20b3548deee452674123ad00da0aa0e31ecbd0",
+      "runtime_asset_member": "python/DLLs/libssl-3-x64.dll",
+      "runtime_asset_member_size": 936448,
+      "runtime_asset_member_sha256": "4cde268f01a6f81c989de12f2b20b3548deee452674123ad00da0aa0e31ecbd0",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "pyexpat.pyd",
+      "component": "CPython 3.12.9 + Expat 2.6.4",
+      "final_size": 190464,
+      "final_sha256": "9d09acbd76537a9842b4f10acdd897fcdeb333505d4f104a8180fa74963a588a",
+      "runtime_asset_member": "python/DLLs/pyexpat.pyd",
+      "runtime_asset_member_size": 190464,
+      "runtime_asset_member_sha256": "9d09acbd76537a9842b4f10acdd897fcdeb333505d4f104a8180fa74963a588a",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "python3.dll",
+      "component": "CPython 3.12.9",
+      "final_size": 56320,
+      "final_sha256": "37b361cee2f40e922801986d7f750169b5ae95c9a2cf37ad899a690b4788754d",
+      "runtime_asset_member": "python/python3.dll",
+      "runtime_asset_member_size": 56320,
+      "runtime_asset_member_sha256": "37b361cee2f40e922801986d7f750169b5ae95c9a2cf37ad899a690b4788754d",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "python312.dll",
+      "component": "CPython 3.12.9 + zlib/HACL*/BLAKE2 runtime code",
+      "final_size": 6954496,
+      "final_sha256": "3cad6885f126d08ce38b2999fb127292a0399a3fa69bba65ca0bc2964c6c6168",
+      "runtime_asset_member": "python/python312.dll",
+      "runtime_asset_member_size": 6954496,
+      "runtime_asset_member_sha256": "3cad6885f126d08ce38b2999fb127292a0399a3fa69bba65ca0bc2964c6c6168",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "select.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 18944,
+      "final_sha256": "5a28b7d60be8f64f7b8af6e68d6d465671a3f9fc4a672ebb5809d57766566fe0",
+      "runtime_asset_member": "python/DLLs/select.pyd",
+      "runtime_asset_member_size": 18944,
+      "runtime_asset_member_sha256": "5a28b7d60be8f64f7b8af6e68d6d465671a3f9fc4a672ebb5809d57766566fe0",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "sqlite3.dll",
+      "component": "SQLite 3.47.1 (CPython standalone runtime)",
+      "final_size": 1558528,
+      "final_sha256": "f62eb83c9dfcfb17fc2e58534fcc0b7536affb40b269ab46d6cb5cd67c6ba9f5",
+      "runtime_asset_member": "python/DLLs/sqlite3.dll",
+      "runtime_asset_member_size": 1558528,
+      "runtime_asset_member_sha256": "f62eb83c9dfcfb17fc2e58534fcc0b7536affb40b269ab46d6cb5cd67c6ba9f5",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "unicodedata.pyd",
+      "component": "CPython 3.12.9",
+      "final_size": 1126400,
+      "final_sha256": "f96337dd3f56a0ab4f904e31452a5c05fb0119632463f107fe57d4867f620067",
+      "runtime_asset_member": "python/DLLs/unicodedata.pyd",
+      "runtime_asset_member_size": 1126400,
+      "runtime_asset_member_sha256": "f96337dd3f56a0ab4f904e31452a5c05fb0119632463f107fe57d4867f620067",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "VCRUNTIME140.dll",
+      "component": "Microsoft runtime",
+      "final_size": 99840,
+      "final_sha256": "1a130e77ef1995a593e7e621fa384c8404dcfa90ba705fb12ac8ad47b2812edb",
+      "runtime_asset_member": "python/vcruntime140.dll",
+      "runtime_asset_member_size": 99840,
+      "runtime_asset_member_sha256": "1a130e77ef1995a593e7e621fa384c8404dcfa90ba705fb12ac8ad47b2812edb",
+      "matches_exact_runtime_asset": true
+    },
+    {
+      "final_path": "VCRUNTIME140_1.dll",
+      "component": "Microsoft runtime",
+      "final_size": 29184,
+      "final_sha256": "bd7fcd1973d05e358329c06c56435396f7e9c50fb6fe6a3b4d33eb7489a73e69",
+      "runtime_asset_member": "python/vcruntime140_1.dll",
+      "runtime_asset_member_size": 29184,
+      "runtime_asset_member_sha256": "bd7fcd1973d05e358329c06c56435396f7e9c50fb6fe6a3b4d33eb7489a73e69",
+      "matches_exact_runtime_asset": true
+    }
+  ],
+  "hold_reason": "Exact artifact-byte provenance does not supply the missing upstream buildhost/toolchain record, clean rebuild evidence, or Microsoft redistribution-rights confirmation."
+}

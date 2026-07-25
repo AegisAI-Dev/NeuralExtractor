@@ -23,12 +23,80 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-          architecture: "x64"
-          cache: "pip"
+      - name: Enforce licensing release gate
+        shell: pwsh
+        run: |
+          $license = Get-Content -Raw -LiteralPath "LICENSE"
+          $notices = Get-Content -Raw -LiteralPath "THIRD_PARTY_NOTICES.md"
+          $inventory = Get-Content -Raw -LiteralPath "THIRD_PARTY_LICENSES.txt"
+          $sourcePlan = Get-Content -Raw -LiteralPath "docs\DEPENDENCY-SOURCE.md"
+          $blockers = @()
+          if ($license -notmatch '(?m)^Copyright-owner-status: PASS\s*$') {
+            $blockers += "LICENSE has no authorized copyright owner/year PASS record"
+          }
+          if ($notices -notmatch '(?m)^Release-gate-status: PASS\s*$') {
+            $blockers += "THIRD_PARTY_NOTICES.md is not explicitly marked PASS"
+          }
+          if ($inventory -notmatch '(?m)^Release-gate-status: PASS\s*$') {
+            $blockers += "THIRD_PARTY_LICENSES.txt is not explicitly marked PASS"
+          }
+          if ($inventory -notmatch '(?m)^Audit-blocker-count: 0\s*$') {
+            $blockers += "THIRD_PARTY_LICENSES.txt does not declare zero audited blockers"
+          }
+          if ($sourcePlan -notmatch '(?m)^Release-gate-status: PASS\s*$') {
+            $blockers += "docs/DEPENDENCY-SOURCE.md is not explicitly marked PASS"
+          }
+          foreach ($reviewedDocument in @(
+            @{ Name = "THIRD_PARTY_NOTICES.md"; Text = $notices },
+            @{ Name = "THIRD_PARTY_LICENSES.txt"; Text = $inventory },
+            @{ Name = "docs/DEPENDENCY-SOURCE.md"; Text = $sourcePlan }
+          )) {
+            if ($reviewedDocument.Text -notmatch '(?m)^Qualified-review-status: PASS\s*$') {
+              $blockers += "$($reviewedDocument.Name) has no qualified-review PASS record"
+            }
+          }
+          foreach ($required in @(
+            "uv.lock",
+            "requirements.lock",
+            "SOURCE-HASHES.sha256",
+            "licenses\RELEASE-LICENSE-MANIFEST.sha256",
+            "docs\BUILD-REPRODUCIBILITY.md",
+            "docs\LGPL-COMPLIANCE.md",
+            "docs\OPTIONAL-PO-PROVIDER.md"
+          )) {
+            if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
+              $blockers += "Required release input is missing: $required"
+            }
+          }
+          if ($blockers.Count -gt 0) {
+            $blockers | ForEach-Object { Write-Host "::error::$_" }
+            Write-Error "Licensing audit status is HOLD. Public build/release is blocked."
+            exit 1
+          }
+
+      - name: Stage pinned CPython runtime
+        shell: pwsh
+        run: |
+          $asset = "cpython-3.12.9+20250317-x86_64-pc-windows-msvc-install_only_stripped.tar.gz"
+          $expectedSha256 = "ee338839315bdd8af5fc935f9595eca20ebebdd250726c5816b2d0cf94d1e661"
+          $archive = Join-Path $env:RUNNER_TEMP $asset
+          $runtime = Join-Path $env:RUNNER_TEMP "neural-extractor-python-3.12.9-20250317"
+          $url = "https://github.com/astral-sh/python-build-standalone/releases/download/20250317/$asset"
+          Invoke-WebRequest -Uri $url -OutFile $archive
+          $actualSha256 = (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant()
+          if ($actualSha256 -ne $expectedSha256) {
+            Write-Error "Pinned CPython archive checksum mismatch."
+            exit 1
+          }
+          New-Item -ItemType Directory -Path $runtime -Force | Out-Null
+          tar -xzf $archive -C $runtime
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $python = Join-Path $runtime "python\python.exe"
+          if (-not (Test-Path -LiteralPath $python -PathType Leaf)) {
+            Write-Error "Pinned CPython archive layout changed."
+            exit 1
+          }
+          "PYTHON_EXE=$python" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Set up Node.js runtime
         uses: actions/setup-node@v4
@@ -44,7 +112,7 @@ jobs:
             exit 1
           }
           $releaseRef = if ("${{ github.event_name }}" -eq "workflow_dispatch") { "${{ github.event.inputs.version }}" } else { "${{ github.ref_name }}" }
-          python scripts/release_tools.py validate --release-ref $releaseRef
+          & $env:PYTHON_EXE scripts/release_tools.py validate --release-ref $releaseRef
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $version = $releaseRef -replace '^v', ''
           "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Encoding utf8 -Append
@@ -68,9 +136,14 @@ jobs:
             }
 
       - name: Install dependencies
+        shell: pwsh
         run: |
-          python -m pip install --upgrade pip
-          python -m pip install --upgrade --upgrade-strategy eager -e ".[dev,build]"
+          & $env:PYTHON_EXE -m ensurepip
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $env:PYTHON_EXE -m pip install --require-hashes --only-binary=:all: -r requirements.lock
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $env:PYTHON_EXE -m pip check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Stage verified bundled runtimes
         shell: pwsh
@@ -109,13 +182,25 @@ jobs:
       - name: Validate
         shell: pwsh
         run: |
-          python -m ruff check src tests scripts main.py
-          python -m compileall -q src scripts main.py
+          & $env:PYTHON_EXE -m ruff check src tests scripts main.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $env:PYTHON_EXE -m compileall -q src scripts main.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $env:PYTHONPATH = "$PWD\src"
-          python -m pytest tests -q
+          & $env:PYTHON_EXE -m pytest tests -q
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $env:PYTHON_EXE scripts/generate_compliance_manifests.py --check
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $env:PYTHON_EXE scripts/verify_distribution_boundary.py .
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Build EXE
-        run: python -m PyInstaller NeuralExtractorV3.spec --clean --noconfirm
+        shell: pwsh
+        run: |
+          $env:PYTHONHASHSEED = "0"
+          $env:SOURCE_DATE_EPOCH = "0"
+          & $env:PYTHON_EXE -m PyInstaller NeuralExtractorV3.spec --clean --noconfirm
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Verify packaged version and bundled runtimes
         shell: pwsh
@@ -133,6 +218,33 @@ jobs:
               exit 1
             }
           }
+          & $env:PYTHON_EXE scripts/verify_packaged_licensing.py "dist\NeuralExtractorV3.exe"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          foreach ($smoke in @(
+            @{ Name = "runtime"; Argument = "--internal-runtime-smoke" },
+            @{ Name = "gui-offscreen"; Argument = "--internal-gui-startup-smoke" },
+            @{ Name = "gui-windows"; Argument = "--internal-windows-gui-smoke" },
+            @{ Name = "provider-boundary"; Argument = "--internal-provider-media-smoke" },
+            @{ Name = "youtube-connection"; Argument = "--internal-youtube-connection-smoke" }
+          )) {
+            $result = Join-Path $env:RUNNER_TEMP "neural-extractor-$($smoke.Name)-smoke.json"
+            $arguments = "$($smoke.Argument) `"$result`""
+            $process = Start-Process -FilePath "dist\NeuralExtractorV3.exe" -ArgumentList $arguments -PassThru -WindowStyle Hidden
+            if (-not $process.WaitForExit(60000)) {
+              & "$env:SystemRoot\System32\taskkill.exe" /PID $process.Id /T /F | Out-Null
+              Write-Error "Packaged $($smoke.Name) smoke timed out; its process tree was terminated."
+              exit 1
+            }
+            if ($process.ExitCode -ne 0 -or -not (Test-Path -LiteralPath $result -PathType Leaf)) {
+              Write-Error "Packaged $($smoke.Name) smoke failed."
+              exit 1
+            }
+            $payload = Get-Content -Raw -LiteralPath $result | ConvertFrom-Json
+            if ($payload.passed -ne $true) {
+              Write-Error "Packaged $($smoke.Name) smoke reported a failed check."
+              exit 1
+            }
+          }
 
       - name: Rename and checksum
         shell: pwsh
@@ -141,21 +253,57 @@ jobs:
           $exe = "dist\NeuralExtractorV3.exe"
           $versioned = "dist\NeuralExtractorV3-$version-windows-x64.exe"
           $manifest = "dist\NeuralExtractorV3-$version-manifest.json"
+          $artifactInventory = "dist\NeuralExtractorV3-$version-THIRD_PARTY_LICENSES-artifact-companion.txt"
+          $sourceName = "NeuralExtractorV3-$version-corresponding-source.zip"
+          $sourceInput = "release-assets\$sourceName"
+          $sourceOutput = "dist\$sourceName"
+          $licenseArchive = "dist\NeuralExtractorV3-$version-license-texts.zip"
+          if (-not (Test-Path $sourceInput -PathType Leaf)) {
+            Write-Error "Validated corresponding-source archive is missing: $sourceInput"
+            exit 1
+          }
+          & $env:PYTHON_EXE scripts/verify_release_companion.py --source-archive $sourceInput --license-directory licenses
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           Copy-Item $exe $versioned -Force
+          & $env:PYTHON_EXE scripts/verify_packaged_licensing.py $versioned
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          & $env:PYTHON_EXE scripts/generate_distribution_inventory.py $versioned $artifactInventory
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Copy-Item $sourceInput $sourceOutput -Force
+          Copy-Item "LICENSE" "dist\LICENSE" -Force
+          Copy-Item "THIRD_PARTY_LICENSES.txt" "dist\THIRD_PARTY_LICENSES.txt" -Force
+          Copy-Item "THIRD_PARTY_NOTICES.md" "dist\THIRD_PARTY_NOTICES.md" -Force
+          Copy-Item "docs\DEPENDENCY-SOURCE.md" "dist\DEPENDENCY-SOURCE.md" -Force
+          Compress-Archive -Path "licenses\*" -DestinationPath $licenseArchive -Force
           Get-FileHash $versioned -Algorithm SHA256 |
             ForEach-Object { "$($_.Hash)  $(Split-Path $versioned -Leaf)" } |
             Set-Content "$versioned.sha256"
-          python scripts/release_tools.py manifest --version $version --exe $versioned --output $manifest --minimum-updater-version 3.0.4
+          Get-FileHash $sourceOutput -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash)  $(Split-Path $sourceOutput -Leaf)" } |
+            Set-Content "$sourceOutput.sha256"
+          Get-FileHash $licenseArchive -Algorithm SHA256 |
+            ForEach-Object { "$($_.Hash)  $(Split-Path $licenseArchive -Leaf)" } |
+            Set-Content "$licenseArchive.sha256"
+          & $env:PYTHON_EXE scripts/release_tools.py manifest --version $version --exe $versioned --output $manifest --minimum-updater-version 3.0.4
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           $expected = @(
             "NeuralExtractorV3.exe",
             "NeuralExtractorV3-$version-windows-x64.exe",
             "NeuralExtractorV3-$version-windows-x64.exe.sha256",
-            "NeuralExtractorV3-$version-manifest.json"
+            "NeuralExtractorV3-$version-manifest.json",
+            "NeuralExtractorV3-$version-THIRD_PARTY_LICENSES-artifact-companion.txt",
+            $sourceName,
+            "$sourceName.sha256",
+            "NeuralExtractorV3-$version-license-texts.zip",
+            "NeuralExtractorV3-$version-license-texts.zip.sha256",
+            "LICENSE",
+            "THIRD_PARTY_LICENSES.txt",
+            "THIRD_PARTY_NOTICES.md",
+            "DEPENDENCY-SOURCE.md"
           ) | Sort-Object
           $actual = @(Get-ChildItem dist -File | Select-Object -ExpandProperty Name | Sort-Object)
           if ((Compare-Object $expected $actual).Count -ne 0) {
-            Write-Error "Release output does not contain the exact required four files."
+            Write-Error "Release output does not contain the exact required binary, source, license, notice, checksum, and manifest files."
             Compare-Object $expected $actual | Format-Table
             exit 1
           }
@@ -174,6 +322,15 @@ jobs:
             dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-windows-x64.exe
             dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-windows-x64.exe.sha256
             dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-manifest.json
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-THIRD_PARTY_LICENSES-artifact-companion.txt
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-corresponding-source.zip
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-corresponding-source.zip.sha256
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-license-texts.zip
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-license-texts.zip.sha256
+            dist/LICENSE
+            dist/THIRD_PARTY_LICENSES.txt
+            dist/THIRD_PARTY_NOTICES.md
+            dist/DEPENDENCY-SOURCE.md
 
       - name: Publish GitHub Release
         uses: softprops/action-gh-release@v2
@@ -189,3 +346,12 @@ jobs:
             dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-windows-x64.exe
             dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-windows-x64.exe.sha256
             dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-manifest.json
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-THIRD_PARTY_LICENSES-artifact-companion.txt
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-corresponding-source.zip
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-corresponding-source.zip.sha256
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-license-texts.zip
+            dist/NeuralExtractorV3-${{ steps.release.outputs.version }}-license-texts.zip.sha256
+            dist/LICENSE
+            dist/THIRD_PARTY_LICENSES.txt
+            dist/THIRD_PARTY_NOTICES.md
+            dist/DEPENDENCY-SOURCE.md

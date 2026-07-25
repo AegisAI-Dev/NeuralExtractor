@@ -9,9 +9,17 @@ import sys
 import tempfile
 from pathlib import Path
 
-from neural_extractor_v3.config import APP_NAME, VERSION
+from neural_extractor_v3.config import APP_NAME, VERSION, assets_dir, base_dir, bin_dir
 from neural_extractor_v3.core.diagnostics import run_support_diagnostics
 from neural_extractor_v3.core.downloader import DownloadEngine, recover_stale_download_processes
+from neural_extractor_v3.core.update_directory_installer import (
+    DIRECTORY_TRANSACTION_FILENAME,
+    cleanup_stale_directory_update_state,
+    read_directory_update_recovery_message,
+    recover_stale_directory_updates,
+    run_directory_update_helper,
+    write_directory_startup_confirmation,
+)
 from neural_extractor_v3.core.update_installer import (
     cleanup_stale_update_state,
     read_update_recovery_message,
@@ -57,13 +65,17 @@ def _parse_args(argv: list[str]) -> argparse.Namespace:
         help="YouTube URL for the safe format probe. Defaults to the first --url or a public test video.",
     )
     parser.add_argument("--apply-update", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--apply-directory-update", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--post-update-token", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--post-update-marker", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--post-update-transaction", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--update-rollback-status", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--internal-ytdlp-worker", action="store_true", help=argparse.SUPPRESS)
     parser.add_argument("--internal-youtube-connection-smoke", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--internal-provider-media-smoke", default=None, help=argparse.SUPPRESS)
     parser.add_argument("--internal-gui-startup-smoke", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--internal-windows-gui-smoke", default=None, help=argparse.SUPPRESS)
+    parser.add_argument("--internal-runtime-smoke", default=None, help=argparse.SUPPRESS)
     return parser.parse_args(argv)
 
 
@@ -110,8 +122,8 @@ def run_cli(args: argparse.Namespace) -> int:
 
 
 def run_gui(argv: list[str], args: argparse.Namespace) -> int:
-    from PyQt6.QtCore import QTimer
-    from PyQt6.QtWidgets import QApplication, QMessageBox
+    from PySide6.QtCore import QTimer
+    from PySide6.QtWidgets import QApplication, QMessageBox
 
     from neural_extractor_v3.gui.main_window import MainWindow
 
@@ -122,6 +134,7 @@ def run_gui(argv: list[str], args: argparse.Namespace) -> int:
     window.show()
     recover_stale_download_processes(window.log)
     if not args.post_update_transaction:
+        recover_stale_directory_updates(window.log)
         recovery = recover_stale_update_ownership(window.log)
         if recovery.shutdown_required:
             window.log("Detached updater recovery accepted the transaction; closing safely")
@@ -132,10 +145,17 @@ def run_gui(argv: list[str], args: argparse.Namespace) -> int:
         def confirm_startup() -> None:
             try:
                 if args.post_update_transaction:
-                    write_transaction_startup_confirmation(
-                        Path(args.post_update_transaction),
-                        version=VERSION,
-                    )
+                    transaction_path = Path(args.post_update_transaction)
+                    if transaction_path.name == DIRECTORY_TRANSACTION_FILENAME:
+                        write_directory_startup_confirmation(
+                            transaction_path,
+                            version=VERSION,
+                        )
+                    else:
+                        write_transaction_startup_confirmation(
+                            transaction_path,
+                            version=VERSION,
+                        )
                 else:
                     write_startup_confirmation(
                         args.post_update_token,
@@ -156,13 +176,21 @@ def run_gui(argv: list[str], args: argparse.Namespace) -> int:
 
     if args.update_rollback_status:
         def show_recovery_status() -> None:
-            message = read_update_recovery_message(Path(args.update_rollback_status))
+            status_path = Path(args.update_rollback_status)
+            if status_path.name == DIRECTORY_TRANSACTION_FILENAME:
+                message = read_directory_update_recovery_message(status_path)
+            else:
+                message = read_update_recovery_message(status_path)
             window.log(message)
             QMessageBox.warning(window, "Update Recovery", message)
 
         QTimer.singleShot(800, show_recovery_status)
 
-    QTimer.singleShot(10_000, cleanup_stale_update_state)
+    def cleanup_all_stale_update_state() -> None:
+        cleanup_stale_update_state()
+        cleanup_stale_directory_update_state()
+
+    QTimer.singleShot(10_000, cleanup_all_stale_update_state)
     return app.exec()
 
 
@@ -186,35 +214,207 @@ def run_youtube_connection_smoke(result_path: str) -> int:
     return 0 if passed else 1
 
 
-def run_gui_startup_smoke(argv: list[str], result_path: str) -> int:
-    os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
-    from PyQt6.QtCore import QSettings, QTimer
-    from PyQt6.QtWidgets import QApplication
+def run_provider_media_smoke(result_path: str) -> int:
+    from neural_extractor_v3.core.provider_media_smoke import (
+        run_offline_provider_media_smoke,
+    )
+
+    results = run_offline_provider_media_smoke()
+    passed = all(results.values())
+    _write_internal_smoke_result(result_path, {"passed": passed, "checks": results})
+    return 0 if passed else 1
+
+
+def run_gui_startup_smoke(
+    argv: list[str], result_path: str, *, platform_name: str = "offscreen"
+) -> int:
+    os.environ["QT_QPA_PLATFORM"] = platform_name
+    from PySide6 import QtCore as QtCoreModule
+    from PySide6 import QtGui as QtGuiModule
+    from PySide6 import QtWidgets as QtWidgetsModule
+    from PySide6.QtCore import QLibraryInfo, QSettings, QTimer
+    from PySide6.QtGui import QPixmap
+    from PySide6.QtWidgets import QApplication
+    from shiboken6 import Shiboken as ShibokenModule
 
     from neural_extractor_v3.gui.main_window import MainWindow
 
-    settings_root = str(Path(tempfile.gettempdir()) / "neural-extractor-gui-smoke-settings")
+    settings_root = str(
+        Path(tempfile.gettempdir())
+        / f"neural-extractor-gui-smoke-settings-{platform_name}-{os.getpid()}"
+    )
     QSettings.setDefaultFormat(QSettings.Format.IniFormat)
     QSettings.setPath(QSettings.Format.IniFormat, QSettings.Scope.UserScope, settings_root)
     app = QApplication(argv)
     window = MainWindow()
     window.show()
 
-    def complete() -> None:
-        checks = window.responsive_layout_smoke_checks()
-        _write_internal_smoke_result(
-            result_path,
-            {
-                "passed": window.isVisible() and all(checks.values()),
-                "window_title": window.windowTitle(),
-                "checks": checks,
-            },
+    def loaded_windows_modules() -> dict[str, str]:
+        if sys.platform != "win32":
+            return {}
+        import ctypes
+
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.GetModuleHandleW.argtypes = [ctypes.c_wchar_p]
+        kernel32.GetModuleHandleW.restype = ctypes.c_void_p
+        kernel32.GetModuleFileNameW.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_wchar_p,
+            ctypes.c_uint32,
+        ]
+        kernel32.GetModuleFileNameW.restype = ctypes.c_uint32
+        names = (
+            "Qt6Core.dll",
+            "Qt6Gui.dll",
+            "Qt6Widgets.dll",
+            "pyside6.abi3.dll",
+            "shiboken6.abi3.dll",
+            "qoffscreen.dll",
+            "qwindows.dll",
+            "qico.dll",
         )
-        window.close()
-        app.quit()
+        result: dict[str, str] = {}
+        for name in names:
+            module = kernel32.GetModuleHandleW(name)
+            if not module:
+                continue
+            buffer = ctypes.create_unicode_buffer(32_768)
+            length = kernel32.GetModuleFileNameW(module, buffer, len(buffer))
+            if length:
+                result[name] = str(Path(buffer.value).resolve())
+        return result
+
+    state = {"complete": False}
+
+    def finish(payload: dict[str, object]) -> None:
+        if state["complete"]:
+            return
+        state["complete"] = True
+        try:
+            _write_internal_smoke_result(result_path, payload)
+        finally:
+            window.close()
+            app.quit()
+
+    def complete() -> None:
+        try:
+            checks = window.responsive_layout_smoke_checks()
+            checks["qt_png_asset"] = not QPixmap(
+                str(assets_dir() / "NeuralExtractorIcon.png")
+            ).isNull()
+            checks["qt_ico_plugin"] = not QPixmap(
+                str(assets_dir() / "NeuralExtractoricon.ico")
+            ).isNull()
+            checks["requested_platform_plugin"] = app.platformName().casefold() == platform_name
+            finish(
+                {
+                    "passed": window.isVisible() and all(checks.values()),
+                    "window_title": window.windowTitle(),
+                    "platform": app.platformName(),
+                    "qt_plugins_path": QLibraryInfo.path(
+                        QLibraryInfo.LibraryPath.PluginsPath
+                    ),
+                    "qt_library_paths": list(app.libraryPaths()),
+                    "qt_binding_module_paths": {
+                        "QtCore.pyd": str(Path(QtCoreModule.__file__).resolve()),
+                        "QtGui.pyd": str(Path(QtGuiModule.__file__).resolve()),
+                        "QtWidgets.pyd": str(Path(QtWidgetsModule.__file__).resolve()),
+                        "Shiboken.pyd": str(Path(ShibokenModule.__file__).resolve()),
+                    },
+                    "qt_loaded_library_paths": loaded_windows_modules(),
+                    "checks": checks,
+                }
+            )
+        except Exception:
+            finish({"passed": False, "checks": {"smoke_callback_completed": False}})
+
+    def watchdog() -> None:
+        finish({"passed": False, "checks": {"gui_watchdog_timeout": False}})
 
     QTimer.singleShot(500, complete)
+    QTimer.singleShot(15_000, watchdog)
     return app.exec()
+
+
+def run_runtime_smoke(result_path: str) -> int:
+    """Exercise packaged ctypes/libffi and the pinned external runtimes."""
+    import _ctypes
+    import ctypes
+    import hashlib
+    import subprocess
+
+    checks: dict[str, bool] = {}
+    callback_type = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int)
+    callback = callback_type(lambda value: value + 7)
+    checks["ctypes_callback"] = callback(35) == 42
+
+    libffi = base_dir() / "libffi-8.dll"
+    libffi_hash = hashlib.sha256(libffi.read_bytes()).hexdigest() if libffi.is_file() else ""
+    checks["cpython_libffi_3_4_2"] = (
+        libffi_hash
+        == "d1682615247e165ba8aa0cff59e090a0b1b6b90793e48733f441dff8d8e6328e"
+    )
+    ctypes_extension = Path(_ctypes.__file__).resolve()
+    ctypes_hash = hashlib.sha256(ctypes_extension.read_bytes()).hexdigest()
+    checks["cpython_ctypes_extension"] = (
+        ctypes_extension.parent == base_dir().resolve()
+        and ctypes_hash
+        == "6968228b18fc86b0b02f3dbf2c879c2c6f689a66130a72f35a3f0b2755d99e41"
+    )
+
+    loaded_libffi = ""
+    if sys.platform == "win32":
+        kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+        kernel32.GetModuleHandleW.argtypes = [ctypes.c_wchar_p]
+        kernel32.GetModuleHandleW.restype = ctypes.c_void_p
+        kernel32.GetModuleFileNameW.argtypes = [
+            ctypes.c_void_p,
+            ctypes.c_wchar_p,
+            ctypes.c_uint32,
+        ]
+        kernel32.GetModuleFileNameW.restype = ctypes.c_uint32
+        handle = kernel32.GetModuleHandleW("libffi-8.dll")
+        buffer = ctypes.create_unicode_buffer(32_768)
+        if handle and kernel32.GetModuleFileNameW(handle, buffer, len(buffer)):
+            loaded_libffi = buffer.value
+    checks["loaded_libffi_from_bundle_root"] = bool(loaded_libffi) and (
+        Path(loaded_libffi).resolve() == libffi.resolve()
+    )
+
+    commands = {
+        "node": ([str(bin_dir() / "node.exe"), "-e", "process.stdout.write('node-ok')"], "node-ok"),
+        "ffmpeg": ([str(bin_dir() / "ffmpeg.exe"), "-hide_banner", "-version"], "ffmpeg version"),
+        "ffprobe": ([str(bin_dir() / "ffprobe.exe"), "-hide_banner", "-version"], "ffprobe version"),
+    }
+    for name, (command, marker) in commands.items():
+        try:
+            completed = subprocess.run(
+                command,
+                shell=False,
+                check=False,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+                timeout=15,
+            )
+        except (OSError, subprocess.SubprocessError):
+            checks[f"{name}_runtime"] = False
+        else:
+            output = f"{completed.stdout}\n{completed.stderr}".casefold()
+            checks[f"{name}_runtime"] = completed.returncode == 0 and marker in output
+
+    passed = all(checks.values())
+    _write_internal_smoke_result(
+        result_path,
+        {
+            "passed": passed,
+            "checks": checks,
+            "libffi_sha256": libffi_hash,
+            "ctypes_sha256": ctypes_hash,
+        },
+    )
+    return 0 if passed else 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -225,13 +425,25 @@ def main(argv: list[str] | None = None) -> int:
         return run_ytdlp_worker()
     if args.internal_youtube_connection_smoke:
         return run_youtube_connection_smoke(args.internal_youtube_connection_smoke)
+    if args.internal_provider_media_smoke:
+        return run_provider_media_smoke(args.internal_provider_media_smoke)
     if args.internal_gui_startup_smoke:
         return run_gui_startup_smoke(
             ["NeuralExtractorV3", "--internal-gui-startup-smoke"],
             args.internal_gui_startup_smoke,
         )
+    if args.internal_windows_gui_smoke:
+        return run_gui_startup_smoke(
+            ["NeuralExtractorV3", "--internal-windows-gui-smoke"],
+            args.internal_windows_gui_smoke,
+            platform_name="windows",
+        )
+    if args.internal_runtime_smoke:
+        return run_runtime_smoke(args.internal_runtime_smoke)
     if args.apply_update:
         return run_update_helper(Path(args.apply_update))
+    if args.apply_directory_update:
+        return run_directory_update_helper(Path(args.apply_directory_update))
     if args.post_update_transaction and (args.post_update_token or args.post_update_marker):
         return 2
     if bool(args.post_update_token) != bool(args.post_update_marker):

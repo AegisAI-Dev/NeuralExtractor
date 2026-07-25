@@ -1,0 +1,6 @@
+Name: requests
+Version: 2.34.2
+License expression/field: Apache-2.0
+Copied files:
+- requests-2.34.2.dist-info__licenses__LICENSE SHA-256 09e8a9bcec8067104652c168685ab0931e7868f9c8284b66f5ae6edae5f1130b
+- requests-2.34.2.dist-info__licenses__NOTICE SHA-256 f5110972dedad2b4e9d314518daf3b7d72d6e02e499acd802181de6f74571dcc

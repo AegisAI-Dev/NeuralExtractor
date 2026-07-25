@@ -1,0 +1,5 @@
+Name: urllib3
+Version: 2.7.0
+License expression/field: MIT
+Copied files:
+- urllib3-2.7.0.dist-info__licenses__LICENSE.txt SHA-256 130e3a64d5fdd5d096a752694634a7d9df284469de86e5732100268041e3d686

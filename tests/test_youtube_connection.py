@@ -11,8 +11,10 @@ from neural_extractor_v3.config import app_data_dir
 from neural_extractor_v3.core import youtube_connection as connection_module
 from neural_extractor_v3.core import youtube_connection_smoke as smoke_module
 from neural_extractor_v3.core.youtube_connection import (
+    ACTIVE_PROVIDER_KEY,
     ConnectionState,
     FirefoxDiscovery,
+    ManagedBrowser,
     VerificationResult,
     YouTubeConnectionManager,
     dedicated_firefox_profile_path,
@@ -346,7 +348,8 @@ def test_cookies_database_alone_never_marks_connection_verified(tmp_path):
 
 
 def test_successful_preflight_marks_connected_and_expiry_reuses_same_profile(tmp_path):
-    manager = manager_for(tmp_path)
+    settings = MemorySettings({ACTIVE_PROVIDER_KEY: ManagedBrowser.CHROME.value})
+    manager = manager_for(tmp_path, settings=settings)
     profile = manager.create_profile()
     write_cookie_database(profile, authenticated=True)
     seen = []
@@ -360,12 +363,33 @@ def test_successful_preflight_marks_connected_and_expiry_reuses_same_profile(tmp
     assert manager.state == ConnectionState.CONNECTED
     assert manager.connected_profile() == profile
     assert manager.last_verified
+    assert settings.values[ACTIVE_PROVIDER_KEY] == ManagedBrowser.FIREFOX.value
 
     manager.mark_expired("cookies are no longer valid: cookie=secret")
     assert manager.state == ConnectionState.EXPIRED
     assert "secret" not in manager.failure_reason
     assert manager.create_profile() == profile
     assert seen[0][0] == profile
+
+
+def test_failed_preflight_never_replaces_the_last_verified_provider(tmp_path):
+    settings = MemorySettings({ACTIVE_PROVIDER_KEY: ManagedBrowser.CHROME.value})
+    manager = manager_for(tmp_path, settings=settings)
+    profile = manager.create_profile()
+    write_cookie_database(profile, authenticated=True)
+
+    result = manager.verify(
+        lambda _profile, _url: VerificationResult(
+            False,
+            "session_rejected",
+            "session rejected",
+        ),
+        "https://www.youtube.com/watch?v=abc",
+    )
+
+    assert not result.success
+    assert manager.state == ConnectionState.EXPIRED
+    assert settings.values[ACTIVE_PROVIDER_KEY] == ManagedBrowser.CHROME.value
 
 
 def test_cookie_values_are_never_returned_or_stored(tmp_path):
@@ -385,6 +409,7 @@ def test_disconnect_deletes_only_managed_profile_and_keeps_firefox_path_and_cook
     manager = manager_for(tmp_path, settings=settings, registry_paths=[executable])
     manager.set_firefox_path(executable)
     profile = manager.create_profile()
+    settings.setValue(ACTIVE_PROVIDER_KEY, ManagedBrowser.FIREFOX.value)
     (profile / "owned.txt").write_text("owned", encoding="utf-8")
     cookie_file = tmp_path / "cookies.txt"
     cookie_file.write_text("advanced fallback", encoding="utf-8")
@@ -398,6 +423,18 @@ def test_disconnect_deletes_only_managed_profile_and_keeps_firefox_path_and_cook
     assert cookie_file.exists()
     assert settings.values["youtube_connection/firefox_path"] == str(executable.resolve())
     assert "youtube_connection/profile_path" not in settings.values
+    assert ACTIVE_PROVIDER_KEY not in settings.values
+
+
+def test_disconnect_does_not_clear_another_verified_provider(tmp_path):
+    settings = MemorySettings({ACTIVE_PROVIDER_KEY: ManagedBrowser.CHROME.value})
+    firefox = manager_for(tmp_path, settings=settings)
+    firefox.create_profile()
+
+    result = firefox.disconnect()
+
+    assert result.success
+    assert settings.values[ACTIVE_PROVIDER_KEY] == ManagedBrowser.CHROME.value
 
 
 def test_locked_or_failed_disconnect_preserves_recoverable_profile(tmp_path, monkeypatch):

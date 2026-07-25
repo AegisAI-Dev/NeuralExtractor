@@ -1,0 +1,5 @@
+Name: defusedxml
+Version: 0.7.1
+License expression/field: PSFL
+Copied files:
+- defusedxml-0.7.1.dist-info__LICENSE SHA-256 b80ce9da8c42a1f91079627fbbe2bf27210ae108a0ffe5f077d5b08e076c24c8

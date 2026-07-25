@@ -331,15 +331,36 @@ def assess_installation_capability(
         if getattr(sys, "_MEIPASS", None)
         else None
     )
+    onefolder_runtime = meipass is not None and meipass == target.parent
     if (
         _is_within(target, root)
         or _is_within(target, temp_root)
-        or (meipass is not None and _is_within(target, meipass))
+        or (
+            meipass is not None
+            and not onefolder_runtime
+            and _is_within(target, meipass)
+        )
     ):
         return InstallationCapability(
             False,
             "The application is running from a temporary or update-staging location.",
             code="invalid_install_location",
+        )
+
+    # The established updater transaction replaces one file.  Treating an
+    # externally replaceable one-folder installation as that legacy layout
+    # would leave old Python/Qt files behind and could silently overwrite a
+    # recipient's LGPL replacement later.  Keep automatic installation
+    # fail-closed until the separately reviewed directory transaction is wired
+    # in; downloading and manual, consent-based replacement remain available.
+    if onefolder_runtime:
+        return InstallationCapability(
+            False,
+            "This compliance-friendly one-folder installation requires a "
+            "manual directory update so locally replaced Qt/PySide libraries "
+            "are not overwritten without explicit consent.",
+            target,
+            code="onefolder_manual_install_required",
         )
 
     if not _directory_writable(target.parent):

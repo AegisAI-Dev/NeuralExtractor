@@ -1,0 +1,5 @@
+Name: pillow
+Version: 12.3.0
+License expression/field: MIT-CMU
+Copied files:
+- pillow-12.3.0.dist-info__licenses__LICENSE SHA-256 4f7866a74802c6326f81faff59a56546b6aec2b10b91973e0e9308de95e79857

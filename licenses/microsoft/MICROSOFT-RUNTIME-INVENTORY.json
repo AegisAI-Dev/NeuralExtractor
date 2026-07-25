@@ -1,0 +1,899 @@
+{
+  "schema_version": 1,
+  "status": "HOLD",
+  "distributed_microsoft_file_count": 52,
+  "all_bytes_mapped_to_observed_build_input": true,
+  "redistribution_rights_confirmed_count": 0,
+  "records": [
+    {
+      "path": "api-ms-win-core-console-l1-1-0.dll",
+      "size": 22952,
+      "sha256": "56a3c8ec50eedef1f5024696ef928cb2a0f5d8b40c8a122cba412944dae81c46",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-console-l1-1-0.dll",
+      "observed_build_input_size": 22952,
+      "observed_build_input_sha256": "56a3c8ec50eedef1f5024696ef928cb2a0f5d8b40c8a122cba412944dae81c46",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-datetime-l1-1-0.dll",
+      "size": 22968,
+      "sha256": "e91b155e01b98aa4466b94da39e04c379f2fd392c154e7b6d80c05e0476f0552",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-datetime-l1-1-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "e91b155e01b98aa4466b94da39e04c379f2fd392c154e7b6d80c05e0476f0552",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-debug-l1-1-0.dll",
+      "size": 22968,
+      "sha256": "2117e4953f5ec36adff21a416db5ff5f9ff27ea5f70b71b2e7d87897979b34e1",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-debug-l1-1-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "2117e4953f5ec36adff21a416db5ff5f9ff27ea5f70b71b2e7d87897979b34e1",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-errorhandling-l1-1-0.dll",
+      "size": 22968,
+      "sha256": "ce83855b81333be8ca07a70700bff553dfb94869637dfe529bc8ef64094032be",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-errorhandling-l1-1-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "ce83855b81333be8ca07a70700bff553dfb94869637dfe529bc8ef64094032be",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-fibers-l1-1-0.dll",
+      "size": 22992,
+      "sha256": "5fae6d3fa0df3ac9a0171654062b6518b56bc586ab03d8a05e9cd4a112628934",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-fibers-l1-1-0.dll",
+      "observed_build_input_size": 22992,
+      "observed_build_input_sha256": "5fae6d3fa0df3ac9a0171654062b6518b56bc586ab03d8a05e9cd4a112628934",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-file-l1-1-0.dll",
+      "size": 27048,
+      "sha256": "be54476a0d4394d8ca6a5943b6425569403a1a7e939cf9b4948319b450022b45",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-file-l1-1-0.dll",
+      "observed_build_input_size": 27048,
+      "observed_build_input_sha256": "be54476a0d4394d8ca6a5943b6425569403a1a7e939cf9b4948319b450022b45",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-file-l1-2-0.dll",
+      "size": 22968,
+      "sha256": "87cd5dac0ad2c7f6d64a51c58bc6fb9f2b207fe4966dcf47dd83728b0e439a75",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-file-l1-2-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "87cd5dac0ad2c7f6d64a51c58bc6fb9f2b207fe4966dcf47dd83728b0e439a75",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-file-l2-1-0.dll",
+      "size": 20960,
+      "sha256": "f957a4c261506484b53534a9be8931c02ec1a349b3f431a858f8215cecfec3f7",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.22000.194",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-file-l2-1-0.dll",
+      "observed_build_input_size": 20960,
+      "observed_build_input_sha256": "f957a4c261506484b53534a9be8931c02ec1a349b3f431a858f8215cecfec3f7",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-handle-l1-1-0.dll",
+      "size": 22968,
+      "sha256": "5ae3a6e15f6a47f78b59f8a24334ffc88e8de05664c4c04d6243921ecba16325",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-handle-l1-1-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "5ae3a6e15f6a47f78b59f8a24334ffc88e8de05664c4c04d6243921ecba16325",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-heap-l1-1-0.dll",
+      "size": 22952,
+      "sha256": "5f8dca9ec0204453ad8e31b8f36226fef8342c36d3a07b15bcece301bc7f24cd",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-heap-l1-1-0.dll",
+      "observed_build_input_size": 22952,
+      "observed_build_input_sha256": "5f8dca9ec0204453ad8e31b8f36226fef8342c36d3a07b15bcece301bc7f24cd",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-interlocked-l1-1-0.dll",
+      "size": 22984,
+      "sha256": "bdad0c627f722de797917a9ebbb02acc0669c44326f64ba5fc1f8d6c2d978128",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-interlocked-l1-1-0.dll",
+      "observed_build_input_size": 22984,
+      "observed_build_input_sha256": "bdad0c627f722de797917a9ebbb02acc0669c44326f64ba5fc1f8d6c2d978128",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-libraryloader-l1-1-0.dll",
+      "size": 22952,
+      "sha256": "b17a00e4640a1d5a91c1b1ddf0465ba04ffc2ac5404e37d02b56ba7d2fabbced",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-libraryloader-l1-1-0.dll",
+      "observed_build_input_size": 22952,
+      "observed_build_input_sha256": "b17a00e4640a1d5a91c1b1ddf0465ba04ffc2ac5404e37d02b56ba7d2fabbced",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-localization-l1-2-0.dll",
+      "size": 22968,
+      "sha256": "4b5c4d32550d6ec0715c6cf651e9c1bbccb01bffa72e082a0ae04251800d43a1",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-localization-l1-2-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "4b5c4d32550d6ec0715c6cf651e9c1bbccb01bffa72e082a0ae04251800d43a1",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-memory-l1-1-0.dll",
+      "size": 22968,
+      "sha256": "47817a21044295a18907f13cd9f2705f9a21579f80fa6d3f7bf22e00607189fe",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-memory-l1-1-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "47817a21044295a18907f13cd9f2705f9a21579f80fa6d3f7bf22e00607189fe",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-namedpipe-l1-1-0.dll",
+      "size": 22976,
+      "sha256": "64896c2ca9b8da6c6c327602000f1f6d95e49e6f8df06929176a319cc2aa985e",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-namedpipe-l1-1-0.dll",
+      "observed_build_input_size": 22976,
+      "observed_build_input_sha256": "64896c2ca9b8da6c6c327602000f1f6d95e49e6f8df06929176a319cc2aa985e",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-processenvironment-l1-1-0.dll",
+      "size": 22984,
+      "sha256": "8df2ab621406d2905a330df3955db715965c2c097061345ad94dafab1b04ef00",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-processenvironment-l1-1-0.dll",
+      "observed_build_input_size": 22984,
+      "observed_build_input_sha256": "8df2ab621406d2905a330df3955db715965c2c097061345ad94dafab1b04ef00",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-processthreads-l1-1-0.dll",
+      "size": 22976,
+      "sha256": "a0299f1564ea8aeeff67226b6d2f9b9802aab877c9b89c82d50377ca2a12dba9",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-processthreads-l1-1-0.dll",
+      "observed_build_input_size": 22976,
+      "observed_build_input_sha256": "a0299f1564ea8aeeff67226b6d2f9b9802aab877c9b89c82d50377ca2a12dba9",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-processthreads-l1-1-1.dll",
+      "size": 22976,
+      "sha256": "fe33f48a34243481782742168b24f344485527327534f7e05c60ba5420715387",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-processthreads-l1-1-1.dll",
+      "observed_build_input_size": 22976,
+      "observed_build_input_sha256": "fe33f48a34243481782742168b24f344485527327534f7e05c60ba5420715387",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-profile-l1-1-0.dll",
+      "size": 22952,
+      "sha256": "2f506ccb47a0513d16b3dece9ed1a0459b796fdb96e40d8967dc84e7d4e36954",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-profile-l1-1-0.dll",
+      "observed_build_input_size": 22952,
+      "observed_build_input_sha256": "2f506ccb47a0513d16b3dece9ed1a0459b796fdb96e40d8967dc84e7d4e36954",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-rtlsupport-l1-1-0.dll",
+      "size": 22992,
+      "sha256": "4335d1e4051cc16aee5745b1ae9027e1e710f41972faefc57c065f2166209853",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-rtlsupport-l1-1-0.dll",
+      "observed_build_input_size": 22992,
+      "observed_build_input_sha256": "4335d1e4051cc16aee5745b1ae9027e1e710f41972faefc57c065f2166209853",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-string-l1-1-0.dll",
+      "size": 22984,
+      "sha256": "4c8b4993badf3d843f57638b5f82e98769d3c7e0bd524d999ec2c720013a2fdf",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-string-l1-1-0.dll",
+      "observed_build_input_size": 22984,
+      "observed_build_input_sha256": "4c8b4993badf3d843f57638b5f82e98769d3c7e0bd524d999ec2c720013a2fdf",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-synch-l1-1-0.dll",
+      "size": 22976,
+      "sha256": "a7e2c7177f10d6d35ed2cc79ce71eb979ba69a348f19237121ddac7d61103ebe",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-synch-l1-1-0.dll",
+      "observed_build_input_size": 22976,
+      "observed_build_input_sha256": "a7e2c7177f10d6d35ed2cc79ce71eb979ba69a348f19237121ddac7d61103ebe",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-synch-l1-2-0.dll",
+      "size": 22968,
+      "sha256": "6ff6a5b89c6ccc33a8f99fef4abb83b760c3d6e5be20d4805d95720f67b86876",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-synch-l1-2-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "6ff6a5b89c6ccc33a8f99fef4abb83b760c3d6e5be20d4805d95720f67b86876",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-sysinfo-l1-1-0.dll",
+      "size": 22952,
+      "sha256": "881b7e57388edbf8a167bc7e7714286e9fed54b981479fa540c218aab049a81e",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-sysinfo-l1-1-0.dll",
+      "observed_build_input_size": 22952,
+      "observed_build_input_sha256": "881b7e57388edbf8a167bc7e7714286e9fed54b981479fa540c218aab049a81e",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-timezone-l1-1-0.dll",
+      "size": 22968,
+      "sha256": "c886fd30abe580e0bdb29b9e3cb50872159d1c62bcf03355b28850176f1258aa",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-timezone-l1-1-0.dll",
+      "observed_build_input_size": 22968,
+      "observed_build_input_sha256": "c886fd30abe580e0bdb29b9e3cb50872159d1c62bcf03355b28850176f1258aa",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-core-util-l1-1-0.dll",
+      "size": 22992,
+      "sha256": "26a32ca4e6a5f853a371f1fff7c4b7cd90288f4364921fbd4b11cbff697767a2",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-core-util-l1-1-0.dll",
+      "observed_build_input_size": 22992,
+      "observed_build_input_sha256": "26a32ca4e6a5f853a371f1fff7c4b7cd90288f4364921fbd4b11cbff697767a2",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-conio-l1-1-0.dll",
+      "size": 22984,
+      "sha256": "988e14fa33743956ca182c1ef033c09427d60f2b0132803b8548e28ca0378b7c",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-conio-l1-1-0.dll",
+      "observed_build_input_size": 22984,
+      "observed_build_input_sha256": "988e14fa33743956ca182c1ef033c09427d60f2b0132803b8548e28ca0378b7c",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-convert-l1-1-0.dll",
+      "size": 27088,
+      "sha256": "fa445d728c70db47340907cf12dff8893fd249b738594a1825248211b8ec0dca",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-convert-l1-1-0.dll",
+      "observed_build_input_size": 27088,
+      "observed_build_input_sha256": "fa445d728c70db47340907cf12dff8893fd249b738594a1825248211b8ec0dca",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-environment-l1-1-0.dll",
+      "size": 22984,
+      "sha256": "e2e562ec0ab4be342962e7e885cba380c3143bcbf83fcaff9269f26b2b448e24",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-environment-l1-1-0.dll",
+      "observed_build_input_size": 22984,
+      "observed_build_input_sha256": "e2e562ec0ab4be342962e7e885cba380c3143bcbf83fcaff9269f26b2b448e24",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-filesystem-l1-1-0.dll",
+      "size": 22952,
+      "sha256": "f4a1f0ad4fde3752cf7dc6f3058e4c502546aad9029c8bd78ae1ee4cbe37922a",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-filesystem-l1-1-0.dll",
+      "observed_build_input_size": 22952,
+      "observed_build_input_sha256": "f4a1f0ad4fde3752cf7dc6f3058e4c502546aad9029c8bd78ae1ee4cbe37922a",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-heap-l1-1-0.dll",
+      "size": 22952,
+      "sha256": "998294783016c09345cb2dd0f18163fb9bf469edb4954b1408e99f673c60d9f7",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-heap-l1-1-0.dll",
+      "observed_build_input_size": 22952,
+      "observed_build_input_sha256": "998294783016c09345cb2dd0f18163fb9bf469edb4954b1408e99f673c60d9f7",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-locale-l1-1-0.dll",
+      "size": 22976,
+      "sha256": "2376c1ef50f84a2b0e49e66c0e4c2b24e0c48a4d85450fc74ce77ff02f58fea5",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-locale-l1-1-0.dll",
+      "observed_build_input_size": 22976,
+      "observed_build_input_sha256": "2376c1ef50f84a2b0e49e66c0e4c2b24e0c48a4d85450fc74ce77ff02f58fea5",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-math-l1-1-0.dll",
+      "size": 31168,
+      "sha256": "9e1441afa2e6b3cb88c234fd43755fb2716d7266944239e93a8b3722f44ba792",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-math-l1-1-0.dll",
+      "observed_build_input_size": 31168,
+      "observed_build_input_sha256": "9e1441afa2e6b3cb88c234fd43755fb2716d7266944239e93a8b3722f44ba792",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-multibyte-l1-1-0.dll",
+      "size": 31160,
+      "sha256": "f3a64a3e24775d0e9408fd85289b413d780fe5835685fe6736c54221aca0cb4d",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-multibyte-l1-1-0.dll",
+      "observed_build_input_size": 31160,
+      "observed_build_input_sha256": "f3a64a3e24775d0e9408fd85289b413d780fe5835685fe6736c54221aca0cb4d",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-private-l1-1-0.dll",
+      "size": 76216,
+      "sha256": "98f7d945c15e261c940219f8261a8e2f85fa83b3740ed08a5afe9e54fe894802",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-private-l1-1-0.dll",
+      "observed_build_input_size": 76216,
+      "observed_build_input_sha256": "98f7d945c15e261c940219f8261a8e2f85fa83b3740ed08a5afe9e54fe894802",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-process-l1-1-0.dll",
+      "size": 22976,
+      "sha256": "df4a913f1708ccc03b9f41f69cf563a9c57bebaba18262fbc377584a2c2bbb9c",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-process-l1-1-0.dll",
+      "observed_build_input_size": 22976,
+      "observed_build_input_sha256": "df4a913f1708ccc03b9f41f69cf563a9c57bebaba18262fbc377584a2c2bbb9c",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-runtime-l1-1-0.dll",
+      "size": 27048,
+      "sha256": "3e95f9a63c2c742c43138b731966d4cfa6c922bdcff3e2958fe24e4bdf6e5461",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-runtime-l1-1-0.dll",
+      "observed_build_input_size": 27048,
+      "observed_build_input_sha256": "3e95f9a63c2c742c43138b731966d4cfa6c922bdcff3e2958fe24e4bdf6e5461",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-stdio-l1-1-0.dll",
+      "size": 27064,
+      "sha256": "21a5efa2bdf4a89e06b7dad84aa990412e054bac9befd198c05dd6add93b8430",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-stdio-l1-1-0.dll",
+      "observed_build_input_size": 27064,
+      "observed_build_input_sha256": "21a5efa2bdf4a89e06b7dad84aa990412e054bac9befd198c05dd6add93b8430",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-string-l1-1-0.dll",
+      "size": 27048,
+      "sha256": "05a910f254a8eae65c0f032ec7740afacb8439f87a64d53f9b8ebd66304b3b68",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-string-l1-1-0.dll",
+      "observed_build_input_size": 27048,
+      "observed_build_input_sha256": "05a910f254a8eae65c0f032ec7740afacb8439f87a64d53f9b8ebd66304b3b68",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-time-l1-1-0.dll",
+      "size": 22976,
+      "sha256": "4a90e5b2f3fb45b6a92581a39d3b62948a588a360d449554d8cae1a40b009114",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-time-l1-1-0.dll",
+      "observed_build_input_size": 22976,
+      "observed_build_input_sha256": "4a90e5b2f3fb45b6a92581a39d3b62948a588a360d449554d8cae1a40b009114",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "api-ms-win-crt-utility-l1-1-0.dll",
+      "size": 22952,
+      "sha256": "88ce66919d551efa7a0430f1188b558c41532c363258c1f07a05e2b67d603208",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.26100.8249",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\api-ms-win-crt-utility-l1-1-0.dll",
+      "observed_build_input_size": 22952,
+      "observed_build_input_sha256": "88ce66919d551efa7a0430f1188b558c41532c363258c1f07a05e2b67d603208",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "PySide6/MSVCP140.dll",
+      "size": 549176,
+      "sha256": "708dd7bbc7bd23bce9e93f7837a70c2dd7ad55cff43801e92c0f7fcd7dda47cd",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.44.35211.0",
+      "observed_build_input_path": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\.venv\\Lib\\site-packages\\PySide6\\MSVCP140.dll",
+      "observed_build_input_size": 549176,
+      "observed_build_input_sha256": "708dd7bbc7bd23bce9e93f7837a70c2dd7ad55cff43801e92c0f7fcd7dda47cd",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "PySide6_Essentials-6.11.1-cp39-abi3-win_amd64.whl",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/PySide/Qt upstream wheel terms require separate review"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "PySide6/MSVCP140_1.dll",
+      "size": 27448,
+      "sha256": "b2113956aa3fcb9decfe65be1ee7829f8e3ae0899633ae89fe04888ada201594",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.44.35211.0",
+      "observed_build_input_path": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\.venv\\Lib\\site-packages\\PySide6\\MSVCP140_1.dll",
+      "observed_build_input_size": 27448,
+      "observed_build_input_sha256": "b2113956aa3fcb9decfe65be1ee7829f8e3ae0899633ae89fe04888ada201594",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "PySide6_Essentials-6.11.1-cp39-abi3-win_amd64.whl",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/PySide/Qt upstream wheel terms require separate review"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "PySide6/MSVCP140_2.dll",
+      "size": 271672,
+      "sha256": "1b806b427ffb573deff8478cf6fe336465fe2c67e0919bb95f452b6f31d25736",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.44.35211.0",
+      "observed_build_input_path": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\.venv\\Lib\\site-packages\\PySide6\\MSVCP140_2.dll",
+      "observed_build_input_size": 271672,
+      "observed_build_input_sha256": "1b806b427ffb573deff8478cf6fe336465fe2c67e0919bb95f452b6f31d25736",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "PySide6_Essentials-6.11.1-cp39-abi3-win_amd64.whl",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/PySide/Qt upstream wheel terms require separate review"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "PySide6/VCRUNTIME140.dll",
+      "size": 116024,
+      "sha256": "c6e841078cd352299a58925991e2552f7251b046253ba895b3ad50cd5cd32ec6",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.44.35211.0",
+      "observed_build_input_path": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\.venv\\Lib\\site-packages\\PySide6\\VCRUNTIME140.dll",
+      "observed_build_input_size": 116024,
+      "observed_build_input_sha256": "c6e841078cd352299a58925991e2552f7251b046253ba895b3ad50cd5cd32ec6",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "PySide6_Essentials-6.11.1-cp39-abi3-win_amd64.whl",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/PySide/Qt upstream wheel terms require separate review"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "PySide6/VCRUNTIME140_1.dll",
+      "size": 41272,
+      "sha256": "b322e382ea249b50009f14a9a71ad16729eb6e4b58a8d3b3be6ac66ea6342a22",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.44.35211.0",
+      "observed_build_input_path": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\.venv\\Lib\\site-packages\\PySide6\\VCRUNTIME140_1.dll",
+      "observed_build_input_size": 41272,
+      "observed_build_input_sha256": "b322e382ea249b50009f14a9a71ad16729eb6e4b58a8d3b3be6ac66ea6342a22",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "PySide6_Essentials-6.11.1-cp39-abi3-win_amd64.whl",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/PySide/Qt upstream wheel terms require separate review"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "shiboken6/MSVCP140.dll",
+      "size": 549176,
+      "sha256": "005f2324c7ff79bbe9a44992b0708abb4c871bd24bcc7a34aca5eab4439c1f4a",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.44.35211.0",
+      "observed_build_input_path": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\.venv\\Lib\\site-packages\\shiboken6\\MSVCP140.dll",
+      "observed_build_input_size": 549176,
+      "observed_build_input_sha256": "005f2324c7ff79bbe9a44992b0708abb4c871bd24bcc7a34aca5eab4439c1f4a",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "shiboken6-6.11.1-cp39-abi3-win_amd64.whl",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/PySide/Qt upstream wheel terms require separate review"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "shiboken6/VCRUNTIME140.dll",
+      "size": 116024,
+      "sha256": "8d9c679c825c5fff298d66c41af30f35c289fc101868dfc9635547bada0daba6",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.44.35211.0",
+      "observed_build_input_path": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\.venv\\Lib\\site-packages\\shiboken6\\VCRUNTIME140.dll",
+      "observed_build_input_size": 116024,
+      "observed_build_input_sha256": "8d9c679c825c5fff298d66c41af30f35c289fc101868dfc9635547bada0daba6",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "shiboken6-6.11.1-cp39-abi3-win_amd64.whl",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/PySide/Qt upstream wheel terms require separate review"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "shiboken6/VCRUNTIME140_1.dll",
+      "size": 41272,
+      "sha256": "e4d7ea5f4f4ff6d0c208e693853617cdef0ad71cfe5dd5c3ae16c8a6b64c18ea",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.44.35211.0",
+      "observed_build_input_path": "D:\\Companys\\Neuralshield\\Software\\Neural Extractor\\NeuralExtractor V3\\.venv\\Lib\\site-packages\\shiboken6\\VCRUNTIME140_1.dll",
+      "observed_build_input_size": 41272,
+      "observed_build_input_sha256": "e4d7ea5f4f4ff6d0c208e693853617cdef0ad71cfe5dd5c3ae16c8a6b64c18ea",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "shiboken6-6.11.1-cp39-abi3-win_amd64.whl",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/PySide/Qt upstream wheel terms require separate review"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "ucrtbase.dll",
+      "size": 1122768,
+      "sha256": "c04daeba7e7c4b711d33993ab4c51a2e087f98f4211aea0dcb3a216656ba0ab7",
+      "component": "Microsoft runtime",
+      "pe_file_version": "10.0.22000.194",
+      "observed_build_input_path": "C:\\Program Files (x86)\\Windows Kits\\10\\Windows Performance Toolkit\\ucrtbase.dll",
+      "observed_build_input_size": 1122768,
+      "observed_build_input_sha256": "c04daeba7e7c4b711d33993ab4c51a2e087f98f4211aea0dcb3a216656ba0ab7",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "Local Windows Performance Toolkit installation; exact installer/package identity not retained",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf",
+        "licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "VCRUNTIME140.dll",
+      "size": 99840,
+      "sha256": "1a130e77ef1995a593e7e621fa384c8404dcfa90ba705fb12ac8ad47b2812edb",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.42.34438.0",
+      "observed_build_input_path": "C:\\Users\\Blind\\AppData\\Roaming\\uv\\python\\cpython-3.12.9-windows-x86_64-none\\VCRUNTIME140.dll",
+      "observed_build_input_size": 99840,
+      "observed_build_input_sha256": "1a130e77ef1995a593e7e621fa384c8404dcfa90ba705fb12ac8ad47b2812edb",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "python-build-standalone 20250317 x86_64-pc-windows-msvc install-only stripped asset",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/python-build-standalone upstream distribution evidence"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    },
+    {
+      "path": "VCRUNTIME140_1.dll",
+      "size": 29184,
+      "sha256": "bd7fcd1973d05e358329c06c56435396f7e9c50fb6fe6a3b4d33eb7489a73e69",
+      "component": "Microsoft runtime",
+      "pe_file_version": "14.42.34438.0",
+      "observed_build_input_path": "C:\\Users\\Blind\\AppData\\Roaming\\uv\\python\\cpython-3.12.9-windows-x86_64-none\\VCRUNTIME140_1.dll",
+      "observed_build_input_size": 29184,
+      "observed_build_input_sha256": "bd7fcd1973d05e358329c06c56435396f7e9c50fb6fe6a3b4d33eb7489a73e69",
+      "observed_input_matches_conveyed_bytes": true,
+      "source_package": "python-build-standalone 20250317 x86_64-pc-windows-msvc install-only stripped asset",
+      "candidate_terms_evidence": [
+        "licenses/microsoft/Visual-Studio-2022-REDIST-current.txt",
+        "licenses/microsoft/python-build-standalone upstream distribution evidence"
+      ],
+      "redistribution_status": "HOLD - candidate terms retained, exact permitted-redistribution proof not confirmed"
+    }
+  ],
+  "blockers": [
+    "The Windows Performance Toolkit files were taken from a local installed toolkit, not a retained official redistributable installer.",
+    "Candidate SDK/Visual Studio terms do not by themselves prove every exact file is permitted for this redistribution.",
+    "PySide/Shiboken wheel carriage and PBS carriage do not replace confirmation of the project's own redistribution entitlement.",
+    "Qualified legal review is required before changing HOLD."
+  ]
+}

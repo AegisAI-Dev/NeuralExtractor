@@ -1,0 +1,721 @@
+{
+  "application_version": "3.0.8",
+  "files": [
+    {
+      "component": "python-build-standalone-runtime",
+      "disposition": "reused",
+      "kind": "build-runtime",
+      "path": "build_inputs/runtime-archives/cpython-3.12.9+20250317-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "sha256": "ee338839315bdd8af5fc935f9595eca20ebebdd250726c5816b2d0cf94d1e661",
+      "size": 21175541,
+      "url": "https://github.com/astral-sh/python-build-standalone/releases/download/20250317/cpython-3.12.9%2B20250317-x86_64-pc-windows-msvc-install_only_stripped.tar.gz",
+      "version": "CPython 3.12.9 / PBS 20250317"
+    },
+    {
+      "component": "ffmpeg-btbn-binary-archive",
+      "disposition": "reused",
+      "kind": "build-runtime",
+      "path": "build_inputs/runtime-archives/ffmpeg-N-125365-g9a01c1cb6a-win64-gpl.zip",
+      "sha256": "52c0383c460f0ec1039088f1591921fb82e3b870b32aab8faf2ff1e5ae14bf9d",
+      "size": 167310447,
+      "url": "https://github.com/BtbN/FFmpeg-Builds/releases/download/autobuild-2026-06-30-13-34/ffmpeg-N-125365-g9a01c1cb6a-win64-gpl.zip",
+      "version": "N-125365-g9a01c1cb6a / 2026-06-30"
+    },
+    {
+      "component": "node-binary-archive",
+      "disposition": "reused",
+      "kind": "build-runtime",
+      "path": "build_inputs/runtime-archives/node-v22.17.0-win-x64.zip",
+      "sha256": "721ab118a3aac8584348b132767eadf51379e0616f0db802cc1e66d7f0d98f85",
+      "size": 35506792,
+      "url": "https://nodejs.org/download/release/v22.17.0/node-v22.17.0-win-x64.zip",
+      "version": "22.17.0"
+    },
+    {
+      "component": "altgraph",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/altgraph-0.17.5-py2.py3-none-any.whl",
+      "sha256": "f3a22400bce1b0c701683820ac4f3b159cd301acab067c51c653e06961600597",
+      "size": 21228,
+      "url": "https://files.pythonhosted.org/packages/a9/ba/000a1996d4308bc65120167c21241a3b205464a2e0b58deda26ae8ac21d1/altgraph-0.17.5-py2.py3-none-any.whl",
+      "version": "0.17.5"
+    },
+    {
+      "component": "ast-serialize",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/ast_serialize-0.6.0-cp39-abi3-win_amd64.whl",
+      "sha256": "113b58346f9ceb664352032770caca817d4a3c86f611c6088e6ef65ddaa70f0e",
+      "size": 1101444,
+      "url": "https://files.pythonhosted.org/packages/47/ae/6710c14ecb276031cf10249f6adf5a59e2d3fdb3b5183bd59f70524067ee/ast_serialize-0.6.0-cp39-abi3-win_amd64.whl",
+      "version": "0.6.0"
+    },
+    {
+      "component": "certifi",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/certifi-2026.7.22-py3-none-any.whl",
+      "sha256": "62f22742b58a1a33014a2b6b706588a8d7e2a88ae7bd1a6ebe8c992928483775",
+      "size": 136983,
+      "url": "https://files.pythonhosted.org/packages/0b/a7/71ac2cff56fec219ed242bb11b8efb69fcc4bec75db06fb7bfe35de520e6/certifi-2026.7.22-py3-none-any.whl",
+      "version": "2026.7.22"
+    },
+    {
+      "component": "charset-normalizer",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/charset_normalizer-3.4.9-cp312-cp312-win_amd64.whl",
+      "sha256": "4b3dac63058cc36820b0dd072f89898604e2d39686fe05321729d00d8ac185a0",
+      "size": 162557,
+      "url": "https://files.pythonhosted.org/packages/80/cc/f920afd1a23c58ccd53c1d36085a71893a4737ff5e66e0371efab6809850/charset_normalizer-3.4.9-cp312-cp312-win_amd64.whl",
+      "version": "3.4.9"
+    },
+    {
+      "component": "colorama",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/colorama-0.4.6-py2.py3-none-any.whl",
+      "sha256": "4f1d9991f5acc0ca119f9d443620b77f9d6b33703e51011c16baf57afb285fc6",
+      "size": 25335,
+      "url": "https://files.pythonhosted.org/packages/d1/d6/3965ed04c63042e047cb6a3e6ed1a63a35087b6a609aa3a15ed8ac56c221/colorama-0.4.6-py2.py3-none-any.whl",
+      "version": "0.4.6"
+    },
+    {
+      "component": "defusedxml",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/defusedxml-0.7.1-py2.py3-none-any.whl",
+      "sha256": "a352e7e428770286cc899e2542b6cdaedb2b4953ff269a210103ec58f6198a61",
+      "size": 25604,
+      "url": "https://files.pythonhosted.org/packages/07/6c/aa3f2f849e01cb6a001cd8554a88d4c77c5c1a31c95bdf1cf9301e6d9ef4/defusedxml-0.7.1-py2.py3-none-any.whl",
+      "version": "0.7.1"
+    },
+    {
+      "component": "exceptiongroup",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/exceptiongroup-1.3.1-py3-none-any.whl",
+      "sha256": "a7a39a3bd276781e98394987d3a5701d0c4edffb633bb7a5144577f82c773598",
+      "size": 16740,
+      "url": "https://files.pythonhosted.org/packages/8a/0e/97c33bf5009bdbac74fd2beace167cab3f978feb69cc36f1ef79360d6c4e/exceptiongroup-1.3.1-py3-none-any.whl",
+      "version": "1.3.1"
+    },
+    {
+      "component": "idna",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/idna-3.18-py3-none-any.whl",
+      "sha256": "7f952cbe720b688055e3f87de14f5c3e5fdaa8bc3928985c4077ca689de849a2",
+      "size": 65455,
+      "url": "https://files.pythonhosted.org/packages/1e/5e/d4e9f1a599fb8e573b7b87160658329fbf28d19eac2718f51fc3def3aa5a/idna-3.18-py3-none-any.whl",
+      "version": "3.18"
+    },
+    {
+      "component": "iniconfig",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/iniconfig-2.3.0-py3-none-any.whl",
+      "sha256": "f631c04d2c48c52b84d0d0549c99ff3859c98df65b3101406327ecc7d53fbf12",
+      "size": 7484,
+      "url": "https://files.pythonhosted.org/packages/cb/b1/3846dd7f199d53cb17f49cba7e651e9ce294d8497c8c150530ed11865bb8/iniconfig-2.3.0-py3-none-any.whl",
+      "version": "2.3.0"
+    },
+    {
+      "component": "librt",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/librt-0.13.0-cp312-cp312-win_amd64.whl",
+      "sha256": "e54a315caf843c8d77e388cadc56ea9ded569935ee2d2347d7ea94992e5aa6fa",
+      "size": 126934,
+      "url": "https://files.pythonhosted.org/packages/c9/7b/2da9c74c1ed25a89cc4e1c8e007ea2eb4a0f1fafa3e70d757fe3242c5c5c/librt-0.13.0-cp312-cp312-win_amd64.whl",
+      "version": "0.13.0"
+    },
+    {
+      "component": "macholib",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/macholib-1.16.4-py2.py3-none-any.whl",
+      "sha256": "da1a3fa8266e30f0ce7e97c6a54eefaae8edd1e5f86f3eb8b95457cae90265ea",
+      "size": 38117,
+      "url": "https://files.pythonhosted.org/packages/c7/d1/a9f36f8ecdf0fb7c9b1e78c8d7af12b8c8754e74851ac7b94a8305540fc7/macholib-1.16.4-py2.py3-none-any.whl",
+      "version": "1.16.4"
+    },
+    {
+      "component": "mypy",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/mypy-2.3.0-cp312-cp312-win_amd64.whl",
+      "sha256": "b1942b9314d4c784b8ea1dbab4972603290e5dd5630f06675f13aec97526bc4c",
+      "size": 11218346,
+      "url": "https://files.pythonhosted.org/packages/cf/96/d8b37d819adec6cfccfb1fd3afc1735d94717ddeafb45536db9c6943e09b/mypy-2.3.0-cp312-cp312-win_amd64.whl",
+      "version": "2.3.0"
+    },
+    {
+      "component": "mypy-extensions",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/mypy_extensions-1.1.0-py3-none-any.whl",
+      "sha256": "1be4cccdb0f2482337c4743e60421de3a356cd97508abadd57d47403e94f5505",
+      "size": 4963,
+      "url": "https://files.pythonhosted.org/packages/79/7b/2c79738432f5c924bef5071f933bcc9efd0473bac3b4aa584a6f7c1c8df8/mypy_extensions-1.1.0-py3-none-any.whl",
+      "version": "1.1.0"
+    },
+    {
+      "component": "packaging",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/packaging-26.2-py3-none-any.whl",
+      "sha256": "5fc45236b9446107ff2415ce77c807cee2862cb6fac22b8a73826d0693b0980e",
+      "size": 100195,
+      "url": "https://files.pythonhosted.org/packages/df/b2/87e62e8c3e2f4b32e5fe99e0b86d576da1312593b39f47d8ceef365e95ed/packaging-26.2-py3-none-any.whl",
+      "version": "26.2"
+    },
+    {
+      "component": "pathspec",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pathspec-1.1.1-py3-none-any.whl",
+      "sha256": "a00ce642f577bf7f473932318056212bc4f8bfdf53128c78bbd5af0b9b20b189",
+      "size": 57328,
+      "url": "https://files.pythonhosted.org/packages/f1/d9/7fb5aa316bc299258e68c73ba3bddbc499654a07f151cba08f6153988714/pathspec-1.1.1-py3-none-any.whl",
+      "version": "1.1.1"
+    },
+    {
+      "component": "pefile",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pefile-2024.8.26-py3-none-any.whl",
+      "sha256": "76f8b485dcd3b1bb8166f1128d395fa3d87af26360c2358fb75b80019b957c6f",
+      "size": 74766,
+      "url": "https://files.pythonhosted.org/packages/54/16/12b82f791c7f50ddec566873d5bdd245baa1491bac11d15ffb98aecc8f8b/pefile-2024.8.26-py3-none-any.whl",
+      "version": "2024.8.26"
+    },
+    {
+      "component": "pillow",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pillow-12.3.0-cp312-cp312-win_amd64.whl",
+      "sha256": "a2b55dd6b2a4c4b7d87ffa56bdb33fdc5fdb9a462173861a7bc097f17d91cb09",
+      "size": 7227137,
+      "url": "https://files.pythonhosted.org/packages/45/89/da2f7971a317f83d807fdd4065c0af40208e59e692cc43d315a71a0e96d1/pillow-12.3.0-cp312-cp312-win_amd64.whl",
+      "version": "12.3.0"
+    },
+    {
+      "component": "pluggy",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pluggy-1.6.0-py3-none-any.whl",
+      "sha256": "e920276dd6813095e9377c0bc5566d94c932c33b27a3e3945d8389c374dd4746",
+      "size": 20538,
+      "url": "https://files.pythonhosted.org/packages/54/20/4d324d65cc6d9205fabedc306948156824eb9f0ee1633355a8f7ec5c66bf/pluggy-1.6.0-py3-none-any.whl",
+      "version": "1.6.0"
+    },
+    {
+      "component": "pygments",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pygments-2.20.0-py3-none-any.whl",
+      "sha256": "81a9e26dd42fd28a23a2d169d86d7ac03b46e2f8b59ed4698fb4785f946d0176",
+      "size": 1231151,
+      "url": "https://files.pythonhosted.org/packages/f4/7e/a72dd26f3b0f4f2bf1dd8923c85f7ceb43172af56d63c7383eb62b332364/pygments-2.20.0-py3-none-any.whl",
+      "version": "2.20.0"
+    },
+    {
+      "component": "pyinstaller",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pyinstaller-6.21.0-py3-none-win_amd64.whl",
+      "sha256": "7fae06c494ce0ebfe6bd3055c0e409def884f63af2e3705d06bd431ad9237fc7",
+      "size": 1397487,
+      "url": "https://files.pythonhosted.org/packages/c1/fa/ca1d7e5257dd8566a9dfc0dfb02f8a8075eeb53d4b2d3c579f1276759042/pyinstaller-6.21.0-py3-none-win_amd64.whl",
+      "version": "6.21.0"
+    },
+    {
+      "component": "pyinstaller-hooks-contrib",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pyinstaller_hooks_contrib-2026.6-py3-none-any.whl",
+      "sha256": "fd13b8ac126b35361175edacd41a0d97080b75dd5f4b594ecefefff969509dd3",
+      "size": 457159,
+      "url": "https://files.pythonhosted.org/packages/e7/31/f2d7343d8ed5f7c4678377886f6ce533e6eaaa131b252ce950114c2a7efa/pyinstaller_hooks_contrib-2026.6-py3-none-any.whl",
+      "version": "2026.6"
+    },
+    {
+      "component": "pyside6",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pyside6-6.11.1-cp310-abi3-win_amd64.whl",
+      "sha256": "0968877ab1fb4ef3587a284da6fe05e8647ada56a6a3750b6395188e01f4aba6",
+      "size": 578377,
+      "url": "https://files.pythonhosted.org/packages/57/f2/d9d8ce1373dabb37e5919f63cd18446556079631d3f2eea3ada03c29f6b8/pyside6-6.11.1-cp310-abi3-win_amd64.whl",
+      "version": "6.11.1"
+    },
+    {
+      "component": "pyside6-addons",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pyside6_addons-6.11.1-cp310-abi3-win_amd64.whl",
+      "sha256": "0d13c4dfd671b050a48e4f8d8ddc724b7248f9c0437e7fc47fdf316278572923",
+      "size": 168816308,
+      "url": "https://files.pythonhosted.org/packages/9a/bd/8adc4d350b3b363f3dfc8fccdcf5bfed25f7e36c2fff30c64e106f4f1572/pyside6_addons-6.11.1-cp310-abi3-win_amd64.whl",
+      "version": "6.11.1"
+    },
+    {
+      "component": "pyside6-essentials",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pyside6_essentials-6.11.1-cp310-abi3-win_amd64.whl",
+      "sha256": "63311bd48e32c584599ab04b9ef7c324082374cd2c9fa533f978fb893bb47e40",
+      "size": 77549267,
+      "url": "https://files.pythonhosted.org/packages/64/0e/b663ecc96ca57b5c91b83b6615d6b174380b0faf30338125c26e053d6aa7/pyside6_essentials-6.11.1-cp310-abi3-win_amd64.whl",
+      "version": "6.11.1"
+    },
+    {
+      "component": "pytest",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pytest-9.1.1-py3-none-any.whl",
+      "sha256": "37a86b45efb9a47a61a36449063e8e18d0cab3161329fc099eb21783169c4f0c",
+      "size": 386536,
+      "url": "https://files.pythonhosted.org/packages/24/25/1de2678b631f5a49215c6c96fff41ba892b0a34df68d6d80292b1b48aa7f/pytest-9.1.1-py3-none-any.whl",
+      "version": "9.1.1"
+    },
+    {
+      "component": "pywin32-ctypes",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/pywin32_ctypes-0.2.3-py3-none-any.whl",
+      "sha256": "8a1513379d709975552d202d942d9837758905c8d01eb82b8bcc30918929e7b8",
+      "size": 30756,
+      "url": "https://files.pythonhosted.org/packages/de/3d/8161f7711c017e01ac9f008dfddd9410dff3674334c233bde66e7ba65bbf/pywin32_ctypes-0.2.3-py3-none-any.whl",
+      "version": "0.2.3"
+    },
+    {
+      "component": "requests",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/requests-2.34.2-py3-none-any.whl",
+      "sha256": "2a0d60c172f83ac6ab31e4554906c0f3b3588d37b5cb939b1c061f4907e278e0",
+      "size": 73075,
+      "url": "https://files.pythonhosted.org/packages/a0/f4/c67b0b3f1b9245e8d266f0f112c500d50e5b4e83cb6f3b71b6528104182a/requests-2.34.2-py3-none-any.whl",
+      "version": "2.34.2"
+    },
+    {
+      "component": "ruff",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/ruff-0.15.21-py3-none-win_amd64.whl",
+      "sha256": "d4b8d9a2f0f12b816b50447f6eccb9f4bb01a6b82c86b50fb3b5354b458dc6d3",
+      "size": 12038772,
+      "url": "https://files.pythonhosted.org/packages/c0/b8/e43466b2a6067ce91e669068f6e28d6c719a920f014b070d5c8731725de3/ruff-0.15.21-py3-none-win_amd64.whl",
+      "version": "0.15.21"
+    },
+    {
+      "component": "setuptools",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/setuptools-83.0.0-py3-none-any.whl",
+      "sha256": "29b23c360f22f414dc7336bb39178cc7bcbf6021ed2733cde173f09dba19abb3",
+      "size": 1008090,
+      "url": "https://files.pythonhosted.org/packages/5d/40/e1e72872c6354b306daef1703549e8e83b4d43cfea356311bf722a043752/setuptools-83.0.0-py3-none-any.whl",
+      "version": "83.0.0"
+    },
+    {
+      "component": "shiboken6",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/shiboken6-6.11.1-cp310-abi3-win_amd64.whl",
+      "sha256": "c2c6863aa80ec18c0f82cea3417837b279cdc60024ac17123461dc9042577df7",
+      "size": 1223647,
+      "url": "https://files.pythonhosted.org/packages/52/b5/3f6fb2ee65b534193fb4ef713dd619dc31dadff5d12c16979a7699ad58be/shiboken6-6.11.1-cp310-abi3-win_amd64.whl",
+      "version": "6.11.1"
+    },
+    {
+      "component": "tomli",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/tomli-2.4.1-cp312-cp312-win_amd64.whl",
+      "sha256": "52c8ef851d9a240f11a88c003eacb03c31fc1c9c4ec64a99a0f922b93874fda9",
+      "size": 108847,
+      "url": "https://files.pythonhosted.org/packages/24/22/4daacd05391b92c55759d55eaee21e1dfaea86ce5c571f10083360adf534/tomli-2.4.1-cp312-cp312-win_amd64.whl",
+      "version": "2.4.1"
+    },
+    {
+      "component": "typing-extensions",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/typing_extensions-4.16.0-py3-none-any.whl",
+      "sha256": "481caa481374e813c1b176ada14e97f1f67a4539ce9cfeb3f350d78d6370c2e8",
+      "size": 45571,
+      "url": "https://files.pythonhosted.org/packages/49/d3/b8441a820a491ddfc024b0b0cf0393375b75ea13866d9c66727e54c2fc80/typing_extensions-4.16.0-py3-none-any.whl",
+      "version": "4.16.0"
+    },
+    {
+      "component": "urllib3",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/urllib3-2.7.0-py3-none-any.whl",
+      "sha256": "9fb4c81ebbb1ce9531cce37674bbc6f1360472bc18ca9a553ede278ef7276897",
+      "size": 131087,
+      "url": "https://files.pythonhosted.org/packages/7f/3e/5db95bcf282c52709639744ca2a8b149baccf648e39c8cc87553df9eae0c/urllib3-2.7.0-py3-none-any.whl",
+      "version": "2.7.0"
+    },
+    {
+      "component": "youtube-transcript-api",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/youtube_transcript_api-1.2.4-py3-none-any.whl",
+      "sha256": "03878759356da5caf5edac77431780b91448fb3d8c21d4496015bdc8a7bc43ff",
+      "size": 485227,
+      "url": "https://files.pythonhosted.org/packages/be/95/129ea37efd6cd6ed00f62baae6543345c677810b8a3bf0026756e1d3cf3c/youtube_transcript_api-1.2.4-py3-none-any.whl",
+      "version": "1.2.4"
+    },
+    {
+      "component": "yt-dlp",
+      "disposition": "downloaded",
+      "kind": "python-build-wheel",
+      "path": "build_inputs/wheels/cp312-win_amd64/yt_dlp-2026.7.4-py3-none-any.whl",
+      "sha256": "f11f2b11d5a8ac4059f9bdf29fa4407dc7c6bb00c5097e95ca22a7a9db518266",
+      "size": 3184705,
+      "url": "https://files.pythonhosted.org/packages/f9/8a/cd4c9b02c10c563adfe78118310129641900e1cd6de888cfae2452072696/yt_dlp-2026.7.4-py3-none-any.whl",
+      "version": "2026.7.4"
+    },
+    {
+      "component": "node-source",
+      "disposition": "reused",
+      "kind": "corresponding-source",
+      "path": "third_party_sources/node/archives/node-v22.17.0.tar.gz",
+      "sha256": "f8bf095ff559033edf04108fb1f14f72e2be337c609d4f83e8af1e299af7f4b4",
+      "size": 100631430,
+      "url": "https://nodejs.org/download/release/v22.17.0/node-v22.17.0.tar.gz",
+      "version": "22.17.0"
+    },
+    {
+      "component": "altgraph",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/altgraph-0.17.5.tar.gz",
+      "sha256": "c87b395dd12fabde9c99573a9749d67da8d29ef9de0125c7f536699b4a9bc9e7",
+      "size": 48428,
+      "url": "https://files.pythonhosted.org/packages/7e/f8/97fdf103f38fed6792a1601dbc16cc8aac56e7459a9fff08c812d8ae177a/altgraph-0.17.5.tar.gz",
+      "version": "0.17.5"
+    },
+    {
+      "component": "ast-serialize",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/ast_serialize-0.6.0.tar.gz",
+      "sha256": "aadd3ffcf4858c9726bf3515f7b199c7eadbe504f96028e4a87172c0da65a8fe",
+      "size": 61489,
+      "url": "https://files.pythonhosted.org/packages/58/ad/0d70a3a2d6e01968d985415259e8ec7ad3f777903f9b1c1f3c8c44642c60/ast_serialize-0.6.0.tar.gz",
+      "version": "0.6.0"
+    },
+    {
+      "component": "certifi",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/certifi-2026.7.22.tar.gz",
+      "sha256": "741e2c3b351ddf169a738da9f2c048608ff7f2c5cc02f1ebc6b118bb090d5d55",
+      "size": 138112,
+      "url": "https://files.pythonhosted.org/packages/a3/c2/24167ea9858356b47a87a50d39908bfdb72ceeefe0041586e704e5376b3a/certifi-2026.7.22.tar.gz",
+      "version": "2026.7.22"
+    },
+    {
+      "component": "charset-normalizer",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/charset_normalizer-3.4.9.tar.gz",
+      "sha256": "673611bbd43f0810bec0b0f028ddeaaa501190339cac411f347ac76917c3ae7b",
+      "size": 152439,
+      "url": "https://files.pythonhosted.org/packages/bd/2a/23f34ec9d04624958e137efdc394888716353190e75f25dd22c7a2c7a8aa/charset_normalizer-3.4.9.tar.gz",
+      "version": "3.4.9"
+    },
+    {
+      "component": "colorama",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/colorama-0.4.6.tar.gz",
+      "sha256": "08695f5cb7ed6e0531a20572697297273c47b8cae5a63ffc6d6ed5c201be6e44",
+      "size": 27697,
+      "url": "https://files.pythonhosted.org/packages/d8/53/6f443c9a4a8358a93a6792e2acffb9d9d5cb0a5cfd8802644b7b1c9a02e4/colorama-0.4.6.tar.gz",
+      "version": "0.4.6"
+    },
+    {
+      "component": "defusedxml",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/defusedxml-0.7.1.tar.gz",
+      "sha256": "1bb3032db185915b62d7c6209c5a8792be6a32ab2fedacc84e01b52c51aa3e69",
+      "size": 75520,
+      "url": "https://files.pythonhosted.org/packages/0f/d5/c66da9b79e5bdb124974bfe172b4daf3c984ebd9c2a06e2b8a4dc7331c72/defusedxml-0.7.1.tar.gz",
+      "version": "0.7.1"
+    },
+    {
+      "component": "exceptiongroup",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/exceptiongroup-1.3.1.tar.gz",
+      "sha256": "8b412432c6055b0b7d14c310000ae93352ed6754f70fa8f7c34141f91c4e3219",
+      "size": 30371,
+      "url": "https://files.pythonhosted.org/packages/50/79/66800aadf48771f6b62f7eb014e352e5d06856655206165d775e675a02c9/exceptiongroup-1.3.1.tar.gz",
+      "version": "1.3.1"
+    },
+    {
+      "component": "idna",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/idna-3.18.tar.gz",
+      "sha256": "ffb385a7e039654cef1ab9ef32c6fafe283c0c0467bba1d9029738ce4a14a848",
+      "size": 196711,
+      "url": "https://files.pythonhosted.org/packages/cd/63/9496c57188a2ee585e0f1db071d75089a11e98aa86eb99d9d7618fc1edce/idna-3.18.tar.gz",
+      "version": "3.18"
+    },
+    {
+      "component": "iniconfig",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/iniconfig-2.3.0.tar.gz",
+      "sha256": "c76315c77db068650d49c5b56314774a7804df16fee4402c1f19d6d15d8c4730",
+      "size": 20503,
+      "url": "https://files.pythonhosted.org/packages/72/34/14ca021ce8e5dfedc35312d08ba8bf51fdd999c576889fc2c24cb97f4f10/iniconfig-2.3.0.tar.gz",
+      "version": "2.3.0"
+    },
+    {
+      "component": "librt",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/librt-0.13.0.tar.gz",
+      "sha256": "1d2a610c14ac0d0750ee0a3ab8548e83155258387891caaca04def4bf7289781",
+      "size": 211402,
+      "url": "https://files.pythonhosted.org/packages/dc/2f/3908645ddddab7120b46295e541ead308109fa48dbec7d67d7a778870d60/librt-0.13.0.tar.gz",
+      "version": "0.13.0"
+    },
+    {
+      "component": "macholib",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/macholib-1.16.4.tar.gz",
+      "sha256": "f408c93ab2e995cd2c46e34fe328b130404be143469e41bc366c807448979362",
+      "size": 59427,
+      "url": "https://files.pythonhosted.org/packages/10/2f/97589876ea967487978071c9042518d28b958d87b17dceb7cdc1d881f963/macholib-1.16.4.tar.gz",
+      "version": "1.16.4"
+    },
+    {
+      "component": "mypy",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/mypy-2.3.0.tar.gz",
+      "sha256": "465965d41cd9a2726694e983e8ce7113259327bec798115d1e1dfa2a52fb666e",
+      "size": 3988104,
+      "url": "https://files.pythonhosted.org/packages/12/af/4e516a05d3ca2eb9283e9ec45b2c02225c1514dd6da49fd3c9eaa6639370/mypy-2.3.0.tar.gz",
+      "version": "2.3.0"
+    },
+    {
+      "component": "mypy-extensions",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/mypy_extensions-1.1.0.tar.gz",
+      "sha256": "52e68efc3284861e772bbcd66823fde5ae21fd2fdb51c62a211403730b916558",
+      "size": 6343,
+      "url": "https://files.pythonhosted.org/packages/a2/6e/371856a3fb9d31ca8dac321cda606860fa4548858c0cc45d9d1d4ca2628b/mypy_extensions-1.1.0.tar.gz",
+      "version": "1.1.0"
+    },
+    {
+      "component": "packaging",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/packaging-26.2.tar.gz",
+      "sha256": "ff452ff5a3e828ce110190feff1178bb1f2ea2281fa2075aadb987c2fb221661",
+      "size": 228134,
+      "url": "https://files.pythonhosted.org/packages/d7/f1/e7a6dd94a8d4a5626c03e4e99c87f241ba9e350cd9e6d75123f992427270/packaging-26.2.tar.gz",
+      "version": "26.2"
+    },
+    {
+      "component": "pathspec",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pathspec-1.1.1.tar.gz",
+      "sha256": "17db5ecd524104a120e173814c90367a96a98d07c45b2e10c2f3919fff91bf5a",
+      "size": 135180,
+      "url": "https://files.pythonhosted.org/packages/5a/82/42f767fc1c1143d6fd36efb827202a2d997a375e160a71eb2888a925aac1/pathspec-1.1.1.tar.gz",
+      "version": "1.1.1"
+    },
+    {
+      "component": "pefile",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pefile-2024.8.26.tar.gz",
+      "sha256": "3ff6c5d8b43e8c37bb6e6dd5085658d658a7a0bdcd20b6a07b1fcfc1c4e9d632",
+      "size": 76008,
+      "url": "https://files.pythonhosted.org/packages/03/4f/2750f7f6f025a1507cd3b7218691671eecfd0bbebebe8b39aa0fe1d360b8/pefile-2024.8.26.tar.gz",
+      "version": "2024.8.26"
+    },
+    {
+      "component": "pillow",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pillow-12.3.0.tar.gz",
+      "sha256": "3b8182a766685eaa002637e28b4ec8d6b18819a0c71f579bf0dbaa5830297cce",
+      "size": 47025035,
+      "url": "https://files.pythonhosted.org/packages/1c/3d/bb7fca845737cf9d7dbde16ed1843984665ff2e0a518f5db43e77ec540b9/pillow-12.3.0.tar.gz",
+      "version": "12.3.0"
+    },
+    {
+      "component": "pluggy",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pluggy-1.6.0.tar.gz",
+      "sha256": "7dcc130b76258d33b90f61b658791dede3486c3e6bfb003ee5c9bfb396dd22f3",
+      "size": 69412,
+      "url": "https://files.pythonhosted.org/packages/f9/e2/3e91f31a7d2b083fe6ef3fa267035b518369d9511ffab804f839851d2779/pluggy-1.6.0.tar.gz",
+      "version": "1.6.0"
+    },
+    {
+      "component": "pygments",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pygments-2.20.0.tar.gz",
+      "sha256": "6757cd03768053ff99f3039c1a36d6c0aa0b263438fcab17520b30a303a82b5f",
+      "size": 4955991,
+      "url": "https://files.pythonhosted.org/packages/c3/b2/bc9c9196916376152d655522fdcebac55e66de6603a76a02bca1b6414f6c/pygments-2.20.0.tar.gz",
+      "version": "2.20.0"
+    },
+    {
+      "component": "pyinstaller",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pyinstaller-6.21.0.tar.gz",
+      "sha256": "bb9fab705983e393a2d1cac77d6972513057ad800215fd861dc15ff5272e98fd",
+      "size": 4061519,
+      "url": "https://files.pythonhosted.org/packages/d5/4d/ec706c3fcf39e26888c35b39615ff4d5865d184069666c47492cff1fbe50/pyinstaller-6.21.0.tar.gz",
+      "version": "6.21.0"
+    },
+    {
+      "component": "pyinstaller-hooks-contrib",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pyinstaller_hooks_contrib-2026.6.tar.gz",
+      "sha256": "bef5002c32f4f50bd55b005da12cff64eca8783e7eaf86a06a62410164bab725",
+      "size": 173354,
+      "url": "https://files.pythonhosted.org/packages/94/5b/c9fe0db5e83ee1c39b2258fa21d23b15e1a60786b6c5990ee5074ead8bb6/pyinstaller_hooks_contrib-2026.6.tar.gz",
+      "version": "2026.6"
+    },
+    {
+      "component": "pytest",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pytest-9.1.1.tar.gz",
+      "sha256": "1088fbde8f2b49d95a549a195707afa7a76a3ce9bcadc26b6d71f0ffda5fe313",
+      "size": 1636369,
+      "url": "https://files.pythonhosted.org/packages/e4/47/b9efed96c114afcfa3c9d3fe98a76a1d14c74a9e266d397cf6eb64be5e01/pytest-9.1.1.tar.gz",
+      "version": "9.1.1"
+    },
+    {
+      "component": "pywin32-ctypes",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/pywin32-ctypes-0.2.3.tar.gz",
+      "sha256": "d162dc04946d704503b2edc4d55f3dba5c1d539ead017afa00142c38b9885755",
+      "size": 29471,
+      "url": "https://files.pythonhosted.org/packages/85/9f/01a1a99704853cb63f253eea009390c88e7131c67e66a0a02099a8c917cb/pywin32-ctypes-0.2.3.tar.gz",
+      "version": "0.2.3"
+    },
+    {
+      "component": "requests",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/requests-2.34.2.tar.gz",
+      "sha256": "f288924cae4e29463698d6d60bc6a4da69c89185ad1e0bcc4104f584e960b9ed",
+      "size": 142856,
+      "url": "https://files.pythonhosted.org/packages/ac/c3/e2a2b89f2d3e2179abd6d00ebd70bff6273f37fb3e0cc209f48b39d00cbf/requests-2.34.2.tar.gz",
+      "version": "2.34.2"
+    },
+    {
+      "component": "ruff",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/ruff-0.15.21.tar.gz",
+      "sha256": "d0cfc841c572283c36548f82664a54ce6565567f1b0d5b4cf2caac693d8b7500",
+      "size": 4769401,
+      "url": "https://files.pythonhosted.org/packages/0f/36/6f65aa9989acdec45d417192d8f4e7921931d8a6cf87ac74bce3eed98a8e/ruff-0.15.21.tar.gz",
+      "version": "0.15.21"
+    },
+    {
+      "component": "setuptools",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/setuptools-83.0.0.tar.gz",
+      "sha256": "025bccbbf0fa05b6192bc64ae1e7b16e001fd6d6d4d5de03c97b1c1ade523bef",
+      "size": 1154254,
+      "url": "https://files.pythonhosted.org/packages/34/26/f5d29e25ffdb535afef2d35cdb55b325298f96debd670da4c325e08d70f4/setuptools-83.0.0.tar.gz",
+      "version": "83.0.0"
+    },
+    {
+      "component": "tomli",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/tomli-2.4.1.tar.gz",
+      "sha256": "7c7e1a961a0b2f2472c1ac5b69affa0ae1132c39adcb67aba98568702b9cc23f",
+      "size": 17543,
+      "url": "https://files.pythonhosted.org/packages/22/de/48c59722572767841493b26183a0d1cc411d54fd759c5607c4590b6563a6/tomli-2.4.1.tar.gz",
+      "version": "2.4.1"
+    },
+    {
+      "component": "typing-extensions",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/typing_extensions-4.16.0.tar.gz",
+      "sha256": "dc983d19a509c94dba722ee6abd33940f7c05a89e243c47e907eb4db6f1a43e5",
+      "size": 113555,
+      "url": "https://files.pythonhosted.org/packages/f6/cc/6253133b5bb138fc3306cebfbda2c520f545d36b5be2c7255cc528bb45d6/typing_extensions-4.16.0.tar.gz",
+      "version": "4.16.0"
+    },
+    {
+      "component": "urllib3",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/urllib3-2.7.0.tar.gz",
+      "sha256": "231e0ec3b63ceb14667c67be60f2f2c40a518cb38b03af60abc813da26505f4c",
+      "size": 433602,
+      "url": "https://files.pythonhosted.org/packages/53/0c/06f8b233b8fd13b9e5ee11424ef85419ba0d8ba0b3138bf360be2ff56953/urllib3-2.7.0.tar.gz",
+      "version": "2.7.0"
+    },
+    {
+      "component": "youtube-transcript-api",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/youtube_transcript_api-1.2.4.tar.gz",
+      "sha256": "b72d0e96a335df599d67cee51d49e143cff4f45b84bcafc202ff51291603ddcd",
+      "size": 469839,
+      "url": "https://files.pythonhosted.org/packages/60/43/4104185a2eaa839daa693b30e15c37e7e58795e8e09ec414f22b3db54bec/youtube_transcript_api-1.2.4.tar.gz",
+      "version": "1.2.4"
+    },
+    {
+      "component": "yt-dlp",
+      "disposition": "reused",
+      "kind": "python-source-distribution",
+      "path": "third_party_sources/python-packages/sdists/yt_dlp-2026.7.4.tar.gz",
+      "sha256": "b094813404f87a9dd2186f00815231df32e5fd8a5403be0f807b3bb2d21a4432",
+      "size": 3049326,
+      "url": "https://files.pythonhosted.org/packages/47/c5/9972af4b472b0d55badf841ebafd2f98944cb0ae0f46e11d01f363ea5b91/yt_dlp-2026.7.4.tar.gz",
+      "version": "2026.7.4"
+    }
+  ],
+  "network_phase": "preparation-only",
+  "node_shasums": {
+    "path": "third_party_sources/node/SHASUMS256.txt",
+    "sha256": "7519fede70def5e5afa6f723762341a6a7832a6459226f7a1619c683ff1155c4",
+    "size": 3777,
+    "url": "https://nodejs.org/download/release/v22.17.0/SHASUMS256.txt"
+  },
+  "public_distribution_verdict": "HOLD",
+  "schema_version": 1,
+  "wheel_target": {
+    "abi": "cp312",
+    "directory": "build_inputs/wheels/cp312-win_amd64",
+    "interpreter": "cp312",
+    "platform": "win_amd64",
+    "python": "3.12"
+  }
+}
