@@ -388,3 +388,344 @@ def test_distribution_boundary_rejects_source_hash_mismatch(tmp_path):
     errors = boundary.verify_project(tmp_path)
 
     assert any("source-hash mismatch: pyproject.toml" in error for error in errors)
+
+
+def _write_onefolder_binary_map(tree: Path) -> None:
+    import json as _json
+
+    map_path = tree / "compliance" / "BINARY-TO-SOURCE-MAP.json"
+    map_path.parent.mkdir(parents=True, exist_ok=True)
+    if not map_path.exists():
+        map_path.write_text("{}\n", encoding="utf-8")
+    rows = []
+    tree_digest = hashlib.sha256()
+    files = sorted(
+        (item for item in tree.rglob("*") if item.is_file()),
+        key=lambda item: item.relative_to(tree).as_posix().casefold(),
+    )
+    for item in files:
+        relative = item.relative_to(tree).as_posix()
+        self_map = relative.casefold() == "compliance/binary-to-source-map.json"
+        digest = hashlib.sha256(item.read_bytes()).hexdigest()
+        rows.append(
+            {
+                "path": relative,
+                "size": "SELF-REFERENTIAL" if self_map else item.stat().st_size,
+                "sha256": "SELF-REFERENTIAL" if self_map else digest,
+                "components": ["project"],
+                "mapping_status": "PASS",
+            }
+        )
+        tree_digest.update(relative.encode("utf-8"))
+        tree_digest.update(b"\0")
+        tree_digest.update(b"SELF-REFERENTIAL" if self_map else bytes.fromhex(digest))
+        tree_digest.update(b"\0")
+    map_path.write_text(
+        _json.dumps(
+            {
+                "files": rows,
+                "file_count": len(rows),
+                "tree_sha256": tree_digest.hexdigest(),
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _write_onefolder_directory_manifest(tree: Path, manifest_path: Path) -> None:
+    import json as _json
+
+    files = {}
+    for item in sorted(tree.rglob("*")):
+        if not item.is_file():
+            continue
+        relative = item.relative_to(tree).as_posix()
+        files[relative] = {
+            "sha256": hashlib.sha256(item.read_bytes()).hexdigest(),
+            "size": item.stat().st_size,
+        }
+    replaceable = sorted(
+        relative
+        for relative in files
+        if relative.split("/", 1)[0] in ("PySide6", "shiboken6")
+    )
+    manifest_path.write_text(
+        _json.dumps(
+            {
+                "schema_version": 1,
+                "application_name": "Neural Extractor V3",
+                "release_version": "3.0.8",
+                "platform": "windows",
+                "architecture": "x64",
+                "channel": "stable",
+                "root_name": packaged.ONEFOLDER_ROOT_NAME,
+                "executable": "NeuralExtractorV3.exe",
+                "total_size": sum(record["size"] for record in files.values()),
+                "files": files,
+                "replaceable_paths": replaceable,
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
+def _valid_onefolder_tree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> tuple[Path, Path]:
+    import json as _json
+
+    tree = tmp_path / packaged.ONEFOLDER_ROOT_NAME
+    tree.mkdir()
+    (tree / "NeuralExtractorV3.exe").write_bytes(b"\x90" * (1024 * 1024 + 64))
+    (tree / "bin").mkdir()
+    for name in ("node.exe", "ffmpeg.exe", "ffprobe.exe"):
+        (tree / "bin" / name).write_bytes(f"tool:{name}".encode())
+    monkeypatch.setattr(
+        packaged,
+        "ONEFOLDER_PINNED_EXECUTABLE_SHA256",
+        {
+            f"bin/{name}": hashlib.sha256(f"tool:{name}".encode()).hexdigest()
+            for name in ("node.exe", "ffmpeg.exe", "ffprobe.exe")
+        },
+    )
+    qt_files = {
+        "PySide6/Qt6Core.dll": b"qt-core-fixture",
+        "PySide6/plugins/platforms/qwindows.dll": b"qt-platform-fixture",
+        "shiboken6/shiboken6.abi3.dll": b"shiboken-fixture",
+    }
+    for relative, payload in qt_files.items():
+        destination = tree / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_bytes(payload)
+    qt_manifest = _json.dumps(
+        {
+            "schema_version": 1,
+            "files": [
+                {
+                    "path": relative,
+                    "size": len(payload),
+                    "sha256": hashlib.sha256(payload).hexdigest(),
+                }
+                for relative, payload in sorted(qt_files.items())
+            ],
+        }
+    ).encode()
+    (tree / "QT-PYSIDE-COMPONENTS.json").write_bytes(qt_manifest)
+    metadata = b'{"application_version": "3.0.8"}'
+    (tree / "PROJECT-METADATA.json").write_bytes(metadata)
+    (tree / "README.md").write_text("install instructions", encoding="utf-8")
+    (tree / "LICENSE").write_text("MIT", encoding="utf-8")
+    (tree / "THIRD_PARTY_LICENSES.txt").write_text("inventory", encoding="utf-8")
+    (tree / "THIRD_PARTY_NOTICES.md").write_text("notices", encoding="utf-8")
+    (tree / "SOURCE-HASHES.sha256").write_text(
+        f"{'0' * 64}  src/main.py\n", encoding="utf-8"
+    )
+    (tree / "requirements.lock").write_text("package==1.0", encoding="utf-8")
+    license_file = tree / "licenses" / "Example-LICENSE.txt"
+    license_file.parent.mkdir()
+    license_file.write_bytes(b"license text")
+    (tree / "licenses" / "RELEASE-LICENSE-MANIFEST.sha256").write_text(
+        f"{hashlib.sha256(b'license text').hexdigest()}  Example-LICENSE.txt\n",
+        encoding="utf-8",
+    )
+    (tree / "docs").mkdir()
+    for name in (
+        "BUILD-REPRODUCIBILITY.md",
+        "DEPENDENCY-SOURCE.md",
+        "LGPL-COMPLIANCE.md",
+        "OPTIONAL-PO-PROVIDER.md",
+        "QT-BUILD-PROVENANCE.md",
+        "QT-REPLACEMENT-GUIDE.md",
+    ):
+        (tree / "docs" / name).write_text(f"doc {name}", encoding="utf-8")
+    compliance = tree / "compliance"
+    compliance.mkdir()
+    (compliance / "BUILD-LABEL.txt").write_text(
+        "Public-distribution verdict: HOLD\n", encoding="utf-8"
+    )
+    (compliance / "PROJECT-METADATA.json").write_bytes(metadata)
+    (compliance / "QT-PYSIDE-COMPONENTS.json").write_bytes(qt_manifest)
+    _write_onefolder_binary_map(tree)
+    manifest_path = tmp_path / packaged.ONEFOLDER_DIRECTORY_MANIFEST_NAME
+    _write_onefolder_directory_manifest(tree, manifest_path)
+    return tree, manifest_path
+
+
+def _no_launcher_scan(_payload: bytes) -> list[str]:
+    return []
+
+
+def test_onefolder_verifier_accepts_valid_tree(tmp_path, monkeypatch):
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert errors == []
+
+
+def test_onefolder_verifier_accepts_valid_zip(tmp_path, monkeypatch):
+    import zipfile as _zipfile
+
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    archive = tmp_path / "NeuralExtractorV3-3.0.8-windows-x64.zip"
+    with _zipfile.ZipFile(archive, "w") as handle:
+        for item in sorted(tree.rglob("*")):
+            if item.is_file():
+                arcname = f"{tree.name}/{item.relative_to(tree).as_posix()}"
+                handle.writestr(arcname, item.read_bytes())
+
+    errors = packaged.verify_onefolder(archive, manifest, launcher_scan=_no_launcher_scan)
+
+    assert errors == []
+
+
+def test_onefolder_verifier_rejects_unknown_executable(tmp_path, monkeypatch):
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    (tree / "bin" / "helper.exe").write_bytes(b"unknown tool")
+    _write_onefolder_binary_map(tree)
+    _write_onefolder_directory_manifest(tree, manifest)
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert errors == ["unknown executable in one-folder tree: bin/helper.exe"]
+
+
+def test_onefolder_verifier_rejects_pyqt_and_provider_payloads(tmp_path, monkeypatch):
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    pyqt = tree / "PyQt6" / "QtCore.pyd"
+    pyqt.parent.mkdir()
+    pyqt.write_bytes(b"pyqt payload")
+    provider = tree / "yt_dlp_plugins" / "getpot_bgutil.py"
+    provider.parent.mkdir()
+    provider.write_bytes(b"provider payload")
+    _write_onefolder_binary_map(tree)
+    _write_onefolder_directory_manifest(tree, manifest)
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert any("PyQt code or binary is forbidden: PyQt6/QtCore.pyd" in e for e in errors)
+    assert any(
+        "in-process provider code is forbidden: yt_dlp_plugins/getpot_bgutil.py" in e
+        for e in errors
+    )
+
+
+def test_onefolder_verifier_rejects_prohibited_legacy_hash(tmp_path, monkeypatch):
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    legacy = tree / "extra-archive.zip"
+    legacy.write_bytes(b"legacy one-file payload")
+    monkeypatch.setattr(
+        packaged,
+        "PROHIBITED_LEGACY_SHA256S",
+        frozenset({hashlib.sha256(b"legacy one-file payload").hexdigest()}),
+    )
+    _write_onefolder_binary_map(tree)
+    _write_onefolder_directory_manifest(tree, manifest)
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert errors == [
+        "prohibited legacy artifact hash in one-folder tree: extra-archive.zip"
+    ]
+
+
+def test_onefolder_verifier_rejects_missing_qt_inventory(tmp_path, monkeypatch):
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    (tree / "QT-PYSIDE-COMPONENTS.json").unlink()
+    (tree / "compliance" / "QT-PYSIDE-COMPONENTS.json").unlink()
+    _write_onefolder_binary_map(tree)
+    _write_onefolder_directory_manifest(tree, manifest)
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert any(
+        "missing required one-folder paths" in e and "QT-PYSIDE-COMPONENTS.json" in e
+        for e in errors
+    )
+
+
+def test_onefolder_verifier_rejects_qt_inventory_hash_mismatch(tmp_path, monkeypatch):
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    (tree / "PySide6" / "Qt6Core.dll").write_bytes(b"user replaced qt library")
+    _write_onefolder_binary_map(tree)
+    _write_onefolder_directory_manifest(tree, manifest)
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert any(
+        "Qt/PySide inventory size mismatch: PySide6/Qt6Core.dll" in e
+        or "Qt/PySide inventory hash mismatch: PySide6/Qt6Core.dll" in e
+        for e in errors
+    )
+
+
+def test_onefolder_verifier_rejects_unexpected_file(tmp_path, monkeypatch):
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    (tree / "stray-file.bin").write_bytes(b"not built by the pipeline")
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert any("binary-map coverage differs" in e and "stray-file.bin" in e for e in errors)
+    assert any("directory-manifest coverage differs" in e for e in errors)
+
+
+def test_onefolder_verifier_rejects_unresolved_native_mapping(tmp_path, monkeypatch):
+    import json as _json
+
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    map_path = tree / "compliance" / "BINARY-TO-SOURCE-MAP.json"
+    payload = _json.loads(map_path.read_text(encoding="utf-8"))
+    for row in payload["files"]:
+        if row["path"] == "bin/node.exe":
+            row["mapping_status"] = "HOLD"
+            row["components"] = []
+    map_path.write_text(_json.dumps(payload), encoding="utf-8")
+    _write_onefolder_directory_manifest(tree, manifest)
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert any(
+        "unresolved native/source mapping in binary map: bin/node.exe" in e
+        for e in errors
+    )
+
+
+def test_onefolder_verifier_requires_directory_manifest(tmp_path, monkeypatch):
+    tree, _manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+
+    errors = packaged.verify_onefolder(tree, None, launcher_scan=_no_launcher_scan)
+
+    assert any("directory update manifest is required" in e for e in errors)
+
+
+def test_onefolder_verifier_rejects_directory_manifest_hash_mismatch(
+    tmp_path, monkeypatch
+):
+    import json as _json
+
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    payload = _json.loads(manifest.read_text(encoding="utf-8"))
+    payload["files"]["README.md"]["sha256"] = "0" * 64
+    manifest.write_text(_json.dumps(payload), encoding="utf-8")
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert any("directory-manifest hash mismatch: README.md" in e for e in errors)
+
+
+def test_onefolder_verifier_rejects_runtime_state(tmp_path, monkeypatch):
+    tree, manifest = _valid_onefolder_tree(tmp_path, monkeypatch)
+    (tree / "debug.log").write_bytes(b"log line")
+    (tree / "cookies.txt").write_bytes(b"cookie jar")
+    _write_onefolder_binary_map(tree)
+    _write_onefolder_directory_manifest(tree, manifest)
+
+    errors = packaged.verify_onefolder(tree, manifest, launcher_scan=_no_launcher_scan)
+
+    assert any(
+        "runtime state must not ship in the release tree: debug.log" in e for e in errors
+    )
+    assert any(
+        "runtime state must not ship in the release tree: cookies.txt" in e
+        for e in errors
+    )
