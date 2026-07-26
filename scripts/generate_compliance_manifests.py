@@ -12,9 +12,11 @@ LICENSE_ROOT = PROJECT_ROOT / "licenses"
 LICENSE_OUTPUT = LICENSE_ROOT / "RELEASE-LICENSE-MANIFEST.sha256"
 
 SOURCE_FILES = (
+    ".github/workflows/build-bridge-release.yml",
     ".github/workflows/build-release.yml",
     ".gitignore",
     "LICENSE",
+    "NeuralExtractorV3-bridge-onefile.spec",
     "NeuralExtractorV3.spec",
     "PROJECT-METADATA.json",
     "README.md",
