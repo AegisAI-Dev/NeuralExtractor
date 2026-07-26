@@ -576,3 +576,68 @@ def test_packaged_updater_smoke_covers_confirmation_and_rollback_paths():
 
 def test_bridge_version_matches_the_application_source():
     assert VERSION == BRIDGE_VERSION
+
+def test_archive_scan_uses_the_pinned_python_module_not_a_path_lookup(
+    bridge_workflow: str,
+):
+    """The bare console script is not on the Actions PATH; use the pinned env."""
+    block = bridge_workflow.split(
+        "Scan the packaged EXE for PyQt6 and provider payloads", 1
+    )[1].split("- name:", 1)[0]
+    code = "\n".join(
+        line for line in block.splitlines() if not line.strip().startswith("#")
+    )
+    assert "pyi-archive_viewer" not in code, "the bare console script is not resolvable"
+    assert "pyi-archive-viewer" not in code
+    assert "$env:PYTHON_EXE -m PyInstaller.utils.cliutils.archive_viewer" in code
+    assert "-l " in code
+    # The scan must bind to the interpreter that owns the PyInstaller install.
+    assert "$env:PATH" not in code, "PATH must not be mutated for this scan"
+
+
+def test_archive_scan_fails_closed_on_exit_code_and_empty_output(bridge_workflow: str):
+    block = bridge_workflow.split(
+        "Scan the packaged EXE for PyQt6 and provider payloads", 1
+    )[1].split("- name:", 1)[0]
+    assert "$archiveExit = $LASTEXITCODE" in block
+    assert "$archiveExit -ne 0" in block
+    assert "IsNullOrWhiteSpace($archiveListing)" in block
+    assert block.count("exit 1") >= 3
+
+
+def test_archive_scan_keeps_every_boundary_check(bridge_workflow: str):
+    block = bridge_workflow.split(
+        "Scan the packaged EXE for PyQt6 and provider payloads", 1
+    )[1].split("- name:", 1)[0]
+    for runtime in ("bin\\node.exe", "bin\\ffmpeg.exe", "bin\\ffprobe.exe"):
+        assert runtime in block, f"required bundled runtime check lost: {runtime}"
+    assert "Packaged runtime is missing" in block
+    assert "verify_packaged_licensing.py" in block
+    assert "--bridge-boundary" in block
+    # PyQt/provider rejection lives in the bridge-boundary verifier.
+    verifier = (PROJECT_ROOT / "scripts" / "verify_packaged_licensing.py").read_text(
+        encoding="utf-8"
+    )
+    assert "def verify_bridge_boundary" in verifier
+    assert "_PYQT_TOKEN" in verifier and "_PROVIDER_TOKEN" in verifier
+    assert "PROHIBITED_LEGACY_SHA256S" in verifier
+
+
+def test_prohibited_hash_scan_step_remains(bridge_workflow: str):
+    assert "Scan outputs for prohibited legacy hashes" in bridge_workflow
+    # The two prohibited digests are declared once as workflow-level env vars.
+    assert (
+        'PROHIBITED_LEGACY_SHA256_A: "0d4d4bdf1eabf5af88c1094732ae28cf55f12a0dc36377'
+        'd90088eb54537b82ac"'
+    ) in bridge_workflow
+    assert (
+        'PROHIBITED_LEGACY_SHA256_B: "02fbde8845bcb7b8946a44f320aa1f88a63a70ceac9765'
+        'f800276ce11bfa6ed7"'
+    ) in bridge_workflow
+    block = bridge_workflow.split("Scan outputs for prohibited legacy hashes", 1)[1].split(
+        "- name:", 1
+    )[0]
+    assert "$env:PROHIBITED_LEGACY_SHA256_A" in block
+    assert "$env:PROHIBITED_LEGACY_SHA256_B" in block
+    assert "Prohibited legacy artifact detected" in block
+    assert "exit 1" in block

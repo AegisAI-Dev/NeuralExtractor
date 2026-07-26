@@ -374,8 +374,30 @@ jobs:
       - name: Scan the packaged EXE for PyQt6 and provider payloads
         shell: pwsh
         run: |
-          $archiveListing = & pyi-archive_viewer "dist\NeuralExtractorV3.exe" -l
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # PyInstaller lives in the pinned CPython runtime behind $env:PYTHON_EXE
+          # and its Scripts directory is not on the Actions PATH, so the bare
+          # `pyi-archive_viewer` console script is not resolvable. Invoke the
+          # module through the pinned interpreter: that also guarantees the scan
+          # uses exactly the PyInstaller installation that produced this EXE.
+          #
+          # `-l` lists the CArchive table of contents, which is what these checks
+          # need (bin\node.exe, bin\ffmpeg.exe, bin\ffprobe.exe). The embedded PYZ
+          # appears as a single 'z' entry; its module names are inspected by
+          # verify_packaged_licensing.py --bridge-boundary below, which opens the
+          # PYZ directly, so recursive listing (-r) is not required here.
+          $archiveLines = & $env:PYTHON_EXE -m PyInstaller.utils.cliutils.archive_viewer -l "dist\NeuralExtractorV3.exe"
+          $archiveExit = $LASTEXITCODE
+          if ($archiveExit -ne 0) {
+            Write-Error "Packaged archive listing failed with exit code $archiveExit; PyInstaller.utils.cliutils.archive_viewer could not import or read dist\NeuralExtractorV3.exe."
+            exit 1
+          }
+          $archiveListing = ($archiveLines | Out-String)
+          if ([string]::IsNullOrWhiteSpace($archiveListing)) {
+            Write-Error "Packaged archive listing was empty; the boundary scan cannot be trusted."
+            exit 1
+          }
+          # The listing renders Python reprs, so archive paths carry doubled
+          # backslashes; these literals match that form exactly.
           foreach ($runtime in @("bin\\node.exe", "bin\\ffmpeg.exe", "bin\\ffprobe.exe")) {
             if (-not ($archiveListing -match [regex]::Escape($runtime))) {
               Write-Error "Packaged runtime is missing: $runtime"
