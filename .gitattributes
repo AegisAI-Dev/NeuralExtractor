@@ -69,10 +69,17 @@
 licenses/**             -text
 third_party_sources/**  -text
 
-# Offline build inputs are downloaded, hash-pinned payloads (archives, wheels)
-# plus their pinned preparation manifest. They are byte-exact evidence, so no
-# conversion may ever apply.
-build_inputs/**         -text
+# Offline build inputs are downloaded, hash-pinned payloads (archives, wheels).
+# They are byte-exact evidence, so no conversion may ever apply.
+/build_inputs/**        -text
+
+# Exception, and it must stay the LAST word on this path: the preparation
+# manifest is a project-generated, committed text file, not a downloaded
+# payload. Leaving it under the -text rule above made Git deliver the blob
+# verbatim while SOURCE-HASHES.sha256 recorded CRLF working-tree bytes, which
+# is what failed the clean Actions checkout. Pin it to canonical LF so every
+# platform materializes the exact bytes the manifest records.
+/build_inputs/PREPARATION-MANIFEST.json text eol=lf
 
 # The generated license manifest is project-owned, not third-party content, so
 # it stays canonical LF even though it lives under licenses/.
