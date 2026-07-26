@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import tempfile
+from collections.abc import Callable
 from pathlib import Path
 
 from neural_extractor_v3.config import APP_NAME, VERSION, assets_dir, base_dir, bin_dir
@@ -336,17 +337,104 @@ def run_gui_startup_smoke(
     return app.exec()
 
 
+def _run_internal_smoke(name: str, runner: Callable[[], int]) -> int:
+    """Run an internal smoke so it can never hang a windowed executable.
+
+    The packaged build is a windowed (``console=False``) PyInstaller binary. An
+    unhandled exception there is caught by PyInstaller's windowed traceback
+    handler, which shows a modal dialog: with no interactive desktop the process
+    then waits forever and a supervising CI step can only time out. Internal
+    smokes must instead fail fast and loudly, so every exception is reported on
+    stderr and turned into a non-zero exit code.
+
+    This wrapper is reached only through the hidden ``--internal-*-smoke``
+    flags, so ordinary application behaviour is unchanged.
+    """
+    try:
+        return runner()
+    except BaseException as exc:  # noqa: BLE001 - a smoke must never hang the EXE
+        import traceback
+
+        detail = "".join(traceback.format_exception(type(exc), exc, exc.__traceback__))
+        sys.stderr.write(f"internal {name} smoke failed: {type(exc).__name__}: {exc}\n")
+        sys.stderr.write(detail)
+        sys.stderr.flush()
+        return 3
+
+
+def _internal_smoke_trace_path(result_path: str) -> Path:
+    """Trace file beside the smoke result, under the same temp-dir constraint."""
+    path = Path(result_path).resolve()
+    temp_root = Path(tempfile.gettempdir()).resolve()
+    if temp_root != path.parent and temp_root not in path.parents:
+        raise ValueError("Internal smoke trace must be written below the temporary directory.")
+    return path.with_name(path.name + ".trace")
+
+
 def run_runtime_smoke(result_path: str) -> int:
     """Exercise packaged ctypes/libffi and the pinned external runtimes."""
     import _ctypes
     import ctypes
     import hashlib
     import subprocess
+    import time
+
+    smoke_started = time.monotonic()
+    trace_path = _internal_smoke_trace_path(result_path)
+
+    def trace(phase: str, **extra: object) -> None:
+        # Diagnostics only, and only for the internal smoke: each phase is
+        # appended and flushed immediately so a supervising harness can read
+        # partial progress if this process is killed. Never raises into the
+        # smoke itself, and never logs user data.
+        event: dict[str, object] = {
+            "phase": phase,
+            "elapsed": round(time.monotonic() - smoke_started, 3),
+        }
+        event.update(extra)
+        try:
+            trace_path.parent.mkdir(parents=True, exist_ok=True)
+            with trace_path.open("a", encoding="utf-8") as handle:
+                handle.write(json.dumps(event, sort_keys=True) + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())
+        except OSError:
+            pass
+
+    def process_uptime_seconds() -> float | None:
+        # How long this process existed before the smoke ran: for a PyInstaller
+        # one-file build this measures archive extraction plus interpreter and
+        # application import time.
+        if sys.platform != "win32":
+            return None
+        try:
+            kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+            creation = ctypes.c_ulonglong()
+            exit_time = ctypes.c_ulonglong()
+            kernel = ctypes.c_ulonglong()
+            user = ctypes.c_ulonglong()
+            if not kernel32.GetProcessTimes(
+                kernel32.GetCurrentProcess(),
+                ctypes.byref(creation),
+                ctypes.byref(exit_time),
+                ctypes.byref(kernel),
+                ctypes.byref(user),
+            ):
+                return None
+            now = ctypes.c_ulonglong()
+            kernel32.GetSystemTimeAsFileTime(ctypes.byref(now))
+            return round((now.value - creation.value) / 10_000_000, 3)
+        except (OSError, AttributeError):
+            return None
+
+    trace("process_started", uptime_before_smoke=process_uptime_seconds(), pid=os.getpid())
+    trace("runtime_smoke_entered")
 
     checks: dict[str, bool] = {}
     callback_type = ctypes.CFUNCTYPE(ctypes.c_int, ctypes.c_int)
     callback = callback_type(lambda value: value + 7)
     checks["ctypes_callback"] = callback(35) == 42
+    trace("ctypes_callback_complete")
 
     libffi = base_dir() / "libffi-8.dll"
     libffi_hash = hashlib.sha256(libffi.read_bytes()).hexdigest() if libffi.is_file() else ""
@@ -380,29 +468,76 @@ def run_runtime_smoke(result_path: str) -> int:
     checks["loaded_libffi_from_bundle_root"] = bool(loaded_libffi) and (
         Path(loaded_libffi).resolve() == libffi.resolve()
     )
+    trace("libffi_checks_complete")
 
+    def run_bounded_runtime(
+        name: str, command: list[str], marker: str, timeout_seconds: float
+    ) -> tuple[bool, dict[str, object]]:
+        # Each external runtime is independently bounded and observable: on
+        # timeout the complete child process tree is terminated and a
+        # structured, non-passing record is kept instead of a silent stall.
+        started = time.monotonic()
+        trace(f"{name}_started")
+        detail: dict[str, object] = {"timed_out": False, "returncode": None}
+        stdout = stderr = ""
+        ok = False
+        try:
+            child = subprocess.Popen(
+                command,
+                shell=False,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+        except OSError as exc:
+            detail["spawn_error"] = type(exc).__name__
+        else:
+            try:
+                stdout, stderr = child.communicate(timeout=timeout_seconds)
+                detail["returncode"] = child.returncode
+                output = f"{stdout}\n{stderr}".casefold()
+                ok = child.returncode == 0 and marker in output
+            except subprocess.TimeoutExpired:
+                detail["timed_out"] = True
+                if sys.platform == "win32":
+                    taskkill = (
+                        Path(os.environ.get("SystemRoot", r"C:\Windows"))
+                        / "System32"
+                        / "taskkill.exe"
+                    )
+                    subprocess.run(  # noqa: S603 - fixed system tool, numeric PID
+                        [str(taskkill), "/PID", str(child.pid), "/T", "/F"],
+                        shell=False,
+                        check=False,
+                        capture_output=True,
+                        timeout=30,
+                    )
+                else:
+                    child.kill()
+                try:
+                    stdout, stderr = child.communicate(timeout=10)
+                except (subprocess.SubprocessError, OSError, ValueError):
+                    stdout, stderr = "", ""
+        detail["elapsed"] = round(time.monotonic() - started, 3)
+        # Bounded diagnostic tails only; these tools emit version banners, not
+        # user data.
+        detail["stdout_tail"] = stdout[-300:]
+        detail["stderr_tail"] = stderr[-300:]
+        trace(f"{name}_finished", **detail)
+        return ok, detail
+
+    runtime_details: dict[str, dict[str, object]] = {}
     commands = {
         "node": ([str(bin_dir() / "node.exe"), "-e", "process.stdout.write('node-ok')"], "node-ok"),
         "ffmpeg": ([str(bin_dir() / "ffmpeg.exe"), "-hide_banner", "-version"], "ffmpeg version"),
         "ffprobe": ([str(bin_dir() / "ffprobe.exe"), "-hide_banner", "-version"], "ffprobe version"),
     }
     for name, (command, marker) in commands.items():
-        try:
-            completed = subprocess.run(
-                command,
-                shell=False,
-                check=False,
-                capture_output=True,
-                text=True,
-                encoding="utf-8",
-                errors="replace",
-                timeout=15,
-            )
-        except (OSError, subprocess.SubprocessError):
-            checks[f"{name}_runtime"] = False
-        else:
-            output = f"{completed.stdout}\n{completed.stderr}".casefold()
-            checks[f"{name}_runtime"] = completed.returncode == 0 and marker in output
+        ok, detail = run_bounded_runtime(name, command, marker, 15)
+        checks[f"{name}_runtime"] = ok
+        runtime_details[name] = detail
 
     passed = all(checks.values())
     _write_internal_smoke_result(
@@ -412,8 +547,11 @@ def run_runtime_smoke(result_path: str) -> int:
             "checks": checks,
             "libffi_sha256": libffi_hash,
             "ctypes_sha256": ctypes_hash,
+            "runtime_details": runtime_details,
         },
     )
+    trace("result_written", passed=passed)
+    trace("process_exiting")
     return 0 if passed else 1
 
 
@@ -424,22 +562,36 @@ def main(argv: list[str] | None = None) -> int:
 
         return run_ytdlp_worker()
     if args.internal_youtube_connection_smoke:
-        return run_youtube_connection_smoke(args.internal_youtube_connection_smoke)
+        return _run_internal_smoke(
+            "youtube-connection",
+            lambda: run_youtube_connection_smoke(args.internal_youtube_connection_smoke),
+        )
     if args.internal_provider_media_smoke:
-        return run_provider_media_smoke(args.internal_provider_media_smoke)
+        return _run_internal_smoke(
+            "provider-media",
+            lambda: run_provider_media_smoke(args.internal_provider_media_smoke),
+        )
     if args.internal_gui_startup_smoke:
-        return run_gui_startup_smoke(
-            ["NeuralExtractorV3", "--internal-gui-startup-smoke"],
-            args.internal_gui_startup_smoke,
+        return _run_internal_smoke(
+            "gui-startup",
+            lambda: run_gui_startup_smoke(
+                ["NeuralExtractorV3", "--internal-gui-startup-smoke"],
+                args.internal_gui_startup_smoke,
+            ),
         )
     if args.internal_windows_gui_smoke:
-        return run_gui_startup_smoke(
-            ["NeuralExtractorV3", "--internal-windows-gui-smoke"],
-            args.internal_windows_gui_smoke,
-            platform_name="windows",
+        return _run_internal_smoke(
+            "windows-gui",
+            lambda: run_gui_startup_smoke(
+                ["NeuralExtractorV3", "--internal-windows-gui-smoke"],
+                args.internal_windows_gui_smoke,
+                platform_name="windows",
+            ),
         )
     if args.internal_runtime_smoke:
-        return run_runtime_smoke(args.internal_runtime_smoke)
+        return _run_internal_smoke(
+            "runtime", lambda: run_runtime_smoke(args.internal_runtime_smoke)
+        )
     if args.apply_update:
         return run_update_helper(Path(args.apply_update))
     if args.apply_directory_update:

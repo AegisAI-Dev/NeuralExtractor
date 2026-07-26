@@ -269,17 +269,37 @@ jobs:
           }
           Write-Host "Packaged version confirmed: $text"
 
-      - name: Run packaged runtime, GUI, Unicode and provider smokes
+      - name: Run packaged runtime smoke
+        shell: pwsh
+        run: |
+          # Dedicated phase-aware harness instead of the generic 90s WaitForExit:
+          # it distinguishes startup (one-file extraction/import), checks, and
+          # post-result exit, collects trace/process-tree diagnostics before any
+          # kill, and fails closed. Budgets are per phase and evidence-based:
+          # warm local runs measure ~9s startup / ~11s total / ~0.5s exit lag,
+          # and CI first launches additionally pay Defender scans of the fresh
+          # 190 MB EXE and the three 85-143 MB extracted tools (bounded at 15s
+          # per tool inside the app), so each phase gets generous but bounded
+          # headroom rather than one opaque timeout.
+          & $env:PYTHON_EXE scripts/packaged_runtime_smoke.py --executable "dist\NeuralExtractorV3.exe" --startup-timeout 240 --check-timeout 120 --exit-grace 60
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Run packaged GUI, Unicode and provider smokes
         shell: pwsh
         run: |
           foreach ($smoke in @(
-            @{ Name = "runtime"; Argument = "--internal-runtime-smoke" },
             @{ Name = "gui-offscreen"; Argument = "--internal-gui-startup-smoke" },
             @{ Name = "gui-windows"; Argument = "--internal-windows-gui-smoke" },
             @{ Name = "provider-boundary"; Argument = "--internal-provider-media-smoke" },
             @{ Name = "youtube-connection"; Argument = "--internal-youtube-connection-smoke" }
           )) {
-            $result = Join-Path $env:RUNNER_TEMP "neural-extractor-bridge-$($smoke.Name)-smoke.json"
+            # The result path MUST live under the process temp directory that
+            # the packaged app itself resolves (Python's tempfile.gettempdir(),
+            # i.e. TEMP). RUNNER_TEMP is a different location on GitHub's
+            # Windows runners, and the app rejects a result path outside its
+            # temp root — which, in a windowed EXE, surfaced as an indefinite
+            # hang rather than an error. Use the real TEMP.
+            $result = Join-Path ([System.IO.Path]::GetTempPath()) "neural-extractor-bridge-$($smoke.Name)-smoke.json"
             $arguments = "$($smoke.Argument) `"$result`""
             $process = Start-Process -FilePath "dist\NeuralExtractorV3.exe" -ArgumentList $arguments -PassThru -WindowStyle Hidden
             if (-not $process.WaitForExit(90000)) {
@@ -311,12 +331,13 @@ jobs:
           # packaged build; the smoke drives the real one-file updater handoff,
           # startup confirmation, concurrency rejection and rollback paths.
           #
-          # The smoke workspace must NOT live under RUNNER_TEMP: the updater
-          # fail-closes when the target executable resolves inside
+          # The smoke workspace must NOT live under any temporary root: the
+          # updater fail-closes when the target executable resolves inside
           # tempfile.gettempdir() ("running from a temporary or update-staging
-          # location"), and on Windows runners TEMP is RUNNER_TEMP. Stage it
-          # under the checkout instead so the simulated install directory is a
-          # normal, non-temporary location.
+          # location"). Stage it under the checkout instead so the simulated
+          # install directory is a normal, non-temporary location. (RUNNER_TEMP
+          # and the process TEMP are distinct directories on GitHub's Windows
+          # runners; neither is a valid install location for this smoke.)
           # Keep these directory names short. The smoke nests roughly 190
           # characters of transaction/ownership path below the workspace, so a
           # long workspace path makes CreateProcess fail with WinError 206
