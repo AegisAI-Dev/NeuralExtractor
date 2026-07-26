@@ -146,6 +146,13 @@ def test_stdin_output_and_heartbeats_keep_an_active_attempt_alive(tmp_path):
     stdout_chunks: list[str] = []
     stderr_chunks: list[str] = []
     record = tmp_path / "owned-process.json"
+    # The child lives for ~3s while printing every 0.1s, against a 3.0s
+    # inactivity ceiling. The run is longer than that ceiling, so the attempt can
+    # only survive if output genuinely resets the inactivity clock — yet each
+    # individual gap keeps a 30x scheduling margin. The original 0.08s/0.18s
+    # pairing left barely 2x and lost that race on the Windows runner; measured
+    # locally, even 0.1s/1.0s (10x) can still lose it when the host is
+    # oversubscribed and the child itself is starved.
     script = textwrap.dedent(
         """
         import json
@@ -153,18 +160,19 @@ def test_stdin_output_and_heartbeats_keep_an_active_attempt_alive(tmp_path):
         import time
 
         payload = json.loads(sys.stdin.read())
-        for index in range(5):
+        for index in range(30):
             print(f"{payload['message']} {index}", flush=True)
-            if index == 2:
+            if index == 15:
                 print("stderr activity", file=sys.stderr, flush=True)
-            time.sleep(0.08)
+            time.sleep(0.1)
         """
     )
     supervisor = OwnedProcessSupervisor(
-        limits(inactivity=0.18, total=3.0, status=0.09),
+        limits(inactivity=3.0, total=60.0, status=0.5),
         ownership_record=record,
     )
 
+    started = time.monotonic()
     result = supervisor.run(
         [sys.executable, "-c", script],
         stdin_data=json.dumps({"message": "progress"}),
@@ -172,16 +180,21 @@ def test_stdin_output_and_heartbeats_keep_an_active_attempt_alive(tmp_path):
         stderr_callback=stderr_chunks.append,
         status_callback=statuses.append,
     )
+    elapsed = time.monotonic() - started
 
     assert result.outcome is ProcessOutcome.EXITED
     assert result.returncode == 0
+    # The attempt outlived the inactivity ceiling, so output must have reset it.
+    assert elapsed > 3.0
     assert "progress 0" in result.stdout
-    assert "progress 4" in "".join(stdout_chunks)
+    assert "progress 29" in "".join(stdout_chunks)
     assert "stderr activity" in "".join(stderr_chunks)
     assert statuses[0].phase is ProcessPhase.STARTED
     assert any(status.phase is ProcessPhase.ACTIVE for status in statuses)
     assert statuses[-1].phase is ProcessPhase.EXITED
-    assert len(statuses) <= 8
+    # Heartbeats stay interval-bounded: 30 output lines must not become 30
+    # status callbacks.
+    assert len(statuses) <= 16
     assert supervisor.current_pid is None
     assert not supervisor.running
     assert not record.exists()
@@ -226,6 +239,140 @@ def test_utf8_stdin_stdout_and_stderr_round_trip(tmp_path):
     assert result.returncode == 0
     assert json.loads(result.stdout) == payload
     assert result.stderr == "خطأ مؤقت\n"
+
+
+def test_activity_clock_arming_discards_pre_monitoring_time() -> None:
+    """Deterministic guarantee, independent of any process scheduling.
+
+    The clock is constructed at ``started_at`` (before launch) because the output
+    readers need it, so arming must move the inactivity baseline forward to the
+    moment monitoring begins. Otherwise launch/setup time is reported as output
+    inactivity — the defect behind the flaky CI failure.
+    """
+    from neural_extractor_v3.core.process_control import _ActivityClock
+
+    started_at = 1_000.0
+    clock = _ActivityClock(started_at)
+
+    # Before arming, elapsed setup time reads as inactivity.
+    assert clock.inactive_for(started_at + 5.0) == pytest.approx(5.0)
+
+    # Arming at the point monitoring begins discards that setup time.
+    armed_at = started_at + 5.0
+    clock.arm(armed_at)
+    assert clock.inactive_for(armed_at) == pytest.approx(0.0)
+    assert clock.inactive_for(armed_at + 1.25) == pytest.approx(1.25)
+
+    # Real output still resets the clock afterwards.
+    clock.touch(armed_at + 1.25)
+    assert clock.inactive_for(armed_at + 1.5) == pytest.approx(0.25)
+
+    # Arming never moves the baseline backwards, so a reader that touched the
+    # clock during setup cannot be undone by a late arm timestamp.
+    late = _ActivityClock(started_at)
+    late.touch(started_at + 9.0)
+    late.arm(started_at + 4.0)
+    assert late.inactive_for(started_at + 9.0) == pytest.approx(0.0)
+
+
+def _delay_supervisor_setup(monkeypatch, seconds: float) -> list[int]:
+    """Delay supervisor setup once by *seconds*, before monitoring is armed.
+
+    Identity capture runs after the process is spawned but before the output
+    readers exist and before the monitoring loop is entered, so delaying it
+    reproduces slow launch/setup on a loaded host deterministically. Only the
+    first call sleeps: identity capture happens more than once per attempt, and
+    a repeated delay would outlive the child and make the test vacuous.
+
+    Returns the list of delayed PIDs so a caller can prove the delay ran.
+    """
+    from neural_extractor_v3.core import process_control
+
+    real_identity = process_control._process_identity
+    delayed: list[int] = []
+
+    def slow_identity(pid: int):
+        if not delayed:
+            delayed.append(pid)
+            time.sleep(seconds)
+        return real_identity(pid)
+
+    monkeypatch.setattr(process_control, "_process_identity", slow_identity)
+    return delayed
+
+
+def test_supervisor_setup_time_is_not_counted_as_output_inactivity(
+    tmp_path, monkeypatch
+):
+    """Regression: launch/setup time must not be charged to the inactivity budget.
+
+    Setup is delayed by 3.0s against a 2.5s inactivity ceiling, and the child
+    stays silent for its first 3.3s while living ~3.8s, so when monitoring begins
+    the child is still running and has produced nothing.
+
+    If the inactivity clock still started at ``started_at`` (before launch), the
+    very first monitoring check would see ~3.0s of "inactivity" and kill a
+    perfectly healthy child. With the clock armed once monitoring is in place,
+    the only gaps that count are the ~0.3s from arming to the first line and the
+    ~0.5s tail before exit, both far inside the ceiling.
+    """
+    record = tmp_path / "setup-delay.json"
+    script = textwrap.dedent(
+        """
+        import sys
+        import time
+
+        time.sleep(3.3)
+        print("late but healthy output", flush=True)
+        time.sleep(0.5)
+        """
+    )
+    delayed = _delay_supervisor_setup(monkeypatch, 3.0)
+    supervisor = OwnedProcessSupervisor(
+        limits(inactivity=2.5, total=60.0, status=1.0),
+        ownership_record=record,
+    )
+
+    started = time.monotonic()
+    result = supervisor.run([sys.executable, "-c", script])
+    elapsed = time.monotonic() - started
+
+    # The injected setup delay must actually have run, otherwise this test
+    # would not exercise the regression at all.
+    assert delayed, "the supervisor-setup delay was never applied"
+    assert result.outcome is ProcessOutcome.EXITED
+    assert result.returncode == 0
+    assert "late but healthy output" in result.stdout
+    # Setup alone (3.0s) exceeded the 2.5s inactivity ceiling, yet nothing timed
+    # out: the delay is charged to the total clock, never to inactivity.
+    assert elapsed >= 3.0
+    assert elapsed > 2.5
+    assert supervisor.current_pid is None
+    assert not supervisor.running
+    assert not record.exists()
+
+
+def test_setup_delay_does_not_disable_the_inactivity_timeout(tmp_path, monkeypatch):
+    """Arming the clock must not grant a silent child unlimited grace."""
+    record = tmp_path / "setup-delay-silent.json"
+    delayed = _delay_supervisor_setup(monkeypatch, 0.6)
+    supervisor = OwnedProcessSupervisor(
+        limits(inactivity=0.5, total=30.0),
+        ownership_record=record,
+    )
+
+    with pytest.raises(ProcessInactivityTimeoutError) as raised:
+        supervisor.run([sys.executable, "-c", "import time; time.sleep(60)"])
+
+    result = raised.value.result
+    assert delayed, "the supervisor-setup delay was never applied"
+    assert result.outcome is ProcessOutcome.INACTIVITY_TIMEOUT
+    assert result.pid is not None
+    # The delay ran, yet the timeout still fired once monitoring was armed.
+    assert result.elapsed_seconds >= 0.6
+    assert not wait_until(lambda: is_process_running(result.pid), timeout=0.1)
+    assert supervisor.current_pid is None
+    assert not record.exists()
 
 
 def test_no_output_triggers_inactivity_timeout_and_cleans_process(tmp_path):

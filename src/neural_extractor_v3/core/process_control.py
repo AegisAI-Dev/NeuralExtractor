@@ -240,6 +240,15 @@ class _ActivityClock:
         with self._lock:
             self._last_activity = max(self._last_activity, timestamp)
 
+    def arm(self, timestamp: float) -> None:
+        """Begin measuring inactivity from *timestamp*.
+
+        Called once, after the process is launched and output monitoring is
+        fully in place, so that process-launch and supervisor-setup time is
+        never charged against the output-inactivity budget.
+        """
+        self.touch(timestamp)
+
     def inactive_for(self, timestamp: float) -> float:
         with self._lock:
             return max(0.0, timestamp - self._last_activity)
@@ -398,6 +407,15 @@ class OwnedProcessSupervisor:
 
             _emit_status(status_callback, process.pid, ProcessPhase.STARTED, 0.0, 0.0)
             next_status_at = started_at + self.limits.status_interval
+
+            # The total-timeout clock intentionally runs from ``started_at``, but
+            # inactivity must only measure the monitored window. Arm it here, now
+            # that the process is launched, its creation identity captured, the
+            # ownership record persisted and the stdout/stderr readers plus any
+            # stdin writer are running. Otherwise launch and setup time counts as
+            # "no meaningful process output" and a healthy child can be killed
+            # for inactivity it never caused.
+            activity.arm(time.monotonic())
 
             while True:
                 returncode = process.poll()
