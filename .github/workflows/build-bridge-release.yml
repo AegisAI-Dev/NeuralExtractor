@@ -68,6 +68,26 @@ jobs:
           }
           Write-Host "Bridge inputs accepted for version $version."
 
+      - name: Configure byte-stable Git checkout
+        shell: pwsh
+        run: |
+          # Every SHA-256 manifest in this repository records committed bytes, so
+          # the checkout must not rewrite line endings. This must run BEFORE
+          # actions/checkout, otherwise the working tree arrives as CRLF on
+          # Windows and SOURCE-HASHES.sha256, the hashed license manifest and
+          # PROJECT-METADATA.json all mismatch. See .gitattributes for the
+          # canonical per-path policy.
+          git config --global core.autocrlf false
+          git config --global core.eol lf
+          $autocrlf = git config --global --get core.autocrlf
+          $eol = git config --global --get core.eol
+          Write-Host "core.autocrlf=$autocrlf"
+          Write-Host "core.eol=$eol"
+          if ($autocrlf -ne "false" -or $eol -ne "lf") {
+            Write-Error "Byte-stable Git configuration was not applied before checkout."
+            exit 1
+          }
+
       - name: Checkout default branch
         uses: actions/checkout@v4
         with:
@@ -167,6 +187,23 @@ jobs:
           & bin\ffmpeg.exe -version
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
           & bin\ffprobe.exe -version
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+
+      - name: Reconstruct and verify pinned offline build inputs
+        shell: pwsh
+        run: |
+          # build_inputs/ payloads are deliberately not committed, but
+          # SOURCE-HASHES.sha256 covers them, so a clean checkout must rebuild
+          # them before the packaging-contract tests run. The pinned CPython and
+          # FFmpeg archives were already downloaded and SHA-256 verified in
+          # earlier steps, so reuse those exact bytes from RUNNER_TEMP instead of
+          # downloading ~188 MB a second time; a reused copy is accepted only
+          # when its SHA-256 matches the pinned value.
+          & $env:PYTHON_EXE scripts/restore_build_inputs.py --reuse-dir $env:RUNNER_TEMP
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          # Independent second pass: every pinned payload must now be present and
+          # byte-exact without any download or copy being permitted.
+          & $env:PYTHON_EXE scripts/restore_build_inputs.py --verify-only
           if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
       - name: Validate source, tests and manifests

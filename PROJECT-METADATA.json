@@ -25,7 +25,7 @@
     },
     {
       "path": "README.md",
-      "sha256": "5df4999ed41c71687f40045fc4a9a88d2248385b02a4b549ccf6f0e034623d81"
+      "sha256": "ae537f48c2acf4969d3f5f7872c42a26c82a7cf4e0fabce305fa0018f8f6f8cd"
     },
     {
       "path": "docs/COPYRIGHT-OWNERSHIP-QUESTIONS.md",
@@ -37,7 +37,7 @@
     },
     {
       "path": "pyproject.toml",
-      "sha256": "115be79abe3e31b3f1ff3bb4a0982cb6f30587ac434eb42f84af8c14f9f15510"
+      "sha256": "9f14ea472b6f8590a4ab1190ac1acacbb27fb60146d63cda36d7845ebdcb3784"
     },
     {
       "path": "version_info.txt",

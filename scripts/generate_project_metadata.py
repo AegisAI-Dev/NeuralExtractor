@@ -189,12 +189,16 @@ def main() -> int:
     expected = render()
     output = args.output.resolve()
     if args.check:
-        if not output.is_file() or output.read_text(encoding="utf-8") != expected:
+        # Compare exact bytes: the inventory records SHA-256 values of tracked
+        # files, so a line-ending rewrite of this file must fail the check
+        # instead of being hidden by universal-newline decoding.
+        if not output.is_file() or output.read_bytes() != expected.encode("utf-8"):
             print(f"HOLD: project metadata inventory differs or is missing: {output}")
             return 1
         print("Project metadata inventory verified.")
         return 0
-    output.write_text(expected, encoding="utf-8")
+    # newline="\n" keeps the generated inventory byte-identical across platforms.
+    output.write_text(expected, encoding="utf-8", newline="\n")
     print(f"Generated {output}")
     return 0
 
