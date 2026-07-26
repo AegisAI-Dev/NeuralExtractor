@@ -222,4 +222,19 @@ def test_release_gate_detects_prohibited_old_hash(tmp_path, monkeypatch):
 
     failures = release_gate.scan_prohibited_artifacts(tmp_path)
 
-    assert failures == [f"Prohibited old V3.0.8 artifact detected: {artifact}"]
+    assert failures == [f"Prohibited legacy one-file artifact detected: {artifact}"]
+
+
+def test_release_gate_detects_both_prohibited_legacy_hashes(tmp_path, monkeypatch):
+    legacy_304_hash = (
+        "02fbde8845bcb7b8946a44f320aa1f88a63a70ceac9765f800276ce11bfa6ed7"
+    )
+    assert legacy_304_hash in release_gate.PROHIBITED_LEGACY_SHA256S
+    assert release_gate.PROHIBITED_OLD_SHA256 in release_gate.PROHIBITED_LEGACY_SHA256S
+    artifact = tmp_path / "legacy-3.0.4.exe"
+    artifact.write_bytes(b"legacy")
+    monkeypatch.setattr(release_gate, "sha256_file", lambda _path: legacy_304_hash)
+
+    failures = release_gate.scan_prohibited_artifacts(tmp_path)
+
+    assert failures == [f"Prohibited legacy one-file artifact detected: {artifact}"]

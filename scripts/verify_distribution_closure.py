@@ -16,6 +16,14 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+# Legacy bundled-provider V3.0.8 and legacy V3.0.4 one-file EXE hashes.
+PROHIBITED_LEGACY_SHA256S = frozenset(
+    {
+        "0d4d4bdf1eabf5af88c1094732ae28cf55f12a0dc36377d90088eb54537b82ac",
+        "02fbde8845bcb7b8946a44f320aa1f88a63a70ceac9765f800276ce11bfa6ed7",
+    }
+)
+# Backward-compatible alias for the original single-hash constant.
 PROHIBITED_OLD_SHA256 = "0d4d4bdf1eabf5af88c1094732ae28cf55f12a0dc36377d90088eb54537b82ac"
 NATIVE_SUFFIXES = {".dll", ".exe", ".pyd", ".node"}
 PROHIBITED_PATH_PATTERNS = (
@@ -173,7 +181,9 @@ def classify(relative: str) -> tuple[str, ...]:
         "component-inventory.json",
         "binary-to-source-map.json",
         "build-inputs.lock",
+        "project-metadata.json",
         "qt-pyside-components.json",
+        "readme.md",
         "requirements.lock",
         "source-bundle-manifest.json",
         "source-hashes.json",
@@ -319,8 +329,8 @@ def audit_distribution(distribution: Path, project_root: Path) -> dict[str, Any]
         components = classify(relative)
         normalized = relative.casefold()
         reasons = [pattern.pattern for pattern in PROHIBITED_PATH_PATTERNS if pattern.search(normalized)]
-        if actual_digest == PROHIBITED_OLD_SHA256:
-            reasons.append("prohibited-old-v3.0.8-sha256")
+        if actual_digest in PROHIBITED_LEGACY_SHA256S:
+            reasons.append("prohibited-legacy-one-file-sha256")
         if reasons:
             prohibited.append({"path": relative, "reason": "; ".join(reasons)})
         if not components:

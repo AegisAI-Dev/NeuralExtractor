@@ -12,6 +12,16 @@ import zipfile
 from pathlib import Path, PurePosixPath
 from typing import Any
 
+# Legacy bundled-provider V3.0.8 one-file EXE (PyQt6 + in-process GPL
+# PO-provider payload) and legacy V3.0.4 one-file EXE (PyQt6, no embedded
+# notices/source). Neither may appear anywhere in the release workspace.
+PROHIBITED_LEGACY_SHA256S = frozenset(
+    {
+        "0d4d4bdf1eabf5af88c1094732ae28cf55f12a0dc36377d90088eb54537b82ac",
+        "02fbde8845bcb7b8946a44f320aa1f88a63a70ceac9765f800276ce11bfa6ed7",
+    }
+)
+# Backward-compatible alias for the original single-hash constant.
 PROHIBITED_OLD_SHA256 = "0d4d4bdf1eabf5af88c1094732ae28cf55f12a0dc36377d90088eb54537b82ac"
 PROHIBITED_NAMES = re.compile(
     r"(?:^|/)(?:pyqt5|pyqt6|bgutil-ytdlp-pot-provider|yt_dlp_plugins|node_modules)(?:/|$)",
@@ -295,8 +305,8 @@ def scan_prohibited_artifacts(root: Path) -> list[str]:
     for path in root.rglob("*"):
         if not path.is_file() or path.suffix.casefold() not in {".exe", ".zip"}:
             continue
-        if sha256_file(path) == PROHIBITED_OLD_SHA256:
-            failures.append(f"Prohibited old V3.0.8 artifact detected: {path}")
+        if sha256_file(path) in PROHIBITED_LEGACY_SHA256S:
+            failures.append(f"Prohibited legacy one-file artifact detected: {path}")
     return failures
 
 
@@ -462,8 +472,8 @@ def verify_artifact(root: Path, artifact: Path) -> list[str]:
     failures: list[str] = []
     if not artifact.is_file():
         return [f"Application artifact is missing: {artifact}"]
-    if sha256_file(artifact) == PROHIBITED_OLD_SHA256:
-        failures.append("Application artifact is the prohibited old V3.0.8 EXE")
+    if sha256_file(artifact) in PROHIBITED_LEGACY_SHA256S:
+        failures.append("Application artifact is a prohibited legacy one-file EXE")
     if artifact.suffix.casefold() != ".zip":
         failures.append("Primary public candidate must be a one-folder ZIP")
         return failures

@@ -5,8 +5,14 @@ from __future__ import annotations
 import argparse
 import hashlib
 import io
+import json
+import os
 import re
+import stat
+import tempfile
 import zipfile
+from collections.abc import Callable
+from dataclasses import dataclass
 from pathlib import Path, PurePosixPath
 from typing import Protocol
 
@@ -81,7 +87,65 @@ _PROVIDER_TOKEN = re.compile(
     r"|(?:^|[./\\])(?:yt_dlp_plugins|yt-dlp-plugins)(?:$|[./\\])",
     re.I,
 )
-_RAW_JAVASCRIPT_SUFFIXES = (".js", ".mjs", ".cjs", ".ts", ".js.map")
+_RAW_JAVASCRIPT_SUFFIXES = (".js", ".mjs", ".cjs", ".ts", ".js.map", ".ts.map")
+
+PROHIBITED_LEGACY_SHA256S = frozenset(
+    {
+        # Legacy bundled-provider V3.0.8 one-file EXE (PyQt6 + in-process
+        # GPL PO-provider payload, missing notices/source).
+        "0d4d4bdf1eabf5af88c1094732ae28cf55f12a0dc36377d90088eb54537b82ac",
+        # Legacy V3.0.4 one-file EXE (PyQt6, no embedded notices/source).
+        "02fbde8845bcb7b8946a44f320aa1f88a63a70ceac9765f800276ce11bfa6ed7",
+    }
+)
+PROHIBITED_LEGACY_SIZES = frozenset({234709652, 193141493})
+
+ONEFOLDER_ROOT_NAME = "NeuralExtractorV3-3.0.8-windows-x64"
+ONEFOLDER_LAUNCHER_PATH = "NeuralExtractorV3.exe"
+ONEFOLDER_DIRECTORY_MANIFEST_NAME = f"{ONEFOLDER_ROOT_NAME}-directory-manifest.json"
+# The three external runtime tools are pinned to the audited byte-exact builds
+# (same hashes as NeuralExtractorV3.spec require_sha256 pins).
+ONEFOLDER_PINNED_EXECUTABLE_SHA256 = {
+    "bin/node.exe": "39d45b5933f339d3ebdebd76474893dab5d7da1038920f65cf5bbcf0f20f3636",
+    "bin/ffmpeg.exe": "6ed7e5c931d3cbc72931ee7e97efc4b7d8a1287f03c60585fab81a6a293b2e0e",
+    "bin/ffprobe.exe": "55a3d20229c2373dade4362215c9bd5a04b59d4e734d0bbb882afd9cea4fb046",
+}
+ONEFOLDER_REQUIRED_PATHS: tuple[str, ...] = (
+    ONEFOLDER_LAUNCHER_PATH,
+    "LICENSE",
+    "PROJECT-METADATA.json",
+    "README.md",
+    "THIRD_PARTY_LICENSES.txt",
+    "THIRD_PARTY_NOTICES.md",
+    "QT-PYSIDE-COMPONENTS.json",
+    "SOURCE-HASHES.sha256",
+    "requirements.lock",
+    LICENSE_MANIFEST_PATH,
+    "compliance/BINARY-TO-SOURCE-MAP.json",
+    "compliance/BUILD-LABEL.txt",
+    "compliance/PROJECT-METADATA.json",
+    "compliance/QT-PYSIDE-COMPONENTS.json",
+    "docs/BUILD-REPRODUCIBILITY.md",
+    "docs/DEPENDENCY-SOURCE.md",
+    "docs/LGPL-COMPLIANCE.md",
+    "docs/OPTIONAL-PO-PROVIDER.md",
+    "docs/QT-BUILD-PROVENANCE.md",
+    "docs/QT-REPLACEMENT-GUIDE.md",
+)
+# One-folder trees must never ship runtime state: profiles, cookies, tokens,
+# or logs are recipient-machine artifacts, not release material.
+_RUNTIME_STATE_SUFFIXES = (".log",)
+_RUNTIME_STATE_NAME_TOKENS = ("cookie", "browser-profile", "browser_profile")
+_RUNTIME_STATE_EXACT_NAMES = frozenset({"tokens.json", "token.json", ".token"})
+_LAUNCHER_FORBIDDEN_NATIVE_SUFFIXES = (".dll", ".dylib", ".pyd", ".so")
+_ONEFOLDER_REPLACEABLE_ROOTS = ("PySide6", "shiboken6")
+
+DIRECTORY_MANIFEST_MAX_BYTES = 8 * 1024 * 1024
+DIRECTORY_MANIFEST_MAX_FILES = 20_000
+DIRECTORY_MANIFEST_MAX_PATH_LENGTH = 240
+DIRECTORY_MANIFEST_MAX_REPLACEABLE = 512
+DIRECTORY_MANIFEST_MIN_TOTAL = 1 * 1024 * 1024
+DIRECTORY_MANIFEST_MAX_TOTAL = 4 * 1024 * 1024 * 1024
 _CODE_OR_BINARY_SUFFIXES = (
     ".dll",
     ".dylib",
@@ -573,20 +637,616 @@ def verify(executable: Path) -> list[str]:
     return verify_archive(archive)
 
 
+@dataclass(frozen=True)
+class _TreeMember:
+    """Lazy view of one file inside a one-folder distribution tree or ZIP."""
+
+    size: int
+    read: Callable[[], bytes]
+
+
+def _is_reparse_point(path: Path) -> bool:
+    try:
+        status = os.lstat(path)
+    except OSError:
+        return True
+    attributes = getattr(status, "st_file_attributes", 0)
+    reparse_flag = getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0)
+    return bool(attributes & reparse_flag) or stat.S_ISLNK(status.st_mode)
+
+
+def _is_onefolder_documentation_path(path: str) -> bool:
+    lowered = path.casefold()
+    return lowered.startswith(("docs/", "licenses/", "compliance/")) or lowered in {
+        "license",
+        "readme.md",
+        "third_party_licenses.txt",
+        "third_party_notices.md",
+    }
+
+
+def _load_onefolder_directory(root: Path) -> tuple[dict[str, _TreeMember], list[str]]:
+    errors: list[str] = []
+    members: dict[str, _TreeMember] = {}
+    if root.name != ONEFOLDER_ROOT_NAME:
+        errors.append(f"unexpected one-folder distribution root name: {root.name}")
+    seen_folded: set[str] = set()
+    for current, dirnames, filenames in os.walk(root):
+        current_path = Path(current)
+        for name in list(dirnames):
+            if _is_reparse_point(current_path / name):
+                relative = (current_path / name).relative_to(root).as_posix()
+                errors.append(f"one-folder tree contains a reparse point: {relative}")
+                dirnames.remove(name)
+        for name in filenames:
+            absolute = current_path / name
+            relative = absolute.relative_to(root).as_posix()
+            if _is_reparse_point(absolute):
+                errors.append(f"one-folder tree contains a reparse point: {relative}")
+                continue
+            folded = relative.casefold()
+            if folded in seen_folded:
+                errors.append(f"case-colliding one-folder tree path: {relative}")
+                continue
+            seen_folded.add(folded)
+            members[relative] = _TreeMember(
+                size=absolute.stat().st_size, read=absolute.read_bytes
+            )
+    if not members:
+        errors.append("one-folder tree contains no files")
+    return members, errors
+
+
+def _load_onefolder_zip(handle: zipfile.ZipFile) -> tuple[dict[str, _TreeMember], list[str]]:
+    errors: list[str] = []
+    raw_members: dict[str, _TreeMember] = {}
+    seen_folded: set[str] = set()
+    top_levels: set[str] = set()
+    for info in handle.infolist():
+        name = info.filename.replace("\\", "/")
+        pure = PurePosixPath(name)
+        if pure.is_absolute() or ".." in pure.parts or (pure.parts and ":" in pure.parts[0]):
+            errors.append(f"unsafe one-folder ZIP path: {name}")
+            continue
+        if (info.external_attr >> 16) & 0o170000 == 0o120000:
+            errors.append(f"one-folder ZIP symlink is forbidden: {name}")
+            continue
+        if not pure.parts:
+            continue
+        top_levels.add(pure.parts[0])
+        if info.is_dir():
+            continue
+        folded = name.casefold()
+        if folded in seen_folded:
+            errors.append(f"case-colliding one-folder ZIP path: {name}")
+            continue
+        seen_folded.add(folded)
+
+        def _read(member_name: str = info.filename) -> bytes:
+            return handle.read(member_name)
+
+        raw_members[name] = _TreeMember(size=info.file_size, read=_read)
+    if len(top_levels) != 1:
+        errors.append(
+            "one-folder ZIP must contain exactly one top-level directory, "
+            f"found {sorted(top_levels)}"
+        )
+        return {}, errors
+    top_level = next(iter(top_levels))
+    if top_level != ONEFOLDER_ROOT_NAME:
+        errors.append(f"unexpected one-folder ZIP root: {top_level}")
+        return {}, errors
+    members = {
+        name[len(top_level) + 1 :]: member
+        for name, member in raw_members.items()
+        if name.startswith(f"{top_level}/") and name != f"{top_level}/"
+    }
+    if not members:
+        errors.append("one-folder ZIP contains no files")
+    return members, errors
+
+
+def _scan_onefolder_launcher(payload: bytes) -> list[str]:
+    errors: list[str] = []
+    with tempfile.TemporaryDirectory(prefix="neural-onefolder-verify-") as temporary:
+        executable = Path(temporary) / ONEFOLDER_LAUNCHER_PATH
+        executable.write_bytes(payload)
+        try:
+            archive = CArchiveReader(str(executable))
+        except Exception as exc:  # Keep malformed launchers fail closed.
+            return [f"cannot read one-folder launcher CArchive: {exc}"]
+        for archive_name in archive.toc:
+            path = _normalize_archive_path(str(archive_name))
+            lowered = path.casefold()
+            if lowered.endswith(_LAUNCHER_FORBIDDEN_NATIVE_SUFFIXES):
+                errors.append(f"one-folder launcher embeds a native library: {path}")
+            if lowered.endswith(_RAW_JAVASCRIPT_SUFFIXES):
+                errors.append(f"raw JavaScript/TypeScript in one-folder launcher: {path}")
+            if _PYQT_TOKEN.search(lowered) and not _is_documentation_path(path):
+                errors.append(f"PyQt payload is forbidden in one-folder launcher: {path}")
+            if _PROVIDER_TOKEN.search(lowered) and not _is_documentation_path(path):
+                errors.append(f"provider payload is forbidden in one-folder launcher: {path}")
+        pyz_names = [
+            name for name, entry in archive.toc.items() if _entry_type(entry) == "z"
+        ]
+        if len(pyz_names) != 1:
+            errors.append(
+                f"one-folder launcher must embed exactly one PYZ, found {len(pyz_names)}"
+            )
+            return errors
+        try:
+            pyz = archive.open_embedded_archive(pyz_names[0])
+            module_names = [str(name) for name in pyz.toc]
+        except Exception as exc:  # PyInstaller raises archive-specific exceptions.
+            errors.append(f"cannot inspect one-folder launcher PYZ: {exc}")
+            return errors
+        if not any(name.casefold() == "pyside6" for name in module_names):
+            errors.append("one-folder launcher PYZ does not contain PySide6")
+        for module_name in module_names:
+            lowered = module_name.casefold()
+            if _PYQT_TOKEN.search(lowered):
+                errors.append(f"PyQt module is forbidden in one-folder launcher PYZ: {module_name}")
+            if _PROVIDER_TOKEN.search(lowered):
+                errors.append(
+                    f"provider module is forbidden in one-folder launcher PYZ: {module_name}"
+                )
+    return errors
+
+
+def _verify_onefolder_executables(
+    members: dict[str, _TreeMember],
+    launcher_scan: Callable[[bytes], list[str]],
+) -> list[str]:
+    errors: list[str] = []
+    pinned_folded = {path.casefold(): (path, digest) for path, digest in
+                     ONEFOLDER_PINNED_EXECUTABLE_SHA256.items()}
+    for relative, member in sorted(members.items()):
+        folded = relative.casefold()
+        if not folded.endswith(".exe"):
+            continue
+        if folded == ONEFOLDER_LAUNCHER_PATH.casefold():
+            errors.extend(launcher_scan(member.read()))
+            continue
+        pinned = pinned_folded.get(folded)
+        if pinned is None:
+            errors.append(f"unknown executable in one-folder tree: {relative}")
+            continue
+        actual = _sha256(member.read())
+        if actual != pinned[1]:
+            errors.append(
+                f"pinned executable hash mismatch for {pinned[0]}: "
+                f"expected {pinned[1]}, got {actual}"
+            )
+    return errors
+
+
+def _verify_onefolder_prohibited_hashes(members: dict[str, _TreeMember]) -> list[str]:
+    errors: list[str] = []
+    for relative, member in sorted(members.items()):
+        folded = relative.casefold()
+        if not (
+            folded.endswith((".exe", ".zip")) or member.size in PROHIBITED_LEGACY_SIZES
+        ):
+            continue
+        if _sha256(member.read()) in PROHIBITED_LEGACY_SHA256S:
+            errors.append(f"prohibited legacy artifact hash in one-folder tree: {relative}")
+    return errors
+
+
+def _onefolder_member(
+    members: dict[str, _TreeMember], path: str
+) -> _TreeMember | None:
+    folded = path.casefold()
+    for relative, member in members.items():
+        if relative.casefold() == folded:
+            return member
+    return None
+
+
+def _verify_onefolder_qt_inventory(members: dict[str, _TreeMember]) -> list[str]:
+    root_member = _onefolder_member(members, "QT-PYSIDE-COMPONENTS.json")
+    if root_member is None:
+        return []  # The required-path check reports this once.
+    errors: list[str] = []
+    compliance_member = _onefolder_member(members, "compliance/QT-PYSIDE-COMPONENTS.json")
+    root_bytes = root_member.read()
+    if compliance_member is not None and compliance_member.read() != root_bytes:
+        errors.append(
+            "QT-PYSIDE-COMPONENTS.json differs between tree root and compliance copy"
+        )
+    try:
+        payload = json.loads(root_bytes.decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        return errors + [f"invalid QT-PYSIDE-COMPONENTS.json: {exc}"]
+    rows = payload.get("files")
+    if not isinstance(rows, list) or not rows:
+        return errors + ["QT-PYSIDE-COMPONENTS.json has no file records"]
+    manifest_paths: set[str] = set()
+    for row in rows:
+        if not isinstance(row, dict) or not isinstance(row.get("path"), str):
+            errors.append("QT-PYSIDE-COMPONENTS.json has an invalid file row")
+            continue
+        relative = row["path"].replace("\\", "/")
+        if relative.casefold() in {path.casefold() for path in manifest_paths}:
+            errors.append(f"duplicate Qt/PySide inventory path: {relative}")
+            continue
+        manifest_paths.add(relative)
+        member = _onefolder_member(members, relative)
+        if member is None:
+            errors.append(f"Qt/PySide inventory file is missing from the tree: {relative}")
+            continue
+        content = member.read()
+        if row.get("size") != len(content):
+            errors.append(f"Qt/PySide inventory size mismatch: {relative}")
+        if row.get("sha256") != _sha256(content):
+            errors.append(f"Qt/PySide inventory hash mismatch: {relative}")
+    replaceable_prefixes = tuple(
+        f"{root.casefold()}/" for root in _ONEFOLDER_REPLACEABLE_ROOTS
+    )
+    on_disk = {
+        relative
+        for relative in members
+        if relative.casefold().startswith(replaceable_prefixes)
+    }
+    manifest_folded = {path.casefold() for path in manifest_paths}
+    on_disk_folded = {path.casefold() for path in on_disk}
+    if manifest_folded != on_disk_folded:
+        unlisted = sorted(on_disk_folded - manifest_folded)
+        absent = sorted(manifest_folded - on_disk_folded)
+        errors.append(
+            "Qt/PySide inventory does not exactly cover the PySide6/shiboken6 tree: "
+            f"unlisted={unlisted}, absent={absent}"
+        )
+    return errors
+
+
+def _verify_onefolder_binary_map(members: dict[str, _TreeMember]) -> list[str]:
+    map_member = _onefolder_member(members, "compliance/BINARY-TO-SOURCE-MAP.json")
+    if map_member is None:
+        return []  # The required-path check reports this once.
+    try:
+        payload = json.loads(map_member.read().decode("utf-8"))
+    except (UnicodeError, json.JSONDecodeError) as exc:
+        return [f"invalid embedded binary-to-source map: {exc}"]
+    errors: list[str] = []
+    rows = payload.get("files")
+    if not isinstance(rows, list) or not rows:
+        return ["embedded binary-to-source map has no file records"]
+    by_path: dict[str, dict[str, object]] = {}
+    for row in rows:
+        if not isinstance(row, dict) or not isinstance(row.get("path"), str):
+            errors.append("embedded binary-to-source map has an invalid row")
+            continue
+        relative = row["path"]
+        if relative in by_path:
+            errors.append(f"duplicate binary-map path: {relative}")
+            continue
+        by_path[relative] = row
+    if set(by_path) != set(members):
+        unlisted = sorted(set(members) - set(by_path))[:5]
+        absent = sorted(set(by_path) - set(members))[:5]
+        errors.append(
+            "binary-map coverage differs from the one-folder tree "
+            f"(unexpected files or missing rows): unlisted={unlisted}, absent={absent}"
+        )
+        return errors
+    tree = hashlib.sha256()
+    for relative in sorted(members, key=str.casefold):
+        row = by_path[relative]
+        content = members[relative].read()
+        self_map = relative.casefold() == "compliance/binary-to-source-map.json"
+        expected_size: int | str = "SELF-REFERENTIAL" if self_map else len(content)
+        expected_hash = (
+            "SELF-REFERENTIAL" if self_map else hashlib.sha256(content).hexdigest()
+        )
+        if row.get("size") != expected_size or row.get("sha256") != expected_hash:
+            errors.append(f"binary-map size/hash mismatch: {relative}")
+        if row.get("mapping_status") != "PASS" or not row.get("components"):
+            errors.append(f"unresolved native/source mapping in binary map: {relative}")
+        tree.update(relative.encode("utf-8"))
+        tree.update(b"\0")
+        tree.update(b"SELF-REFERENTIAL" if self_map else bytes.fromhex(expected_hash))
+        tree.update(b"\0")
+    if payload.get("tree_sha256") != tree.hexdigest():
+        errors.append("binary-map canonical tree hash differs from the one-folder tree")
+    if payload.get("file_count") != len(rows):
+        errors.append("binary-map file_count differs from its file records")
+    return errors
+
+
+def _verify_onefolder_license_manifest(members: dict[str, _TreeMember]) -> list[str]:
+    manifest_member = _onefolder_member(members, LICENSE_MANIFEST_PATH)
+    if manifest_member is None:
+        return []  # The required-path check reports this once.
+    try:
+        manifest = _parse_manifest(manifest_member.read().decode("utf-8-sig"))
+    except (UnicodeError, ValueError) as exc:
+        return [f"invalid one-folder license manifest: {exc}"]
+    errors: list[str] = []
+    actual_license_paths = {
+        PurePosixPath(relative[len("licenses/") :])
+        for relative in members
+        if relative.casefold().startswith("licenses/")
+        and relative.casefold() != LICENSE_MANIFEST_PATH.casefold()
+    }
+    if set(manifest) != actual_license_paths:
+        unlisted = sorted(actual_license_paths - set(manifest), key=str)
+        absent = sorted(set(manifest) - actual_license_paths, key=str)
+        errors.append(
+            "one-folder license manifest coverage mismatch: "
+            f"unlisted={[path.as_posix() for path in unlisted]}, "
+            f"absent={[path.as_posix() for path in absent]}"
+        )
+    for relative_path, expected_hash in manifest.items():
+        member = _onefolder_member(members, f"licenses/{relative_path.as_posix()}")
+        if member is None:
+            continue
+        payload = member.read()
+        if not payload:
+            errors.append(f"one-folder license file is empty: licenses/{relative_path}")
+        elif _sha256(payload) != expected_hash:
+            errors.append(f"one-folder license hash mismatch: licenses/{relative_path}")
+    return errors
+
+
+def _strict_json_object(pairs: list[tuple[str, object]]) -> dict[str, object]:
+    result: dict[str, object] = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError(f"duplicate JSON key: {key}")
+        result[key] = value
+    return result
+
+
+def _verify_onefolder_directory_manifest(
+    members: dict[str, _TreeMember], manifest_path: Path | None
+) -> list[str]:
+    if manifest_path is None:
+        return [
+            "directory update manifest is required for the one-folder artifact "
+            f"(--directory-manifest {ONEFOLDER_DIRECTORY_MANIFEST_NAME})"
+        ]
+    if not manifest_path.is_file():
+        return [f"directory update manifest is missing: {manifest_path}"]
+    errors: list[str] = []
+    if manifest_path.name != ONEFOLDER_DIRECTORY_MANIFEST_NAME:
+        errors.append(
+            "directory update manifest must be named "
+            f"{ONEFOLDER_DIRECTORY_MANIFEST_NAME}, found {manifest_path.name}"
+        )
+    document = manifest_path.read_bytes()
+    if len(document) > DIRECTORY_MANIFEST_MAX_BYTES:
+        return errors + ["directory update manifest is too large"]
+    try:
+        payload = json.loads(document.decode("utf-8"), object_pairs_hook=_strict_json_object)
+    except (UnicodeError, ValueError) as exc:
+        return errors + [f"invalid directory update manifest: {exc}"]
+    expected_fields = {
+        "schema_version",
+        "application_name",
+        "release_version",
+        "platform",
+        "architecture",
+        "channel",
+        "root_name",
+        "executable",
+        "total_size",
+        "files",
+        "replaceable_paths",
+    }
+    if not isinstance(payload, dict) or set(payload) != expected_fields:
+        return errors + ["directory update manifest fields are invalid"]
+    expected_values = {
+        "schema_version": 1,
+        "application_name": "Neural Extractor V3",
+        "release_version": "3.0.8",
+        "platform": "windows",
+        "architecture": "x64",
+        "channel": "stable",
+        "root_name": ONEFOLDER_ROOT_NAME,
+        "executable": ONEFOLDER_LAUNCHER_PATH,
+    }
+    for key, expected in expected_values.items():
+        if payload.get(key) != expected:
+            errors.append(
+                f"directory update manifest {key} must be {expected!r}, "
+                f"found {payload.get(key)!r}"
+            )
+    files = payload.get("files")
+    if not isinstance(files, dict) or not files:
+        return errors + ["directory update manifest has no file records"]
+    if len(files) > DIRECTORY_MANIFEST_MAX_FILES:
+        return errors + ["directory update manifest lists too many files"]
+    total = 0
+    for relative, record in files.items():
+        if (
+            not isinstance(relative, str)
+            or not relative
+            or len(relative) > DIRECTORY_MANIFEST_MAX_PATH_LENGTH
+            or "\\" in relative
+        ):
+            errors.append(f"invalid directory-manifest path: {relative!r}")
+            continue
+        pure = PurePosixPath(relative)
+        if pure.is_absolute() or ".." in pure.parts:
+            errors.append(f"unsafe directory-manifest path: {relative}")
+            continue
+        if (
+            not isinstance(record, dict)
+            or set(record) != {"sha256", "size"}
+            or not isinstance(record.get("sha256"), str)
+            or not re.fullmatch(r"[0-9a-f]{64}", record["sha256"])
+            or not isinstance(record.get("size"), int)
+            or record["size"] < 0
+        ):
+            errors.append(f"invalid directory-manifest record: {relative}")
+            continue
+        total += record["size"]
+    if payload.get("total_size") != total:
+        errors.append("directory-manifest total_size does not match its file records")
+    if not (DIRECTORY_MANIFEST_MIN_TOTAL <= total <= DIRECTORY_MANIFEST_MAX_TOTAL):
+        errors.append("directory-manifest total size is outside the accepted window")
+    if set(files) != set(members):
+        unlisted = sorted(set(members) - set(files))[:5]
+        absent = sorted(set(files) - set(members))[:5]
+        errors.append(
+            "directory-manifest coverage differs from the one-folder tree: "
+            f"unlisted={unlisted}, absent={absent}"
+        )
+    else:
+        for relative, record in files.items():
+            member = members[relative]
+            if not isinstance(record, dict):
+                continue
+            if record.get("size") != member.size:
+                errors.append(f"directory-manifest size mismatch: {relative}")
+            elif record.get("sha256") != _sha256(member.read()):
+                errors.append(f"directory-manifest hash mismatch: {relative}")
+    replaceable = payload.get("replaceable_paths")
+    if not isinstance(replaceable, list):
+        errors.append("directory-manifest replaceable_paths must be a list")
+        return errors
+    if len(replaceable) > DIRECTORY_MANIFEST_MAX_REPLACEABLE:
+        errors.append("directory-manifest lists too many replaceable paths")
+    for relative in replaceable:
+        if not isinstance(relative, str) or relative not in files:
+            errors.append(f"replaceable path is not a manifest file: {relative!r}")
+            continue
+        if PurePosixPath(relative).parts[0] not in _ONEFOLDER_REPLACEABLE_ROOTS:
+            errors.append(f"replaceable path outside Qt/PySide families: {relative}")
+    expected_replaceable = sorted(
+        relative
+        for relative in files
+        if isinstance(relative, str)
+        and PurePosixPath(relative).parts
+        and PurePosixPath(relative).parts[0] in _ONEFOLDER_REPLACEABLE_ROOTS
+    )
+    if sorted(str(item) for item in replaceable) != expected_replaceable:
+        errors.append(
+            "directory-manifest replaceable_paths must exactly cover the "
+            "PySide6/shiboken6 files"
+        )
+    return errors
+
+
+def verify_onefolder_members(
+    members: dict[str, _TreeMember],
+    directory_manifest: Path | None,
+    *,
+    launcher_scan: Callable[[bytes], list[str]] | None = None,
+) -> list[str]:
+    """Return release-blocking errors for a loaded one-folder tree."""
+    scan = _scan_onefolder_launcher if launcher_scan is None else launcher_scan
+    errors: list[str] = []
+    folded_paths = {relative.casefold() for relative in members}
+
+    missing = [
+        path for path in ONEFOLDER_REQUIRED_PATHS if path.casefold() not in folded_paths
+    ]
+    if missing:
+        errors.append("missing required one-folder paths: " + ", ".join(missing))
+
+    for relative in sorted(members):
+        lowered = relative.casefold()
+        name = PurePosixPath(lowered).name
+        if lowered.endswith(_RAW_JAVASCRIPT_SUFFIXES):
+            errors.append(f"raw JavaScript/TypeScript payload is forbidden: {relative}")
+        if "node_modules/canvas/" in lowered or name == "canvas.node":
+            errors.append(f"canvas native/provider payload is forbidden: {relative}")
+        if _PYQT_TOKEN.search(lowered) and not _is_onefolder_documentation_path(relative):
+            errors.append(f"PyQt code or binary is forbidden: {relative}")
+        if _PROVIDER_TOKEN.search(lowered) and not _is_onefolder_documentation_path(relative):
+            errors.append(f"in-process provider code is forbidden: {relative}")
+        if (
+            name.endswith(_RUNTIME_STATE_SUFFIXES)
+            or any(token in name for token in _RUNTIME_STATE_NAME_TOKENS)
+            or name in _RUNTIME_STATE_EXACT_NAMES
+        ):
+            errors.append(f"runtime state must not ship in the release tree: {relative}")
+
+    errors.extend(_verify_onefolder_executables(members, scan))
+    errors.extend(_verify_onefolder_prohibited_hashes(members))
+    errors.extend(_verify_onefolder_qt_inventory(members))
+    errors.extend(_verify_onefolder_binary_map(members))
+    errors.extend(_verify_onefolder_license_manifest(members))
+    errors.extend(_verify_onefolder_directory_manifest(members, directory_manifest))
+
+    root_metadata = _onefolder_member(members, "PROJECT-METADATA.json")
+    compliance_metadata = _onefolder_member(members, "compliance/PROJECT-METADATA.json")
+    if (
+        root_metadata is not None
+        and compliance_metadata is not None
+        and root_metadata.read() != compliance_metadata.read()
+    ):
+        errors.append("PROJECT-METADATA.json differs between tree root and compliance copy")
+    return errors
+
+
+def verify_onefolder(
+    artifact: Path,
+    directory_manifest: Path | None,
+    *,
+    launcher_scan: Callable[[bytes], list[str]] | None = None,
+) -> list[str]:
+    """Return release-blocking errors for a one-folder directory or ZIP."""
+    if artifact.is_dir():
+        members, errors = _load_onefolder_directory(artifact)
+        if not members:
+            return errors
+        return errors + verify_onefolder_members(
+            members, directory_manifest, launcher_scan=launcher_scan
+        )
+    try:
+        with zipfile.ZipFile(artifact) as handle:
+            members, errors = _load_onefolder_zip(handle)
+            if not members:
+                return errors
+            return errors + verify_onefolder_members(
+                members, directory_manifest, launcher_scan=launcher_scan
+            )
+    except (OSError, zipfile.BadZipFile) as exc:
+        return [f"cannot read one-folder ZIP: {exc}"]
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("executable", type=Path)
+    parser.add_argument(
+        "artifact",
+        type=Path,
+        help="packaged one-file EXE, one-folder distribution directory, or one-folder ZIP",
+    )
+    parser.add_argument(
+        "--directory-manifest",
+        type=Path,
+        help="sibling directory-update manifest asset for a one-folder artifact",
+    )
     args = parser.parse_args()
-    executable = args.executable.resolve()
-    if not executable.is_file():
-        parser.error(f"executable does not exist: {executable}")
+    artifact = args.artifact.resolve()
+    if not artifact.exists():
+        parser.error(f"artifact does not exist: {artifact}")
 
-    errors = verify(executable)
+    if artifact.is_dir() or artifact.suffix.casefold() == ".zip":
+        manifest = args.directory_manifest.resolve() if args.directory_manifest else None
+        errors = verify_onefolder(artifact, manifest)
+        success = (
+            "PASS: one-folder layout, distribution boundary, notices, inventories, "
+            "and directory-update manifest verified."
+        )
+    else:
+        if args.directory_manifest is not None:
+            parser.error("--directory-manifest applies only to one-folder artifacts")
+        if not artifact.is_file():
+            parser.error(f"executable does not exist: {artifact}")
+        errors = verify(artifact)
+        success = (
+            "PASS: packaged PySide6 boundary, notices, manifests, and CPython libffi "
+            "verified."
+        )
     if errors:
         for error in errors:
             print(f"HOLD: {error}")
         return 1
-    print("PASS: packaged PySide6 boundary, notices, manifests, and CPython libffi verified.")
+    print(success)
     return 0
 
 
