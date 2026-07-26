@@ -1,0 +1,79 @@
+# Canonical byte-stable repository representation.
+#
+# Every SHA-256 manifest in this project (SOURCE-HASHES.sha256,
+# licenses/RELEASE-LICENSE-MANIFEST.sha256, PROJECT-METADATA.json,
+# BUILD-INPUTS.lock) records the bytes of a file exactly as committed. If Git
+# rewrites line endings on checkout, those hashes cannot match on another
+# platform, so the maintained text files below are pinned to LF and every
+# binary/payload tree is pinned to verbatim bytes.
+#
+# In this file the LAST matching pattern wins, so the per-extension rules come
+# first and the tree-level overrides come last.
+
+# --- Maintained text sources: canonical LF ---------------------------------
+*.py        text eol=lf
+*.pyi       text eol=lf
+*.md        text eol=lf
+*.txt       text eol=lf
+*.json      text eol=lf
+*.toml      text eol=lf
+*.yml       text eol=lf
+*.yaml      text eol=lf
+*.spec      text eol=lf
+*.sha256    text eol=lf
+*.lock      text eol=lf
+*.ini       text eol=lf
+*.cfg       text eol=lf
+*.ps1       text eol=lf
+
+# Extensionless maintained text files (rooted so third-party copies are not
+# affected; the tree overrides below still win inside vendored trees).
+/LICENSE    text eol=lf
+.gitignore  text eol=lf
+.gitattributes text eol=lf
+
+# Windows batch files stay CRLF. They are byte-stable either way, and CRLF is
+# the safe interpreter convention, so their content is not rewritten.
+*.bat       text eol=crlf
+*.cmd       text eol=crlf
+
+# --- Binary / non-text payloads: never converted, never diffed -------------
+*.exe       binary
+*.dll       binary
+*.pyd       binary
+*.so        binary
+*.dylib     binary
+*.zip       binary
+*.gz        binary
+*.tgz       binary
+*.tar       binary
+*.xz        binary
+*.bz2       binary
+*.7z        binary
+*.whl       binary
+*.png       binary
+*.jpg       binary
+*.jpeg      binary
+*.gif       binary
+*.ico       binary
+*.icns      binary
+*.pdf       binary
+*.qm        binary
+*.node      binary
+*.pyc       binary
+
+# --- Verbatim trees --------------------------------------------------------
+# Third-party license texts and corresponding-source trees must keep the exact
+# bytes they were published/committed with. Normalizing them would modify
+# third-party content and invalidate the hashed license manifest.
+licenses/**             -text
+third_party_sources/**  -text
+
+# Offline build inputs are downloaded, hash-pinned payloads (archives, wheels)
+# plus their pinned preparation manifest. They are byte-exact evidence, so no
+# conversion may ever apply.
+build_inputs/**         -text
+
+# The generated license manifest is project-owned, not third-party content, so
+# it stays canonical LF even though it lives under licenses/.
+licenses/RELEASE-LICENSE-MANIFEST.sha256 text eol=lf

@@ -31,6 +31,7 @@ INCLUDE_ROOTS = (
     "third_party_sources",
 )
 INCLUDE_FILES = (
+    ".gitattributes",
     ".gitignore",
     "build.bat",
     "BUILD-INPUTS.lock",

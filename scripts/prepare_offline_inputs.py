@@ -310,7 +310,9 @@ def main() -> int:
     manifest_path = project_root / "build_inputs" / "PREPARATION-MANIFEST.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
     manifest_path.write_text(
-        json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        json.dumps(manifest, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+        newline="\n",
     )
     print(f"Prepared {len(rows)} verified local inputs: {manifest_path}")
     return 0

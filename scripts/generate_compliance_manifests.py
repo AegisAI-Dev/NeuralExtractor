@@ -12,6 +12,7 @@ LICENSE_ROOT = PROJECT_ROOT / "licenses"
 LICENSE_OUTPUT = LICENSE_ROOT / "RELEASE-LICENSE-MANIFEST.sha256"
 
 SOURCE_FILES = (
+    ".gitattributes",
     ".github/workflows/build-bridge-release.yml",
     ".github/workflows/build-release.yml",
     ".gitignore",
@@ -102,10 +103,16 @@ def _render(paths: list[Path], base: Path) -> str:
 def generate() -> tuple[int, int]:
     """Regenerate both manifests and return their entry counts."""
     license_paths = _license_paths(LICENSE_ROOT)
-    LICENSE_OUTPUT.write_text(_render(license_paths, LICENSE_ROOT), encoding="utf-8")
+    # newline="\n" keeps the generated manifests byte-identical on Windows and
+    # POSIX; the repository's canonical representation is LF (see .gitattributes).
+    LICENSE_OUTPUT.write_text(
+        _render(license_paths, LICENSE_ROOT), encoding="utf-8", newline="\n"
+    )
 
     source_paths = _source_paths(PROJECT_ROOT)
-    SOURCE_OUTPUT.write_text(_render(source_paths, PROJECT_ROOT), encoding="utf-8")
+    SOURCE_OUTPUT.write_text(
+        _render(source_paths, PROJECT_ROOT), encoding="utf-8", newline="\n"
+    )
     return len(source_paths), len(license_paths)
 
 
