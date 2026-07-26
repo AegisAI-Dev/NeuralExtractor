@@ -27,6 +27,7 @@ from neural_extractor_v3.core.update_installer import (
     RESULT_FILENAME,
     STARTUP_MARKER_FILENAME,
     TRANSACTION_FILENAME,
+    UPDATE_HELPER_FILENAME,
     UpdateTransaction,
     prepare_and_launch_update,
 )
@@ -70,6 +71,230 @@ class Scenario:
 def _require(condition: bool, message: str) -> None:
     if not condition:
         raise SmokeError(message)
+
+
+# Windows CreateProcess resolves lpApplicationName against MAX_PATH unless the
+# caller opts into long paths. The detached updater helper is launched by exact
+# path, so that path must stay below this limit on an ordinary Windows install
+# where long-path policy may well be disabled.
+MAX_WINDOWS_PATH = 260
+MAX_WINDOWS_COMMAND_LINE = 32767
+SHORT_ROOT_LEAF = "neu"
+# Preflight models the worst case, so use the longest scenario directory name.
+LONGEST_SCENARIO_NAME = "concurrency"
+APP_DIRECTORY_NAME = "NeuralExtractorV3"
+DRIVE_FIXED = 3
+
+
+def _fixed_drive_roots() -> list[Path]:
+    """Return the fixed (non-removable, non-network) drive roots."""
+    if os.name != "nt":
+        return [Path("/")]
+    kernel32 = ctypes.WinDLL("kernel32", use_last_error=True)
+    mask = kernel32.GetLogicalDrives()
+    roots: list[Path] = []
+    for index in range(26):
+        if not mask & (1 << index):
+            continue
+        root = f"{chr(ord('A') + index)}:\\"
+        if kernel32.GetDriveTypeW(ctypes.c_wchar_p(root)) == DRIVE_FIXED:
+            roots.append(Path(root))
+    return roots
+
+
+def _is_within(path: Path, root: Path) -> bool:
+    try:
+        Path(os.path.abspath(path)).relative_to(Path(os.path.abspath(root)))
+    except (ValueError, OSError):
+        return False
+    return True
+
+
+def _directory_is_writable(path: Path) -> bool:
+    probe = path / f".w{uuid.uuid4().hex[:4]}"
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+        probe.write_bytes(b"w")
+        probe.unlink()
+    except OSError:
+        return False
+    return True
+
+
+def select_short_external_root(
+    project_root: Path | None = None,
+    *,
+    temp_root: Path | None = None,
+    runner_temp: Path | None = None,
+    candidate_roots: list[Path] | None = None,
+) -> Path:
+    """Pick the shortest writable fixed-drive root for the updater smoke.
+
+    The updater refuses to install a target inside the temporary root, and a
+    workspace below the repository checkout pushes the generated helper path
+    past MAX_PATH on GitHub's runners. The smoke therefore needs a very short
+    root outside the checkout, outside TEMP/TMP and outside RUNNER_TEMP. Fails
+    closed when no such root is writable.
+    """
+    project_root = Path(os.path.abspath(project_root or Path.cwd()))
+    temp_root = Path(os.path.abspath(temp_root or Path(tempfile.gettempdir())))
+    drives = candidate_roots if candidate_roots is not None else _fixed_drive_roots()
+    # Prefer the drive holding the checkout so staging copies stay on one
+    # volume, then the remaining fixed drives in a deterministic order.
+    ordered = sorted(
+        drives,
+        key=lambda drive: (
+            0 if str(drive)[:1].upper() == str(project_root.drive)[:1].upper() else 1,
+            str(drive).upper(),
+        ),
+    )
+    rejected: list[str] = []
+    for drive in ordered:
+        candidate = Path(os.path.abspath(drive / SHORT_ROOT_LEAF))
+        if _is_within(candidate, temp_root):
+            rejected.append(f"{candidate} (inside the temporary root)")
+            continue
+        if runner_temp is not None and _is_within(candidate, runner_temp):
+            rejected.append(f"{candidate} (inside RUNNER_TEMP)")
+            continue
+        if _is_within(candidate, project_root):
+            rejected.append(f"{candidate} (inside the repository checkout)")
+            continue
+        if not _directory_is_writable(candidate):
+            rejected.append(f"{candidate} (not writable)")
+            continue
+        return candidate
+    raise SmokeError(
+        "No short external updater-smoke root is available; rejected: "
+        + ", ".join(rejected or ["<no fixed drive found>"])
+    )
+
+
+def modelled_smoke_paths(workspace: Path) -> dict[str, Path]:
+    """Model the deepest paths the smoke generates, worst case, without I/O.
+
+    Mirrors ``_scenario`` and ``prepare_and_launch_update`` so preflight can
+    reject an unusable workspace before a launch fails inside the updater.
+    """
+    identity = "f" * 64  # normalized_target_identity is a SHA-256 hex digest
+    transaction_id = new_transaction_id()
+    scenario_root = workspace / LONGEST_SCENARIO_NAME
+    local_app_data = scenario_root / "local-app-data"
+    updates_root = local_app_data / APP_DIRECTORY_NAME / "updates"
+    helper_root = local_app_data / APP_DIRECTORY_NAME / "updater-helper"
+    target = scenario_root / "install" / "NeuralExtractorV3.exe"
+    transaction_dir = updates_root / VERSION / transaction_id
+    return {
+        "detached_helper_executable": (
+            helper_root / identity / transaction_id / UPDATE_HELPER_FILENAME
+        ),
+        "staged_payload": transaction_dir / "package" / expected_exe_filename(VERSION),
+        "transaction": transaction_dir / TRANSACTION_FILENAME,
+        "startup_marker": transaction_dir / STARTUP_MARKER_FILENAME,
+        "result": transaction_dir / RESULT_FILENAME,
+        "ownership": updates_root / "ownership" / f"{identity}.json",
+        "backup": target.parent / f".{target.name}.{transaction_id}.backup",
+        "target": target,
+    }
+
+
+def preflight_workspace(
+    workspace: Path,
+    *,
+    project_root: Path | None = None,
+    temp_root: Path | None = None,
+    runner_temp: Path | None = None,
+) -> dict[str, object]:
+    """Validate the workspace and report every path/command-line measurement.
+
+    Raises ``SmokeError`` with an actionable diagnostic rather than letting
+    CreateProcess fail with a bare ``WinError 206`` inside the updater.
+    """
+    project_root = Path(os.path.abspath(project_root or Path.cwd()))
+    temp_root = Path(os.path.abspath(temp_root or Path(tempfile.gettempdir())))
+
+    if not workspace.is_absolute():
+        raise SmokeError(f"Updater-smoke workspace must be absolute: {workspace}")
+    if _is_within(workspace, temp_root):
+        raise SmokeError(
+            "Updater-smoke workspace must not be below the temporary root "
+            f"({temp_root}); the updater rejects an installation target inside it: {workspace}"
+        )
+    if runner_temp is not None and _is_within(workspace, runner_temp):
+        raise SmokeError(
+            f"Updater-smoke workspace must not be below RUNNER_TEMP ({runner_temp}): {workspace}"
+        )
+    if _is_within(workspace, project_root):
+        raise SmokeError(
+            "Updater-smoke workspace must not be below the repository checkout "
+            f"({project_root}); nested transaction paths then exceed MAX_PATH: {workspace}"
+        )
+    if not _directory_is_writable(workspace):
+        raise SmokeError(f"Updater-smoke workspace is not writable: {workspace}")
+
+    paths = modelled_smoke_paths(workspace)
+    helper = paths["detached_helper_executable"]
+    arguments = [str(helper), "--apply-update", str(paths["transaction"])]
+    command_line = subprocess.list2cmdline(arguments)
+    longest_argument = max(arguments, key=len)
+    deepest_name, deepest_path = max(paths.items(), key=lambda item: len(str(item[1])))
+
+    diagnostics: dict[str, object] = {
+        "workspace": str(workspace),
+        "workspace_length": len(str(workspace)),
+        "cwd": str(project_root),
+        "cwd_length": len(str(project_root)),
+        "detached_helper_executable": str(helper),
+        "detached_helper_executable_length": len(str(helper)),
+        "arguments": [{"value": value, "length": len(value)} for value in arguments],
+        "longest_argument": longest_argument,
+        "longest_argument_length": len(longest_argument),
+        "command_line_length": len(command_line),
+        "deepest_path": str(deepest_path),
+        "deepest_path_name": deepest_name,
+        "deepest_path_length": len(str(deepest_path)),
+        "modelled_paths": {
+            name: {"path": str(value), "length": len(str(value))}
+            for name, value in sorted(paths.items(), key=lambda item: -len(str(item[1])))
+        },
+        "max_windows_path": MAX_WINDOWS_PATH,
+        "max_command_line": MAX_WINDOWS_COMMAND_LINE,
+    }
+
+    oversized = {
+        name: len(str(value))
+        for name, value in paths.items()
+        if len(str(value)) > MAX_WINDOWS_PATH
+    }
+    if oversized:
+        raise SmokeError(
+            "Updater-smoke workspace produces paths beyond the Windows MAX_PATH limit "
+            f"({MAX_WINDOWS_PATH}): "
+            + ", ".join(f"{name}={length}" for name, length in sorted(oversized.items()))
+            + f". Deepest: {deepest_path} ({len(str(deepest_path))} chars). "
+            "Use a shorter external workspace root."
+        )
+    if len(command_line) > MAX_WINDOWS_COMMAND_LINE:
+        raise SmokeError(
+            "Detached updater command line exceeds the Windows CreateProcess limit "
+            f"({MAX_WINDOWS_COMMAND_LINE}): {len(command_line)} characters"
+        )
+    return diagnostics
+
+
+def _long_path_smoke_error(helper: Path, arguments: list[str], exc: OSError) -> SmokeError:
+    """Turn a raw WinError 206 into an actionable updater-smoke diagnostic."""
+    command_line = subprocess.list2cmdline(arguments)
+    longest = max(arguments, key=len) if arguments else ""
+    return SmokeError(
+        "The detached updater helper could not be launched because its path exceeds the "
+        f"Windows MAX_PATH limit ({MAX_WINDOWS_PATH}). "
+        f"helper={helper} ({len(str(helper))} chars); "
+        f"longest argument={longest} ({len(longest)} chars); "
+        f"command line={len(command_line)} chars (limit {MAX_WINDOWS_COMMAND_LINE}); "
+        f"original error: WinError {getattr(exc, 'winerror', '?')}: {exc.strerror}. "
+        "Run the smoke from a short external workspace root such as D:\\neu\\w."
+    )
 
 
 def _environment(
@@ -405,18 +630,42 @@ def _run_prepared_update(
         _require(parent_created is not None, "Fake GUI process identity was unavailable")
         if create_stale_state:
             _write_stale_ownership(scenario)
-        prepared = prepare_and_launch_update(
-            _update_info(scenario.staged),
-            scenario.staged,
-            parent_pid=parent.pid,
-            transaction_id=scenario.transaction_id,
-            target_executable=scenario.target,
-            frozen=True,
-            updates_root=scenario.updates_root,
-            temporary_root=Path(tempfile.gettempdir()),
-            helper_root=scenario.helper_root,
-            handoff_timeout=45,
-        )
+        try:
+            prepared = prepare_and_launch_update(
+                _update_info(scenario.staged),
+                scenario.staged,
+                parent_pid=parent.pid,
+                transaction_id=scenario.transaction_id,
+                target_executable=scenario.target,
+                frozen=True,
+                updates_root=scenario.updates_root,
+                temporary_root=Path(tempfile.gettempdir()),
+                helper_root=scenario.helper_root,
+                handoff_timeout=45,
+            )
+        except OSError as exc:
+            # CreateProcess reports ERROR_FILENAME_EXCED_RANGE when the helper
+            # executable path exceeds MAX_PATH. Report that precisely instead of
+            # surfacing a bare traceback from deep inside the updater.
+            if getattr(exc, "winerror", None) != 206:
+                raise
+            expected_helper = (
+                scenario.helper_root
+                / normalized_target_identity(scenario.target)
+                / scenario.transaction_id
+                / UPDATE_HELPER_FILENAME
+            )
+            transaction_path = (
+                scenario.updates_root
+                / VERSION
+                / scenario.transaction_id
+                / TRANSACTION_FILENAME
+            )
+            raise _long_path_smoke_error(
+                expected_helper,
+                [str(expected_helper), "--apply-update", str(transaction_path)],
+                exc,
+            ) from exc
         transaction_path = prepared.transaction_path
         helper_path = (
             scenario.helper_root
@@ -710,21 +959,50 @@ def _concurrency_smoke(
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--old-package", type=Path, required=True)
-    parser.add_argument("--new-package", type=Path, required=True)
-    parser.add_argument("--workspace", type=Path, required=True)
+    parser.add_argument("--old-package", type=Path)
+    parser.add_argument("--new-package", type=Path)
+    parser.add_argument("--workspace", type=Path)
     parser.add_argument(
         "--scenario",
         choices=("all", "success", "timeout", "concurrency"),
         default="all",
     )
-    return parser.parse_args()
+    parser.add_argument(
+        "--print-selected-root",
+        action="store_true",
+        help=(
+            "print the short external smoke root chosen for this machine and exit; "
+            "the caller stages packages and the workspace below it"
+        ),
+    )
+    parser.add_argument("--project-root", type=Path, default=Path.cwd())
+    args = parser.parse_args()
+    if not args.print_selected_root:
+        missing = [
+            name
+            for name, value in (
+                ("--old-package", args.old_package),
+                ("--new-package", args.new_package),
+                ("--workspace", args.workspace),
+            )
+            if value is None
+        ]
+        if missing:
+            parser.error(f"the following arguments are required: {', '.join(missing)}")
+    return args
 
 
 def main() -> int:
     if os.name != "nt":
         raise SmokeError("Packaged updater smoke requires Windows")
     args = _parse_args()
+    runner_temp = Path(os.environ["RUNNER_TEMP"]) if os.environ.get("RUNNER_TEMP") else None
+    if args.print_selected_root:
+        root = select_short_external_root(
+            args.project_root, runner_temp=runner_temp
+        )
+        print(str(root))
+        return 0
     old_package = args.old_package.resolve()
     new_package = args.new_package.resolve()
     workspace = args.workspace.resolve() / f"run-{uuid.uuid4().hex[:8]}"
@@ -734,6 +1012,30 @@ def main() -> int:
         workspace.parent == args.workspace.resolve() and workspace.name.startswith("run-"),
         "Smoke workspace is invalid",
     )
+    # Validate every generated path and the detached command line before any
+    # launch, so an unusable workspace fails with an actionable diagnostic
+    # rather than a bare WinError 206 from CreateProcess.
+    diagnostics = preflight_workspace(
+        workspace,
+        project_root=args.project_root,
+        runner_temp=runner_temp,
+    )
+    print(
+        "updater-smoke preflight: workspace="
+        f"{diagnostics['workspace']} ({diagnostics['workspace_length']} chars), "
+        f"deepest={diagnostics['deepest_path_name']} "
+        f"({diagnostics['deepest_path_length']} chars, limit {MAX_WINDOWS_PATH}), "
+        f"detached command line={diagnostics['command_line_length']} chars "
+        f"(limit {MAX_WINDOWS_COMMAND_LINE})",
+        flush=True,
+    )
+    # Remove stale smoke-owned state from this exact root so a previous failed
+    # run cannot leave a half-created transaction behind.
+    for stale in sorted(workspace.parent.glob("run-*")):
+        if stale.is_dir():
+            for executable in stale.rglob("*.exe"):
+                _terminate_exact_executable(executable)
+            shutil.rmtree(stale, ignore_errors=True)
     workspace.mkdir(parents=True, exist_ok=False)
     started = time.monotonic()
     completed = False
