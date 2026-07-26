@@ -122,7 +122,7 @@ def test_binary_extensions_are_marked_binary(pattern: str):
 def test_vendored_trees_are_never_line_ending_converted():
     """Third-party bytes must stay verbatim; normalizing them would modify content."""
     rows = _attribute_lines()
-    for tree in ("licenses/**", "third_party_sources/**", "build_inputs/**"):
+    for tree in ("licenses/**", "third_party_sources/**", "/build_inputs/**"):
         matches = [attributes for pattern, attributes in rows if pattern == tree]
         assert matches, f"{tree} has no verbatim-bytes rule"
         assert "-text" in matches[-1], f"{tree} must be marked -text"
@@ -132,6 +132,46 @@ def test_vendored_trees_are_never_line_ending_converted():
     assert patterns.index("licenses/RELEASE-LICENSE-MANIFEST.sha256") > patterns.index(
         "licenses/**"
     )
+
+
+def test_build_inputs_payloads_stay_binary_by_default():
+    """Downloaded archives and wheels must never be line-ending converted."""
+    rows = _attribute_lines()
+    payload = [attributes for pattern, attributes in rows if pattern == "/build_inputs/**"]
+    assert payload, "/build_inputs/** has no rule"
+    assert "-text" in payload[-1]
+    for pattern in ("*.whl", "*.zip", "*.gz"):
+        assert dict(rows)[pattern] == "binary"
+
+
+def test_preparation_manifest_has_a_later_lf_override():
+    """The committed generated manifest is text, unlike the payloads beside it."""
+    rows = _attribute_lines()
+    patterns = [pattern for pattern, _ in rows]
+    override = "/build_inputs/PREPARATION-MANIFEST.json"
+    assert override in patterns, "the preparation manifest has no explicit rule"
+    # Last match wins in .gitattributes, so the override must follow the broad rule.
+    assert patterns.index(override) > patterns.index("/build_inputs/**")
+    attributes = dict(rows)[override]
+    assert "text" in attributes.split()
+    assert "eol=lf" in attributes
+
+
+def test_preparation_manifest_is_canonical_lf_with_one_trailing_newline():
+    raw = (PROJECT_ROOT / "build_inputs" / "PREPARATION-MANIFEST.json").read_bytes()
+    assert b"\r\n" not in raw, "the preparation manifest is not canonical LF"
+    assert b"\r" not in raw, "the preparation manifest contains a bare CR"
+    assert raw.endswith(b"\n"), "the preparation manifest must end with a newline"
+    assert not raw.endswith(b"\n\n"), "it must end with exactly one LF"
+
+
+def test_preparation_manifest_hash_matches_the_source_manifest():
+    relative = "build_inputs/PREPARATION-MANIFEST.json"
+    recorded = _source_hash_records()[relative]
+    raw = (PROJECT_ROOT / relative).read_bytes()
+    assert _sha256(PROJECT_ROOT / relative) == recorded
+    # Guard against a regression to the CRLF bytes that failed CI run #2.
+    assert hashlib.sha256(raw.replace(b"\n", b"\r\n")).hexdigest() != recorded
 
 
 def test_batch_files_are_pinned_crlf_rather_than_rewritten():
@@ -445,6 +485,101 @@ def test_restore_never_rewrites_the_pinned_preparation_manifest():
     assert _sha256(PROJECT_ROOT / "build_inputs" / "PREPARATION-MANIFEST.json") == (
         manifest_hash
     )
+    # The restore command must never invoke the regenerating preparation tool.
+    assert "prepare_offline_inputs" not in source.replace(
+        "scripts/prepare_offline_inputs.py", ""
+    ).replace("``prepare_offline_inputs.py``", "")
+
+
+def test_restore_leaves_the_committed_manifest_byte_identical(tmp_path, monkeypatch):
+    """Run the real restore flow and prove the pin list itself is untouched."""
+    payload = b"pinned archive bytes"
+    root, digest = _write_pinned_fixture(tmp_path / "repo", payload)
+    reuse = tmp_path / "runner-temp"
+    reuse.mkdir()
+    (reuse / "example.zip").write_bytes(payload)
+    manifest_path = root / "build_inputs" / "PREPARATION-MANIFEST.json"
+    before = manifest_path.read_bytes()
+    before_mtime = manifest_path.stat().st_mtime_ns
+
+    pinned = restore.read_pinned_inputs(root)
+    restore.restore_input(pinned[0], root, [reuse], verify_only=False)
+    targets = restore.read_source_hash_targets(root)
+    restore.mirror_wheelhouse(root, targets, verify_only=False)
+    restore.assert_no_runtime_state(root)
+    restore.verify_targets(root, targets)
+
+    assert manifest_path.read_bytes() == before, "the pin list was rewritten"
+    assert manifest_path.stat().st_mtime_ns == before_mtime, "the pin list was replaced"
+    assert digest == hashlib.sha256(payload).hexdigest()
+
+
+def test_bridge_workflow_never_regenerates_the_pin_list():
+    """GitHub Actions must not run the manifest-rewriting preparation script."""
+    workflow = BRIDGE_WORKFLOW.read_text(encoding="utf-8")
+    code_lines = [
+        line
+        for line in workflow.splitlines()
+        if not line.strip().startswith("#")
+    ]
+    joined = "\n".join(code_lines)
+    assert "prepare_offline_inputs.py" not in joined
+    assert "restore_build_inputs.py" in joined
+
+
+def test_clean_checkout_simulation_reconstructs_every_ignored_input(tmp_path):
+    """End-to-end: payloads absent, then restored, with zero unsatisfied targets.
+
+    The pinned payloads are staged in a reuse directory (standing in for the
+    already-verified RUNNER_TEMP archives) so the simulation performs no network
+    access, then every source-hash target under build_inputs/ must be satisfied.
+    """
+    import shutil
+
+    real_root = PROJECT_ROOT
+    targets = restore.read_source_hash_targets(real_root)
+    pinned = restore.read_pinned_inputs(real_root)
+
+    clean = tmp_path / "clean-checkout"
+    (clean / "build_inputs").mkdir(parents=True)
+    # A clean checkout carries the committed manifest and the source manifest,
+    # but none of the ignored payloads.
+    shutil.copy2(
+        real_root / "build_inputs" / "PREPARATION-MANIFEST.json",
+        clean / "build_inputs" / "PREPARATION-MANIFEST.json",
+    )
+    shutil.copy2(real_root / "SOURCE-HASHES.sha256", clean / "SOURCE-HASHES.sha256")
+    shutil.copy2(real_root / "BUILD-INPUTS.lock", clean / "BUILD-INPUTS.lock")
+
+    reuse = tmp_path / "reuse"
+    reuse.mkdir()
+    for item in pinned:
+        source = real_root / item.path
+        assert source.is_file(), f"local pinned input is missing: {item.path}"
+        shutil.copy2(source, reuse / source.name)
+
+    # Nothing but the pin list exists yet, so verification must fail closed.
+    with pytest.raises(restore.RestoreError):
+        restore.verify_targets(clean, targets)
+
+    for item in pinned:
+        assert restore.restore_input(item, clean, [reuse], verify_only=False) == "reused"
+    mirrored = restore.mirror_wheelhouse(clean, targets, verify_only=False)
+    restore.assert_no_runtime_state(clean)
+    restore.verify_targets(clean, targets)
+
+    assert mirrored, "the flat wheel mirror was not reconstructed"
+    missing = [r for r in targets if not (clean / r).is_file()]
+    mismatched = [
+        r for r in targets if (clean / r).is_file() and _sha256(clean / r) != targets[r]
+    ]
+    assert missing == [] and mismatched == [], (
+        f"missing={missing[:5]} mismatched={mismatched[:5]}"
+    )
+    # The reconstruction must not have altered the committed pin list.
+    assert (clean / "build_inputs" / "PREPARATION-MANIFEST.json").read_bytes() == (
+        real_root / "build_inputs" / "PREPARATION-MANIFEST.json"
+    ).read_bytes()
 
 
 def test_repository_build_inputs_satisfy_every_covered_target():
