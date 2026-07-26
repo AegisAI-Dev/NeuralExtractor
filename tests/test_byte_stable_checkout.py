@@ -122,15 +122,15 @@ def test_binary_extensions_are_marked_binary(pattern: str):
 def test_vendored_trees_are_never_line_ending_converted():
     """Third-party bytes must stay verbatim; normalizing them would modify content."""
     rows = _attribute_lines()
-    for tree in ("licenses/**", "third_party_sources/**", "/build_inputs/**"):
+    for tree in ("/licenses/**", "third_party_sources/**", "/build_inputs/**"):
         matches = [attributes for pattern, attributes in rows if pattern == tree]
         assert matches, f"{tree} has no verbatim-bytes rule"
         assert "-text" in matches[-1], f"{tree} must be marked -text"
     # The generated license manifest is project-owned and stays canonical LF,
     # and its rule must come after the licenses/** override to win.
     patterns = [pattern for pattern, _ in rows]
-    assert patterns.index("licenses/RELEASE-LICENSE-MANIFEST.sha256") > patterns.index(
-        "licenses/**"
+    assert patterns.index("/licenses/RELEASE-LICENSE-MANIFEST.sha256") > patterns.index(
+        "/licenses/**"
     )
 
 

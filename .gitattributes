@@ -66,8 +66,46 @@
 # Third-party license texts and corresponding-source trees must keep the exact
 # bytes they were published/committed with. Normalizing them would modify
 # third-party content and invalidate the hashed license manifest.
-licenses/**             -text
+/licenses/**            -text
 third_party_sources/**  -text
+
+# Exception list, and it must stay the LAST word on these paths. These 27
+# preserved files were committed as LF (verified byte-for-byte against the
+# public main branch) while the Windows working tree held CRLF, so
+# licenses/RELEASE-LICENSE-MANIFEST.sha256 recorded CRLF bytes that a clean
+# checkout could never reproduce. Pinning exactly these paths to canonical LF
+# gives them one checkout representation without touching the other preserved
+# license files, which stay byte-verbatim under the rule above. Every other
+# file in this tree — including
+# /licenses/microsoft/Windows-SDK-10.0.26100.0-third-party-notices.rtf, whose
+# committed blob genuinely is CRLF — is deliberately absent from this list.
+/licenses/CPython-3.12.9-LICENSE.txt text eol=lf
+/licenses/Node.js-22.17.0-LICENSE.txt text eol=lf
+/licenses/microsoft/Visual-Studio-2022-BuildTools-Redist-local.txt text eol=lf
+/licenses/microsoft/Windows-Performance-Toolkit-NOTICE.txt text eol=lf
+/licenses/microsoft/Windows-SDK-10.0.26100.0-license.rtf text eol=lf
+/licenses/python/certifi-2026.7.22/WHEEL-METADATA.txt text eol=lf
+/licenses/python/charset-normalizer-3.4.9/WHEEL-METADATA.txt text eol=lf
+/licenses/python/charset-normalizer-3.4.9/charset_normalizer-3.4.9.dist-info__licenses__LICENSE text eol=lf
+/licenses/python/defusedxml-0.7.1/WHEEL-METADATA.txt text eol=lf
+/licenses/python/idna-3.18/WHEEL-METADATA.txt text eol=lf
+/licenses/python/packaging-26.2/WHEEL-METADATA.txt text eol=lf
+/licenses/python/pillow-12.3.0/WHEEL-METADATA.txt text eol=lf
+/licenses/python/pillow-12.3.0/pillow-12.3.0.dist-info__licenses__LICENSE text eol=lf
+/licenses/python/pyside6-6.11.1/WHEEL-METADATA.txt text eol=lf
+/licenses/python/pyside6-6.11.1/pyside6-6.11.1.dist-info__licenses__LicenseRef-Qt-Commercial.txt text eol=lf
+/licenses/python/pyside6-addons-6.11.1/WHEEL-METADATA.txt text eol=lf
+/licenses/python/pyside6-addons-6.11.1/pyside6_addons-6.11.1.dist-info__licenses__LicenseRef-Qt-Commercial.txt text eol=lf
+/licenses/python/pyside6-essentials-6.11.1/WHEEL-METADATA.txt text eol=lf
+/licenses/python/pyside6-essentials-6.11.1/pyside6_essentials-6.11.1.dist-info__licenses__LicenseRef-Qt-Commercial.txt text eol=lf
+/licenses/python/requests-2.34.2/WHEEL-METADATA.txt text eol=lf
+/licenses/python/setuptools-83.0.0/WHEEL-METADATA.txt text eol=lf
+/licenses/python/shiboken6-6.11.1/WHEEL-METADATA.txt text eol=lf
+/licenses/python/shiboken6-6.11.1/shiboken6-6.11.1.dist-info__licenses__LicenseRef-Qt-Commercial.txt text eol=lf
+/licenses/python/typing-extensions-4.16.0/WHEEL-METADATA.txt text eol=lf
+/licenses/python/urllib3-2.7.0/WHEEL-METADATA.txt text eol=lf
+/licenses/python/youtube-transcript-api-1.2.4/WHEEL-METADATA.txt text eol=lf
+/licenses/python/yt-dlp-2026.7.4/WHEEL-METADATA.txt text eol=lf
 
 # Offline build inputs are downloaded, hash-pinned payloads (archives, wheels).
 # They are byte-exact evidence, so no conversion may ever apply.
@@ -83,4 +121,4 @@ third_party_sources/**  -text
 
 # The generated license manifest is project-owned, not third-party content, so
 # it stays canonical LF even though it lives under licenses/.
-licenses/RELEASE-LICENSE-MANIFEST.sha256 text eol=lf
+/licenses/RELEASE-LICENSE-MANIFEST.sha256 text eol=lf
