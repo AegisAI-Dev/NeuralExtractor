@@ -498,19 +498,19 @@ def test_bridge_workflow_drives_the_real_updater_replacement_and_rollback_smokes
     assert "--scenario all" in smoke_block
     assert "simulated-3.0.7" in smoke_block
     assert "must differ from the 3.0.8 payload" in smoke_block
-    # The updater fail-closes when the target executable resolves inside
-    # tempfile.gettempdir(), and TEMP is RUNNER_TEMP on Windows runners, so the
-    # simulated install must be staged outside RUNNER_TEMP or the smoke can
-    # never pass.
     code_lines = [
         line for line in smoke_block.splitlines() if not line.strip().startswith("#")
     ]
-    assert not any("RUNNER_TEMP" in line for line in code_lines)
-    assert 'Join-Path $PWD "build\\upd-smoke"' in smoke_block
-    # The smoke nests ~190 characters below its workspace; a long workspace path
-    # makes the detached-helper launch fail with WinError 206.
-    workspace_line = next(line for line in code_lines if "$workspace =" in line)
-    assert len(workspace_line.split('"')[1]) <= 20
+    # The updater fail-closes when the install target resolves inside
+    # tempfile.gettempdir(), so no temporary root may be used; and below the
+    # checkout the generated detached-helper path exceeds MAX_PATH, which is
+    # what produced WinError 206 in CI. The smoke therefore runs from a short
+    # external root chosen by the harness.
+    for forbidden in ("RUNNER_TEMP", "env:TEMP", "env:TMP"):
+        assert not any(forbidden in line for line in code_lines)
+    assert 'Join-Path $PWD "build' not in "\n".join(code_lines)
+    assert "--print-selected-root" in smoke_block
+    assert 'Join-Path $root "w"' in smoke_block
 
 
 def test_updater_rejects_an_install_target_inside_the_temporary_root(tmp_path):

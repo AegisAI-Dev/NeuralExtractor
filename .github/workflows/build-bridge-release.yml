@@ -331,33 +331,45 @@ jobs:
           # packaged build; the smoke drives the real one-file updater handoff,
           # startup confirmation, concurrency rejection and rollback paths.
           #
-          # The smoke workspace must NOT live under any temporary root: the
-          # updater fail-closes when the target executable resolves inside
-          # tempfile.gettempdir() ("running from a temporary or update-staging
-          # location"). Stage it under the checkout instead so the simulated
-          # install directory is a normal, non-temporary location. (RUNNER_TEMP
-          # and the process TEMP are distinct directories on GitHub's Windows
-          # runners; neither is a valid install location for this smoke.)
-          # Keep these directory names short. The smoke nests roughly 190
-          # characters of transaction/ownership path below the workspace, so a
-          # long workspace path makes CreateProcess fail with WinError 206
-          # ("filename or extension is too long") when the detached updater
-          # helper is launched.
-          $stagingRoot = Join-Path $PWD "build\upd-in"
-          New-Item -ItemType Directory -Path $stagingRoot -Force | Out-Null
-          $previous = Join-Path $stagingRoot "NeuralExtractorV3-simulated-3.0.7.exe"
+          # Everything must live under a very short EXTERNAL root, never under
+          # the checkout and never under TEMP/TMP/RUNNER_TEMP:
+          #   * the updater fail-closes when the install target resolves inside
+          #     tempfile.gettempdir(), which rules out the temporary roots;
+          #   * below the checkout (D:\a\<repo>\<repo>\...) the generated
+          #     detached-helper path reaches 265 characters — the smoke nests a
+          #     64-char target identity plus a 48-char transaction id under
+          #     local-app-data\NeuralExtractorV3\updater-helper — so
+          #     CreateProcess rejects lpApplicationName with WinError 206
+          #     ("filename or extension is too long") before the helper starts.
+          # The harness selects the shortest writable fixed-drive root (for
+          # example D:\neu) and fails closed if none qualifies; it also
+          # preflights every generated path and the detached command line.
+          $env:PYTHONPATH = "$PWD\src"
+          $root = & $env:PYTHON_EXE scripts/packaged_updater_smoke.py --print-selected-root --project-root "$PWD"
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          $root = $root.Trim()
+          Write-Host "updater-smoke external root: $root ($($root.Length) chars)"
+          New-Item -ItemType Directory -Path $root -Force | Out-Null
+          $previous = Join-Path $root "o.exe"
+          $payload = Join-Path $root "n.exe"
+          $workspace = Join-Path $root "w"
+          Copy-Item "dist\NeuralExtractorV3.exe" $payload -Force
           Copy-Item "dist\NeuralExtractorV3.exe" $previous -Force
           Add-Content -LiteralPath $previous -Value "neural-extractor-simulated-3.0.7-bridge-marker" -Encoding Ascii
-          $newHash = (Get-FileHash "dist\NeuralExtractorV3.exe" -Algorithm SHA256).Hash
+          $newHash = (Get-FileHash $payload -Algorithm SHA256).Hash
           $oldHash = (Get-FileHash $previous -Algorithm SHA256).Hash
           if ($newHash -eq $oldHash) {
             Write-Error "The simulated 3.0.7 package must differ from the 3.0.8 payload."
             exit 1
           }
-          $workspace = Join-Path $PWD "build\upd-smoke"
-          $env:PYTHONPATH = "$PWD\src"
-          & $env:PYTHON_EXE scripts/packaged_updater_smoke.py --old-package $previous --new-package "dist\NeuralExtractorV3.exe" --workspace $workspace --scenario all
-          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+          Write-Host "updater-smoke workspace: $workspace ($($workspace.Length) chars)"
+          & $env:PYTHON_EXE scripts/packaged_updater_smoke.py --old-package $previous --new-package $payload --workspace $workspace --project-root "$PWD" --scenario all
+          $smokeExit = $LASTEXITCODE
+          Remove-Item -LiteralPath $payload, $previous -Force -ErrorAction SilentlyContinue
+          if ($smokeExit -eq 0) {
+            Remove-Item -LiteralPath $workspace -Recurse -Force -ErrorAction SilentlyContinue
+          }
+          if ($smokeExit -ne 0) { exit $smokeExit }
 
       - name: Scan the packaged EXE for PyQt6 and provider payloads
         shell: pwsh
