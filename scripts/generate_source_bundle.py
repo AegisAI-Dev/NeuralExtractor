@@ -39,6 +39,7 @@ INCLUDE_FILES = (
     "QT-PYSIDE-COMPONENTS.json",
     "LICENSE",
     "main.py",
+    "NeuralExtractorV3-bridge-onefile.spec",
     "NeuralExtractorV3.spec",
     "PROJECT-METADATA.json",
     "pyproject.toml",

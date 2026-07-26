@@ -637,6 +637,71 @@ def verify(executable: Path) -> list[str]:
     return verify_archive(archive)
 
 
+BRIDGE_REQUIRED_RUNTIME_PATHS: tuple[str, ...] = (
+    "bin/node.exe",
+    "bin/ffmpeg.exe",
+    "bin/ffprobe.exe",
+)
+
+
+def verify_bridge_boundary(archive: _CArchive) -> list[str]:
+    """Return distribution-boundary errors for an owner-authorized bridge EXE.
+
+    This runs the same audited payload-boundary checks as ``verify_archive`` —
+    PyQt/provider/JavaScript/canvas rejection across the CArchive and embedded
+    PYZ, the exact audited PySide6/Qt path set, the pinned CPython
+    libffi/_ctypes bytes, presence of the required compliance material, and the
+    license/source hash manifests — but deliberately omits
+    ``_verify_distribution_inventory``.
+
+    That inventory check binds ``THIRD_PARTY_LICENSES.txt`` to one specific
+    historical artifact's payload fingerprint, so it can only pass for the exact
+    EXE the inventory was generated from. A freshly built bridge EXE has a
+    different fingerprint by definition. Omitting it here does NOT assert
+    distribution compliance and does not alter any audit status: the general
+    public-distribution verdict remains HOLD, and the compliance-gated release
+    path continues to use ``verify_archive``.
+    """
+    normalized = {name: _normalize_archive_path(name) for name in archive.toc}
+    folded_paths = {path.casefold() for path in normalized.values()}
+    errors = _scan_carchive_names(archive, normalized)
+
+    missing = [
+        path for path in REQUIRED_COMPLIANCE_PATHS if path.casefold() not in folded_paths
+    ]
+    if missing:
+        errors.append("missing required compliance paths: " + ", ".join(missing))
+
+    missing_runtimes = [
+        path for path in BRIDGE_REQUIRED_RUNTIME_PATHS if path.casefold() not in folded_paths
+    ]
+    if missing_runtimes:
+        errors.append("missing bundled runtime payloads: " + ", ".join(missing_runtimes))
+
+    errors.extend(_verify_pyz(archive))
+    errors.extend(_verify_pyside_payload(archive, normalized))
+    errors.extend(_verify_libffi(archive, normalized))
+    errors.extend(_verify_source_hash_manifest(archive, normalized))
+    if LICENSE_MANIFEST_PATH.casefold() in folded_paths:
+        errors.extend(_verify_license_manifest(archive, normalized))
+    return errors
+
+
+def verify_bridge(executable: Path) -> list[str]:
+    """Return bridge-boundary errors for a one-file bridge *executable*."""
+    digest = hashlib.sha256()
+    with executable.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    if digest.hexdigest() in PROHIBITED_LEGACY_SHA256S:
+        return ["artifact is a prohibited legacy one-file EXE"]
+    try:
+        archive = CArchiveReader(str(executable))
+    except Exception as exc:  # Keep malformed/not-PyInstaller artifacts fail closed.
+        return [f"cannot read PyInstaller CArchive: {exc}"]
+    return verify_bridge_boundary(archive)
+
+
 @dataclass(frozen=True)
 class _TreeMember:
     """Lazy view of one file inside a one-folder distribution tree or ZIP."""
@@ -1220,10 +1285,37 @@ def main() -> int:
         type=Path,
         help="sibling directory-update manifest asset for a one-folder artifact",
     )
+    parser.add_argument(
+        "--bridge-boundary",
+        action="store_true",
+        help=(
+            "one-file EXEs only: verify the payload boundary (no PyQt, no provider, "
+            "audited Qt paths, pinned CPython natives, required notices) without the "
+            "artifact-specific distribution-inventory fingerprint. Does not assert "
+            "distribution compliance; the public verdict remains HOLD."
+        ),
+    )
     args = parser.parse_args()
     artifact = args.artifact.resolve()
     if not artifact.exists():
         parser.error(f"artifact does not exist: {artifact}")
+
+    if args.bridge_boundary:
+        if artifact.is_dir() or artifact.suffix.casefold() == ".zip":
+            parser.error("--bridge-boundary applies only to a one-file EXE")
+        if args.directory_manifest is not None:
+            parser.error("--bridge-boundary and --directory-manifest are mutually exclusive")
+        errors = verify_bridge(artifact)
+        if errors:
+            for error in errors:
+                print(f"HOLD: {error}")
+            return 1
+        print(
+            "PASS: bridge payload boundary verified (no PyQt, no provider payload, "
+            "audited PySide6/Qt paths, pinned CPython natives, required notices). "
+            "General compliance status remains HOLD."
+        )
+        return 0
 
     if artifact.is_dir() or artifact.suffix.casefold() == ".zip":
         manifest = args.directory_manifest.resolve() if args.directory_manifest else None
